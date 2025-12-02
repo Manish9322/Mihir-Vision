@@ -19,7 +19,14 @@ export const heroData = {
   headline: 'Forging New Paths to the Pinnacle',
   subheadline: 'At Pinnacle Pathways, we pioneer solutions for the next generation of challenges. Explore our journey of innovation and discovery.',
   cta: 'Discover Our Mission',
+  secondaryCta: 'Explore More',
   image: getImage('hero-background'),
+  badges: ['Innovation', 'Excellence', 'Impact'],
+  stats: [
+    { value: '50+', label: 'Missions Completed' },
+    { value: '10+', label: 'Active Programs' },
+    { value: '5', label: 'Years of Experience' },
+  ],
 };
 
 export const aboutData = {
