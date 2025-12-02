@@ -14,7 +14,7 @@ export default function Timeline() {
         </div>
 
         <div className="relative">
-          <div className="absolute left-1/2 top-0 bottom-0 w-0.5 bg-border -translate-x-1/2" aria-hidden="true"></div>
+          <div className="absolute left-1/2 top-0 bottom-0 w-0.5 bg-border dark:bg-primary/30 -translate-x-1/2" aria-hidden="true"></div>
 
           {timelineData.events.map((event, index) => (
             <div key={event.year} className="relative mb-12">
