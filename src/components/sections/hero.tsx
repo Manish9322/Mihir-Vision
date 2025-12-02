@@ -18,7 +18,7 @@ export default function Hero() {
       <div className="absolute -bottom-1/4 -right-1/4 h-1/2 w-1/2 rounded-full bg-primary/10 blur-3xl" />
 
       <div className="relative z-10 flex h-full flex-col items-center justify-center">
-        <div className="container max-w-7xl px-4 text-center mt-12 sm:mt-20">
+        <div className="container max-w-7xl px-4 text-center mt-10 sm:mt-10">
           <h1 className="animate-fade-in-up text-4xl font-extrabold tracking-tighter text-foreground sm:text-5xl lg:text-6xl/none">
             {heroData.headline}
           </h1>
