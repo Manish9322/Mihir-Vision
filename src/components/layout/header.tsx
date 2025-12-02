@@ -1,10 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { Mountain, Menu, X } from 'lucide-react';
+import { Mountain, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
 import { useState } from 'react';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 const navLinks = [
   { href: '#about', label: 'About' },
@@ -33,6 +34,7 @@ export default function Header() {
           ))}
         </nav>
         <div className="flex flex-1 items-center justify-end gap-2">
+          <ThemeToggle />
           <Button asChild variant="ghost">
             <Link href="/admin">Admin Panel</Link>
           </Button>
