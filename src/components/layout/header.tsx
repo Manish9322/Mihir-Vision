@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Mountain, Menu } from 'lucide-react';
+import { Mountain, Menu, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
 import { useState } from 'react';
@@ -20,7 +20,7 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-14 items-center max-w-7xl">
+      <div className="container flex h-14 items-center">
         <div className="mr-4 flex items-center">
           <Link href="/" className="flex items-center gap-2 font-bold">
             <Mountain className="h-6 w-6" />
@@ -37,7 +37,10 @@ export default function Header() {
         <div className="flex flex-1 items-center justify-end gap-2">
           <ThemeToggle />
           <Button asChild variant="ghost">
-            <Link href="/admin">Admin Panel</Link>
+            <Link href="/admin">
+              <Settings className="mr-2 h-4 w-4" />
+              Admin Panel
+            </Link>
           </Button>
           <Sheet open={isSheetOpen} onOpenChange={setSheetOpen}>
             <SheetTrigger asChild>
