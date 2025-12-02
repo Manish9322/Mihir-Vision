@@ -1,6 +1,6 @@
 import { PlaceHolderImages } from './placeholder-images';
 import type { ImagePlaceholder } from './placeholder-images';
-import { BarChart3, Dna, Rocket, Users, Target, Lightbulb, Bot, Check } from 'lucide-react';
+import { BarChart3, Dna, Rocket, Users, Target, Lightbulb, Bot, Check, Package, Award, UsersRound, Globe } from 'lucide-react';
 
 const getImage = (id: string): ImagePlaceholder => {
   const image = PlaceHolderImages.find((img) => img.id === id);
@@ -8,7 +8,7 @@ const getImage = (id: string): ImagePlaceholder => {
     return {
       id: 'placeholder',
       description: 'Placeholder Image',
-      imageUrl: 'https://picsum.photos/seed/placeholder/600/400',
+      imageUrl: 'https://placehold.co/600x400',
       imageHint: 'placeholder',
     };
   }
@@ -22,11 +22,6 @@ export const heroData = {
   secondaryCta: 'Explore More',
   image: getImage('hero-background'),
   badges: ['Innovation', 'Excellence', 'Impact'],
-  stats: [
-    { value: '50+', label: 'Missions Completed' },
-    { value: '10+', label: 'Active Programs' },
-    { value: '5', label: 'Years of Experience' },
-  ],
 };
 
 export const aboutData = {
@@ -68,11 +63,16 @@ export const statsData = {
   title: 'Our Impact in Numbers',
   subheadline: 'We measure our success by the tangible impact we create. Here are some of our key achievements.',
   stats: [
-    { label: 'Projects Completed', value: '150+' },
-    { label: 'Patents Filed', value: '75' },
-    { label: 'Team Members', value: '200' },
-    { label: 'Global Partners', value: '40+' },
+    { label: 'Projects Completed', value: '150+', icon: Package },
+    { label: 'Patents Filed', value: '75', icon: Award },
+    { label: 'Team Members', value: '200', icon: UsersRound },
+    { label: 'Global Partners', value: '40+', icon: Globe },
   ],
+};
+
+export const growthChartData = {
+  title: 'Growth Overview',
+  subheadline: 'Projects and patents filed over the years',
   chartData: [
     { year: '2020', projects: 40, patents: 24 },
     { year: '2021', projects: 30, patents: 13 },
@@ -81,6 +81,7 @@ export const statsData = {
     { year: '2024', projects: 80, patents: 55 },
   ],
 };
+
 
 export const futureMissionsData = {
   title: 'Future Missions',

@@ -8,7 +8,7 @@ export default function Hero() {
   return (
     <section
       id="hero"
-      className="relative min-h-[calc(100vh-3.5rem)] w-full overflow-hidden flex items-center justify-center py-16 md:py-24"
+      className="relative w-full overflow-hidden flex items-center justify-center pt-16 md:pt-24 pb-24 md:pb-32"
     >
       <div className="absolute inset-0 bg-gradient-to-br from-background via-secondary to-background" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary/10 to-transparent" />
@@ -18,7 +18,7 @@ export default function Hero() {
 
       <div className="relative z-10 flex h-full items-center justify-center">
         <div className="container max-w-7xl px-4 text-center">
-          <h1 className="animate-fade-in-up text-4xl font-extrabold tracking-tighter text-foreground sm:text-5xl md:text-6xl lg:text-7xl">
+          <h1 className="animate-fade-in-up text-4xl font-extrabold tracking-tighter text-foreground sm:text-5xl md:text-6xl">
             {heroData.headline}
           </h1>
           <p className="animate-fade-in-up animation-delay-300 mx-auto mt-6 max-w-3xl text-lg text-foreground/70 md:text-xl">
@@ -46,15 +46,6 @@ export default function Hero() {
                 {heroData.secondaryCta}
               </Link>
             </Button>
-          </div>
-          
-          <div className="animate-fade-in-up animation-delay-[900ms] mt-16 flex flex-wrap justify-center gap-8 text-foreground">
-            {heroData.stats.map((stat) => (
-              <div key={stat.label} className="flex flex-col items-center">
-                <p className="text-3xl font-bold md:text-4xl">{stat.value}</p>
-                <p className="text-sm text-foreground/60">{stat.label}</p>
-              </div>
-            ))}
           </div>
         </div>
       </div>

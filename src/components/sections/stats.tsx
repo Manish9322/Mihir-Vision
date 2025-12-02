@@ -1,25 +1,9 @@
-'use client';
-
 import { statsData } from '@/lib/data';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Tooltip } from 'recharts';
-import type { ChartConfig } from '@/components/ui/chart';
-
-const chartConfig = {
-  projects: {
-    label: 'Projects',
-    color: 'hsl(var(--primary))',
-  },
-  patents: {
-    label: 'Patents',
-    color: 'hsl(var(--muted-foreground))',
-  },
-} satisfies ChartConfig;
+import { Card, CardContent } from '@/components/ui/card';
 
 export default function Stats() {
   return (
-    <section id="stats" className="py-16 md:py-24 bg-secondary">
+    <section id="stats" className="pb-16 md:pb-24 bg-background">
       <div className="container max-w-7xl">
         <div className="text-center max-w-3xl mx-auto mb-12">
           <h2 className="text-3xl font-bold tracking-tight sm:text-4xl font-headline">
@@ -29,43 +13,19 @@ export default function Stats() {
             {statsData.subheadline}
           </p>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 mb-12">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
           {statsData.stats.map((stat) => (
-            <Card key={stat.label} className="text-center">
-              <CardHeader>
-                <CardTitle className="text-4xl font-bold">{stat.value}</CardTitle>
-                <CardDescription>{stat.label}</CardDescription>
-              </CardHeader>
+            <Card key={stat.label} className="flex items-center p-6 bg-secondary/50 border-0">
+              <div className="mr-4 bg-primary/10 text-primary p-3 rounded-lg">
+                <stat.icon className="h-8 w-8" />
+              </div>
+              <div>
+                <p className="text-3xl font-bold">{stat.value}</p>
+                <p className="text-muted-foreground">{stat.label}</p>
+              </div>
             </Card>
           ))}
         </div>
-        <Card>
-          <CardHeader>
-            <CardTitle>Growth Overview</CardTitle>
-            <CardDescription>Projects and patents filed over the years</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ChartContainer config={chartConfig} className="h-[250px] w-full">
-              <BarChart data={statsData.chartData} accessibilityLayer>
-                <CartesianGrid vertical={false} />
-                <XAxis
-                  dataKey="year"
-                  tickLine={false}
-                  tickMargin={10}
-                  axisLine={false}
-                  tickFormatter={(value) => value.slice(0, 4)}
-                />
-                 <YAxis />
-                <ChartTooltip
-                  cursor={false}
-                  content={<ChartTooltipContent indicator="dot" />}
-                />
-                <Bar dataKey="projects" fill="var(--color-projects)" radius={4} />
-                <Bar dataKey="patents" fill="var(--color-patents)" radius={4} />
-              </BarChart>
-            </ChartContainer>
-          </CardContent>
-        </Card>
       </div>
     </section>
   );
