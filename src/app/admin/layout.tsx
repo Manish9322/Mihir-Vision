@@ -27,7 +27,7 @@ const navItems = [
     { href: "/admin/dashboard?page=hero", icon: ImageIcon, label: "Hero" },
     { href: "/admin/dashboard?page=about", icon: BookText, label: "About" },
     { href: "/admin/dashboard?page=activities", icon: Settings, label: "Activities" },
-    { href: "/admin/dashboard?page=contacts", icon: Users, label: "Contacts" },
+    { href: "/admin/contacts", icon: Users, label: "Contacts" },
     { href: "#", icon: LineChart, label: "Stats" },
     { href: "#", icon: Rocket, label: "Missions" },
     { href: "#", icon: Milestone, label: "Timeline" },
