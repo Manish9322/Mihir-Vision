@@ -2,6 +2,19 @@ import type { Metadata } from 'next';
 import { Toaster } from '@/components/ui/toaster';
 import './globals.css';
 import { ThemeProvider } from '@/components/theme-provider';
+import { Manrope, Inter } from 'next/font/google';
+
+const headlineFont = Manrope({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-headline',
+});
+
+const bodyFont = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-body',
+});
 
 export const metadata: Metadata = {
   title: 'Pinnacle Pathways',
@@ -15,15 +28,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap"
-          rel="stylesheet"
-        />
-      </head>
-      <body className="font-body antialiased">
+      <body
+        className={`${headlineFont.variable} ${bodyFont.variable} font-body antialiased`}
+      >
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"
