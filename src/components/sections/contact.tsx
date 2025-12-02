@@ -53,6 +53,7 @@ export default function Contact() {
                 id="name"
                 placeholder="e.g. John Doe"
                 {...register('name', { required: 'Name is required' })}
+                className="py-6 text-base"
             />
             {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
             </div>
@@ -69,6 +70,7 @@ export default function Contact() {
                     message: 'Invalid email address',
                 },
                 })}
+                className="py-6 text-base"
             />
             {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
             </div>
@@ -79,6 +81,7 @@ export default function Contact() {
                 type="tel"
                 placeholder="e.g. (123) 456-7890"
                 {...register('phone')}
+                className="py-6 text-base"
             />
             </div>
             <div className="md:col-span-2 space-y-2">
@@ -88,6 +91,7 @@ export default function Contact() {
                 placeholder="Your message..."
                 rows={6}
                 {...register('message', { required: 'Message cannot be empty' })}
+                className="py-4 text-base"
             />
             {errors.message && <p className="text-sm text-destructive">{errors.message.message}</p>}
             </div>

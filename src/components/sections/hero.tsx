@@ -1,6 +1,6 @@
 import { heroData, statsData } from '@/lib/data';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, PlayCircle } from 'lucide-react';
+import { Phone, Mail } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
@@ -36,16 +36,16 @@ export default function Hero() {
 
           <div className="animate-fade-in-up animation-delay-600 mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
             <Button asChild size="lg" className="group rounded-full shadow-lg shadow-primary/20 transition-all duration-300 hover:shadow-primary/40 hover:scale-105 w-full sm:w-auto">
-              <Link href="#about">
-                {heroData.cta}
-                <ArrowRight className="ml-2 h-5 w-5 transition-transform duration-300 group-hover:translate-x-1" />
-              </Link>
+              <a href="tel:+15551234567">
+                <Phone className="mr-2 h-5 w-5" />
+                +1 (555) 123-4567
+              </a>
             </Button>
              <Button asChild size="lg" variant="ghost" className="group rounded-full transition-all duration-300 hover:bg-accent/80 w-full sm:w-auto">
-              <Link href="#">
-                <PlayCircle className="mr-2 h-5 w-5" />
-                {heroData.secondaryCta}
-              </Link>
+              <a href="mailto:contact@pinnaclepathways.com">
+                <Mail className="mr-2 h-5 w-5" />
+                Email Us
+              </a>
             </Button>
           </div>
         </div>
