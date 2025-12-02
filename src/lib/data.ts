@@ -1,6 +1,6 @@
 import { PlaceHolderImages } from './placeholder-images';
 import type { ImagePlaceholder } from './placeholder-images';
-import { BarChart3, Dna, Rocket, Users, Target, Lightbulb, Bot } from 'lucide-react';
+import { BarChart3, Dna, Rocket, Users, Target, Lightbulb, Bot, Check } from 'lucide-react';
 
 const getImage = (id: string): ImagePlaceholder => {
   const image = PlaceHolderImages.find((img) => img.id === id);
@@ -30,10 +30,16 @@ export const heroData = {
 };
 
 export const aboutData = {
+  tagline: "Our Core Principles",
   title: 'Who We Are',
   paragraph1: 'Pinnacle Pathways was founded on the principle of relentless innovation. We are a collective of thinkers, creators, and pioneers dedicated to pushing the boundaries of what\'s possible. Our diverse team brings together expertise from various fields to tackle complex problems with creative and effective solutions.',
   paragraph2: 'Our journey is one of constant evolution, driven by a passion for discovery and a commitment to excellence. We believe in the power of collaboration and technology to build a better future, one breakthrough at a time.',
   image: getImage('about-image'),
+  highlights: [
+    "Commitment to groundbreaking research and development.",
+    "Fostering a culture of collaboration and creativity.",
+    "Delivering solutions that create tangible, real-world impact."
+  ]
 };
 
 export const activitiesData = {
