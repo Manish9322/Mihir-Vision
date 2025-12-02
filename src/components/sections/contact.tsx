@@ -12,6 +12,7 @@ import { useForm, type SubmitHandler } from 'react-hook-form';
 type Inputs = {
   name: string;
   email: string;
+  phone?: string;
   message: string;
 };
 
@@ -73,6 +74,15 @@ export default function Contact() {
                   })}
                 />
                 {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
+              </div>
+              <div className="md:col-span-2 space-y-2">
+                <Label htmlFor="phone">Phone Number (Optional)</Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  placeholder="e.g. (123) 456-7890"
+                  {...register('phone')}
+                />
               </div>
               <div className="md:col-span-2 space-y-2">
                 <Label htmlFor="message">Message</Label>

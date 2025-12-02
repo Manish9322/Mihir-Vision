@@ -9,7 +9,8 @@ import {
   LineChart,
   Rocket,
   Milestone,
-  Users
+  Users,
+  HelpCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -29,6 +30,7 @@ const navItems = [
     { href: "/admin/activities", icon: Settings, label: "Activities" },
     { href: "/admin/missions", icon: Rocket, label: "Missions" },
     { href: "/admin/timeline", icon: Milestone, label: "Timeline" },
+    { href: "/admin/faq", icon: HelpCircle, label: "FAQs" },
     { href: "/admin/contacts", icon: Users, label: "Contacts" },
     { href: "#", icon: LineChart, label: "Stats" },
 ]

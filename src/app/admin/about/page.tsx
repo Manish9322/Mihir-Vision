@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { aboutData } from '@/lib/data';
+import { PlusCircle, Trash2 } from 'lucide-react';
 import Image from 'next/image';
 
 const AboutAdminPage = () => {
@@ -34,13 +35,32 @@ const AboutAdminPage = () => {
                         <Input id="about-title" defaultValue={aboutData.title} />
                     </div>
                     <div className="space-y-2">
-                        <Label htmlFor="about-p1">Paragraph 1</Label>
+                        <Label htmlFor="about-p1">Paragraph</Label>
                         <Textarea id="about-p1" defaultValue={aboutData.paragraph1} rows={4} />
                     </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="about-p2">Paragraph 2</Label>
-                        <Textarea id="about-p2" defaultValue={aboutData.paragraph2} rows={4} />
+
+                    <div className="space-y-4">
+                        <Label>Highlights</Label>
+                        {aboutData.highlights.map((highlight, index) => (
+                            <Card key={index} className="p-4">
+                                <div className="flex items-center gap-4">
+                                    <Input
+                                        id={`highlight-${index}`}
+                                        defaultValue={highlight}
+                                        className="flex-grow"
+                                    />
+                                    <Button variant="outline" size="icon">
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            </Card>
+                        ))}
+                         <Button variant="outline" className="w-full">
+                            <PlusCircle className="mr-2 h-4 w-4" />
+                            Add Highlight
+                        </Button>
                     </div>
+
                     <div className="space-y-2">
                         <Label>Image</Label>
                         <Card className='p-2'>
