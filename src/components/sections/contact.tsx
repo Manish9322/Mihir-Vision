@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent } from '@/components/ui/card';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 
 type Inputs = {
@@ -47,61 +46,57 @@ export default function Contact() {
           </p>
         </div>
 
-        <Card className="shadow-lg">
-          <CardContent className="p-8 md:p-12">
-            <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
-                <Input
-                  id="name"
-                  placeholder="e.g. John Doe"
-                  {...register('name', { required: 'Name is required' })}
-                />
-                {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="email">Email Address</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="e.g. john.doe@example.com"
-                  {...register('email', {
-                    required: 'Email is required',
-                    pattern: {
-                      value: /^\S+@\S+$/i,
-                      message: 'Invalid email address',
-                    },
-                  })}
-                />
-                {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
-              </div>
-              <div className="md:col-span-2 space-y-2">
-                <Label htmlFor="phone">Phone Number (Optional)</Label>
-                <Input
-                  id="phone"
-                  type="tel"
-                  placeholder="e.g. (123) 456-7890"
-                  {...register('phone')}
-                />
-              </div>
-              <div className="md:col-span-2 space-y-2">
-                <Label htmlFor="message">Message</Label>
-                <Textarea
-                  id="message"
-                  placeholder="Your message..."
-                  rows={6}
-                  {...register('message', { required: 'Message cannot be empty' })}
-                />
-                {errors.message && <p className="text-sm text-destructive">{errors.message.message}</p>}
-              </div>
-              <div className="md:col-span-2 text-right">
-                <Button type="submit" size="lg">
-                  Send Message
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+        <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+            <Label htmlFor="name">Full Name</Label>
+            <Input
+                id="name"
+                placeholder="e.g. John Doe"
+                {...register('name', { required: 'Name is required' })}
+            />
+            {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
+            </div>
+            <div className="space-y-2">
+            <Label htmlFor="email">Email Address</Label>
+            <Input
+                id="email"
+                type="email"
+                placeholder="e.g. john.doe@example.com"
+                {...register('email', {
+                required: 'Email is required',
+                pattern: {
+                    value: /^\S+@\S+$/i,
+                    message: 'Invalid email address',
+                },
+                })}
+            />
+            {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
+            </div>
+            <div className="md:col-span-2 space-y-2">
+            <Label htmlFor="phone">Phone Number (Optional)</Label>
+            <Input
+                id="phone"
+                type="tel"
+                placeholder="e.g. (123) 456-7890"
+                {...register('phone')}
+            />
+            </div>
+            <div className="md:col-span-2 space-y-2">
+            <Label htmlFor="message">Message</Label>
+            <Textarea
+                id="message"
+                placeholder="Your message..."
+                rows={6}
+                {...register('message', { required: 'Message cannot be empty' })}
+            />
+            {errors.message && <p className="text-sm text-destructive">{errors.message.message}</p>}
+            </div>
+            <div className="md:col-span-2 text-right">
+            <Button type="submit" size="lg">
+                Send Message
+            </Button>
+            </div>
+        </form>
       </div>
     </section>
   );
