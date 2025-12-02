@@ -4,7 +4,7 @@ import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/ca
 export default function Activities() {
   return (
     <section id="activities" className="py-16 md:py-24 bg-background">
-      <div className="container">
+      <div className="container max-w-7xl">
         <div className="text-center max-w-3xl mx-auto mb-12">
           <h2 className="text-3xl font-bold tracking-tight sm:text-4xl font-headline">
             {activitiesData.title}

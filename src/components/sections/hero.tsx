@@ -7,7 +7,7 @@ export default function Hero() {
   return (
     <section id="hero" className="relative h-[calc(80vh-3.5rem)] w-full bg-primary text-primary-foreground">
       <div className="relative z-10 flex h-full items-center justify-center">
-        <div className="container text-center">
+        <div className="container text-center max-w-7xl">
           <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl font-headline animate-fade-in-up">
             {heroData.headline}
           </h1>

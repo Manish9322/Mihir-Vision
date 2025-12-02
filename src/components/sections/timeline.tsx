@@ -3,7 +3,7 @@ import { timelineData } from '@/lib/data';
 export default function Timeline() {
   return (
     <section id="timeline" className="py-16 md:py-24 bg-secondary">
-      <div className="container">
+      <div className="container max-w-7xl">
         <div className="text-center max-w-3xl mx-auto mb-16">
           <h2 className="text-3xl font-bold tracking-tight sm:text-4xl font-headline">
             {timelineData.title}

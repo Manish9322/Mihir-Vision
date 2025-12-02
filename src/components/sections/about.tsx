@@ -4,7 +4,7 @@ import { aboutData } from '@/lib/data';
 export default function About() {
   return (
     <section id="about" className="py-16 md:py-24 bg-secondary">
-      <div className="container">
+      <div className="container max-w-7xl">
         <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
           <div className="space-y-4">
             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl font-headline">

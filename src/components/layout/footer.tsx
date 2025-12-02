@@ -5,7 +5,7 @@ import { footerData } from '@/lib/data';
 export default function Footer() {
   return (
     <footer className="border-t bg-background">
-      <div className="container py-8">
+      <div className="container py-8 max-w-7xl">
         <div className="flex flex-col items-center justify-center gap-4 md:flex-row md:justify-between">
           <div className="flex items-center gap-2">
             <Mountain className="h-6 w-6" />
