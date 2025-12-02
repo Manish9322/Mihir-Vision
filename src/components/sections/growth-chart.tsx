@@ -52,64 +52,68 @@ export default function GrowthChart() {
                 {growthChartData.subheadline}
             </p>
         </div>
-        <Card>
-            <CardHeader className="flex flex-col md:flex-row md:items-center md:justify-between">
-                <div>
-                    <CardTitle>Innovation Metrics</CardTitle>
-                    <CardDescription>An overview of our projects, patents, and investments.</CardDescription>
-                </div>
-                <div className="flex items-center gap-4 mt-4 md:mt-0">
-                    <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-muted-foreground">From</span>
-                         <Select value={startYear} onValueChange={setStartYear}>
-                            <SelectTrigger className="w-[120px]">
-                                <SelectValue placeholder="Start Year" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {availableStartYears.map(year => <SelectItem key={year} value={year}>{year}</SelectItem>)}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                   <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-muted-foreground">To</span>
-                        <Select value={endYear} onValueChange={setEndYear}>
-                            <SelectTrigger className="w-[120px]">
-                                <SelectValue placeholder="End Year" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {availableEndYears.map(year => <SelectItem key={year} value={year}>{year}</SelectItem>)}
-                            </SelectContent>
-                        </Select>
-                   </div>
-                </div>
-            </CardHeader>
-            <CardContent className="grid md:grid-cols-2 gap-8 pt-6">
-                 <div>
-                    <h3 className="font-semibold mb-2 text-center">{growthChartData.chartTitle}</h3>
+
+        <div className="flex justify-center items-center gap-4 mb-8">
+            <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-muted-foreground">From</span>
+                 <Select value={startYear} onValueChange={setStartYear}>
+                    <SelectTrigger className="w-[120px]">
+                        <SelectValue placeholder="Start Year" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {availableStartYears.map(year => <SelectItem key={year} value={year}>{year}</SelectItem>)}
+                    </SelectContent>
+                </Select>
+            </div>
+           <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-muted-foreground">To</span>
+                <Select value={endYear} onValueChange={setEndYear}>
+                    <SelectTrigger className="w-[120px]">
+                        <SelectValue placeholder="End Year" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {availableEndYears.map(year => <SelectItem key={year} value={year}>{year}</SelectItem>)}
+                    </SelectContent>
+                </Select>
+           </div>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-8">
+            <Card>
+                <CardHeader>
+                    <CardTitle>{growthChartData.chartTitle}</CardTitle>
+                    <CardDescription>{growthChartData.chartSubheadline}</CardDescription>
+                </CardHeader>
+                <CardContent>
                     <ChartContainer config={chartConfig} className="h-[250px] w-full">
-                    <BarChart data={filteredData} accessibilityLayer>
-                        <CartesianGrid vertical={false} />
-                        <XAxis
-                        dataKey="year"
-                        tickLine={false}
-                        tickMargin={10}
-                        axisLine={false}
-                        tickFormatter={(value) => value.slice(0, 4)}
-                        />
-                        <YAxis />
-                        <ChartTooltip
-                        cursor={false}
-                        content={<ChartTooltipContent indicator="dot" />}
-                        />
-                        <Legend />
-                        <Bar dataKey="projects" fill="var(--color-projects)" radius={4} />
-                        <Bar dataKey="patents" fill="var(--color-patents)" radius={4} />
-                    </BarChart>
+                        <BarChart data={filteredData} accessibilityLayer>
+                            <CartesianGrid vertical={false} />
+                            <XAxis
+                            dataKey="year"
+                            tickLine={false}
+                            tickMargin={10}
+                            axisLine={false}
+                            tickFormatter={(value) => value.slice(0, 4)}
+                            />
+                            <YAxis />
+                            <ChartTooltip
+                            cursor={false}
+                            content={<ChartTooltipContent indicator="dot" />}
+                            />
+                            <Legend />
+                            <Bar dataKey="projects" fill="var(--color-projects)" radius={4} />
+                            <Bar dataKey="patents" fill="var(--color-patents)" radius={4} />
+                        </BarChart>
                     </ChartContainer>
-                </div>
-                 <div>
-                     <h3 className="font-semibold mb-2 text-center">R&D Investment Growth</h3>
-                    <ChartContainer config={chartConfig} className="h-[250px] w-full">
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader>
+                    <CardTitle>R&amp;D Investment Growth</CardTitle>
+                    <CardDescription>Millions of USD invested per year.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                     <ChartContainer config={chartConfig} className="h-[250px] w-full">
                         <LineChart data={filteredData} accessibilityLayer>
                             <CartesianGrid vertical={false} />
                              <XAxis
@@ -128,9 +132,9 @@ export default function GrowthChart() {
                             <Line type="monotone" dataKey="investment" stroke="var(--color-investment)" strokeWidth={2} dot={{r: 5, fill: 'var(--color-investment)'}} />
                         </LineChart>
                     </ChartContainer>
-                </div>
-          </CardContent>
-        </Card>
+                </CardContent>
+            </Card>
+        </div>
       </div>
     </section>
   );
