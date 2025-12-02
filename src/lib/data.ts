@@ -141,6 +141,40 @@ export const timelineData = {
   ],
 };
 
+export const contactData = {
+  title: 'Get In Touch',
+  subheadline: 'Have a question or want to work together? Drop us a line. We’d love to hear from you.'
+};
+
+export const contactsData = {
+  messages: [
+    {
+      id: '1',
+      name: 'Olivia Martin',
+      email: 'olivia.martin@email.com',
+      message: 'Interested in learning more about Project Nebula. Can we schedule a call?',
+      date: '2023-06-23',
+      status: 'New'
+    },
+    {
+      id: '2',
+      name: 'Liam Anderson',
+      email: 'liam.anderson@email.com',
+      message: 'Great work on the AI integration! We have a potential partnership opportunity.',
+      date: '2023-06-22',
+      status: 'Replied'
+    },
+    {
+      id: '3',
+      name: 'Sophia Davis',
+      email: 'sophia.davis@email.com',
+      message: 'Question about your strategic partnerships program. Who is the best point of contact?',
+      date: '2023-06-21',
+      status: 'New'
+    },
+  ]
+};
+
 export const footerData = {
   companyName: 'Pinnacle Pathways',
   quote: 'The best way to predict the future is to create it.',

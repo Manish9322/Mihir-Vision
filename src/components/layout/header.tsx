@@ -13,6 +13,7 @@ const navLinks = [
   { href: '#growth', label: 'Growth' },
   { href: '#missions', label: 'Missions' },
   { href: '#timeline', label: 'Timeline' },
+  { href: '#contact', label: 'Contact' },
 ];
 
 export default function Header() {
