@@ -18,7 +18,7 @@ export default function Hero() {
 
       <div className="relative z-10 flex h-full items-center justify-center">
         <div className="container max-w-7xl px-4 text-center">
-          <h1 className="animate-fade-in-up text-4xl font-extrabold tracking-tighter text-foreground sm:text-6xl md:text-7xl lg:text-8xl">
+          <h1 className="animate-fade-in-up text-4xl font-extrabold tracking-tighter text-foreground sm:text-5xl md:text-6xl lg:text-7xl">
             {heroData.headline}
           </h1>
           <p className="animate-fade-in-up animation-delay-300 mx-auto mt-6 max-w-3xl text-lg text-foreground/70 md:text-xl">
