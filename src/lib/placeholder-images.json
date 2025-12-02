@@ -3,55 +3,55 @@
     {
       "id": "hero-background",
       "description": "Abstract mountain range at dawn.",
-      "imageUrl": "https://images.unsplash.com/photo-1612441804231-77a36b284856?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxtb3VudGFpbiUyMGxhbmRzY2FwZXxlbnwwfHx8fDE3NjQ2MjEyMjd8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://placehold.co/1920x1080",
       "imageHint": "mountain landscape"
     },
     {
       "id": "about-image",
       "description": "Team collaborating in a modern office.",
-      "imageUrl": "https://images.unsplash.com/photo-1543269865-cbf427effbad?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8dGVhbSUyMGNvbGxhYm9yYXRpb258ZW58MHx8fHwxNzY0NjQ2NTk1fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://placehold.co/600x450",
       "imageHint": "team collaboration"
     },
     {
       "id": "activity-1",
       "description": "Close up of a circuit board.",
-      "imageUrl": "https://images.unsplash.com/photo-1580982336957-29e605c705d6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHx0ZWNobm9sb2d5JTIwY2lyY3VpdHxlbnwwfHx8fDE3NjQ2MTQ5NDV8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://placehold.co/600x400",
       "imageHint": "technology circuit"
     },
     {
       "id": "activity-2",
       "description": "Person sketching a design on a whiteboard.",
-      "imageUrl": "https://images.unsplash.com/photo-1587355760421-b9de3226a046?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxkZXNpZ24lMjB0aGlua2luZ3xlbnwwfHx8fDE3NjQ2NzA2NDF8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://placehold.co/600x400",
       "imageHint": "design thinking"
     },
     {
       "id": "activity-3",
       "description": "Global network connections visualized.",
-      "imageUrl": "https://images.unsplash.com/photo-1446776653964-20c1d3a81b06?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxnbG9iYWwlMjBuZXR3b3JrfGVufDB8fHx8MTc2NDYzMDQ1MHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://placehold.co/600x400",
       "imageHint": "global network"
     },
     {
       "id": "mission-1",
       "description": "Satellite orbiting the earth.",
-      "imageUrl": "https://images.unsplash.com/photo-1657344956545-8f49e1b1f661?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxzcGFjZSUyMHNhdGVsbGl0ZXxlbnwwfHx8fDE3NjQ2MTY5ODJ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://placehold.co/600x400",
       "imageHint": "space satellite"
     },
     {
       "id": "mission-2",
       "description": "Blueprint of a futuristic city.",
-      "imageUrl": "https://images.unsplash.com/photo-1619618020341-5de1cad0d965?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxmdXR1cmlzdGljJTIwYXJjaGl0ZWN0dXJlfGVufDB8fHx8MTc2NDY3MDY0MXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://placehold.co/600x400",
       "imageHint": "futuristic architecture"
     },
     {
       "id": "mission-3",
       "description": "Scientist looking through a microscope.",
-      "imageUrl": "https://images.unsplash.com/photo-1630959305606-3123a081dada?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxzY2llbnRpZmljJTIwcmVzZWFyY2h8ZW58MHx8fHwxNzY0NTc5NzE1fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://placehold.co/600x400",
       "imageHint": "scientific research"
     },
     {
       "id": "timeline-1",
       "description": "Vintage photograph of a spark of an idea.",
-      "imageUrl": "https://images.unsplash.com/photo-1512351340899-b54995343f78?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxpZGVhJTIwc3Bhcmt8ZW58MHx8fHwxNzY0NjcwNjQxfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://placehold.co/600x400",
       "imageHint": "idea spark"
     }
   ]
