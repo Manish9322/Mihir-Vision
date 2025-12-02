@@ -10,7 +10,9 @@ import {
   Rocket,
   Milestone,
   Users,
-  HelpCircle
+  HelpCircle,
+  User,
+  LogOut,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -22,6 +24,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 const navItems = [
     { href: "/admin/dashboard", icon: LayoutDashboard, label: "Dashboard" },
@@ -32,6 +41,7 @@ const navItems = [
     { href: "/admin/timeline", icon: Milestone, label: "Timeline" },
     { href: "/admin/faq", icon: HelpCircle, label: "FAQs" },
     { href: "/admin/contacts", icon: Users, label: "Contacts" },
+    { href: "/admin/profile", icon: User, label: "Profile" },
     { href: "#", icon: LineChart, label: "Stats" },
 ]
 
@@ -43,16 +53,16 @@ export default function AdminLayout({
   return (
     <div className="flex min-h-screen w-full flex-col bg-muted/40">
       <aside className="fixed inset-y-0 left-0 z-10 hidden w-64 flex-col border-r bg-background sm:flex">
-        <div className="flex flex-col gap-2">
-            <div className="flex h-16 items-center border-b px-6">
-                 <Link
-                    href="/"
-                    className="flex items-center gap-2 font-semibold"
-                >
-                    <Home className="h-6 w-6" />
-                    <span>Pinnacle Pathways</span>
-                </Link>
-            </div>
+        <div className="flex h-16 items-center border-b px-6">
+            <Link
+                href="/"
+                className="flex items-center gap-2 font-semibold"
+            >
+                <Home className="h-6 w-6" />
+                <span>Pinnacle Pathways</span>
+            </Link>
+        </div>
+        <div className="flex flex-col justify-between flex-1">
             <nav className="flex-1 space-y-2 p-4">
                 {navItems.map(item => (
                      <Link
@@ -65,6 +75,24 @@ export default function AdminLayout({
                     </Link>
                 ))}
             </nav>
+            <div className="mt-auto p-4 border-t">
+                 <nav className="space-y-1">
+                    <Link
+                        href="/admin/settings"
+                        className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
+                    >
+                        <Settings className="h-4 w-4" />
+                        Settings
+                    </Link>
+                     <Link
+                        href="/admin/login"
+                        className="flex items-center gap-3 rounded-lg px-3 py-2 text-destructive transition-all hover:text-primary"
+                    >
+                        <LogOut className="h-4 w-4" />
+                        Logout
+                    </Link>
+                </nav>
+            </div>
         </div>
       </aside>
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-64">
@@ -106,17 +134,20 @@ export default function AdminLayout({
                   size="icon"
                   className="overflow-hidden rounded-full"
                 >
-                  <span className="sr-only">Open user menu</span>
-                  <Settings/>
+                    <Avatar>
+                        <AvatarImage src="https://picsum.photos/seed/admin/32/32" alt="@shadcn" />
+                        <AvatarFallback>AD</AvatarFallback>
+                    </Avatar>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuLabel>My Account</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>Settings</DropdownMenuItem>
+                <DropdownMenuItem asChild><Link href="/admin/profile">Profile</Link></DropdownMenuItem>
+                <DropdownMenuItem asChild><Link href="/admin/settings">Settings</Link></DropdownMenuItem>
                 <DropdownMenuItem>Support</DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>Logout</DropdownMenuItem>
+                <DropdownMenuItem asChild><Link href="/admin/login">Logout</Link></DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
