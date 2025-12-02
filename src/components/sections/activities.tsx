@@ -15,13 +15,13 @@ export default function Activities() {
         </div>
         <div className="grid md:grid-cols-3 gap-8">
           {activitiesData.activities.map((activity) => (
-            <Card key={activity.title} className="text-center p-4 transition-transform transform hover:-translate-y-2">
+            <Card key={activity.title} className="text-center p-4 transition-transform transform hover:-translate-y-2 hover:shadow-lg">
               <CardHeader>
-                <div className="mx-auto bg-primary text-primary-foreground rounded-full h-16 w-16 flex items-center justify-center mb-4">
+                <div className="mx-auto bg-primary/10 text-primary rounded-full h-16 w-16 flex items-center justify-center mb-4">
                   <activity.icon className="h-8 w-8" />
                 </div>
-                <CardTitle className="font-headline">{activity.title}</CardTitle>
-                <CardDescription className="pt-2">{activity.description}</CardDescription>
+                <CardTitle className="font-headline text-xl">{activity.title}</CardTitle>
+                <CardDescription className="pt-2 text-base">{activity.description}</CardDescription>
               </CardHeader>
             </Card>
           ))}
