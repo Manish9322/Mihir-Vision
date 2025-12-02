@@ -13,6 +13,7 @@ import {
   HelpCircle,
   User,
   LogOut,
+  ArrowUpRight,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -25,12 +26,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
+
 
 const navItems = [
     { href: "/admin/dashboard", icon: LayoutDashboard, label: "Dashboard" },

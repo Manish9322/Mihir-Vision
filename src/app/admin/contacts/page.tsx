@@ -124,14 +124,16 @@ const ContactsPage = () => {
                                         </TableCell>
                                         <TableCell className="hidden md:table-cell">{message.date}</TableCell>
                                         <TableCell className="text-right">
-                                            <Button size="icon" variant="outline" className="mr-2">
-                                                <Mail className="h-4 w-4" />
-                                                <span className="sr-only">Reply</span>
-                                            </Button>
-                                            <Button size="icon" variant="outline">
-                                                <Trash2 className="h-4 w-4" />
-                                                <span className="sr-only">Delete</span>
-                                            </Button>
+                                            <div className="flex justify-end gap-2">
+                                                <Button size="icon" variant="outline" className="h-8 w-8">
+                                                    <Mail className="h-4 w-4" />
+                                                    <span className="sr-only">Reply</span>
+                                                </Button>
+                                                <Button size="icon" variant="outline" className="h-8 w-8">
+                                                    <Trash2 className="h-4 w-4" />
+                                                    <span className="sr-only">Delete</span>
+                                                </Button>
+                                            </div>
                                         </TableCell>
                                     </TableRow>
                                 ))

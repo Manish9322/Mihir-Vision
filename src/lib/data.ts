@@ -1,6 +1,6 @@
 import { PlaceHolderImages } from './placeholder-images';
 import type { ImagePlaceholder } from './placeholder-images';
-import { BarChart3, Dna, Rocket, Users, Target, Lightbulb, Bot, Check, Package, Award, UsersRound, Globe } from 'lucide-react';
+import { BarChart3, Dna, Rocket, Users, Target, Lightbulb, Bot, Check, Package, Award, UsersRound, Globe, Activity, DollarSign, BookOpen, Mail } from 'lucide-react';
 
 const getImage = (id: string): ImagePlaceholder => {
   const image = PlaceHolderImages.find((img) => img.id === id);
@@ -195,6 +195,22 @@ export const contactsData = {
       date: '2023-06-21',
       status: 'New'
     },
+    {
+      id: '4',
+      name: 'Noah Wilson',
+      email: 'noah.wilson@example.com',
+      message: 'Inquiry about career opportunities.',
+      date: '2023-06-20',
+      status: 'Replied',
+    },
+    {
+      id: '5',
+      name: 'Emma Garcia',
+      email: 'emma.garcia@example.com',
+      message: 'Following up on our conversation from last week.',
+      date: '2023-06-19',
+      status: 'New',
+    },
   ]
 };
 
@@ -207,3 +223,54 @@ export const footerData = {
     { name: 'GitHub', url: '#' },
   ],
 };
+
+export const dashboardData = {
+  stats: [
+    {
+      title: 'Total Visitors',
+      value: '45,231',
+      change: '+20.1%',
+      icon: Users,
+    },
+    {
+      title: 'New Messages',
+      value: '+2,350',
+      change: '+180.1%',
+      icon: Mail,
+    },
+    {
+      title: 'Active Projects',
+      value: '12',
+      change: '+19% from last month',
+      icon: BookOpen,
+    },
+    {
+      title: 'R&D Spend',
+      value: '$5.2M',
+      change: '+3.5%',
+      icon: DollarSign,
+    },
+  ],
+  activities: [
+    {
+      user: 'Admin User',
+      action: 'updated the About section.',
+      timestamp: '2 hours ago',
+    },
+    {
+      user: 'Admin User',
+      action: 'added a new mission to Future Missions.',
+      timestamp: '6 hours ago',
+    },
+    {
+      user: 'Admin User',
+      action: 'replied to a contact message from Sophia Davis.',
+      timestamp: '1 day ago',
+    },
+     {
+      user: 'Admin User',
+      action: 'updated the DNA Timeline with a new event.',
+      timestamp: '2 days ago',
+    },
+  ]
+}
