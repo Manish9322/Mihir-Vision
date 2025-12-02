@@ -71,8 +71,10 @@ export const statsData = {
 };
 
 export const growthChartData = {
-  title: 'Growth Overview',
-  subheadline: 'Projects and patents filed over the years',
+  title: 'Our Trajectory of Innovation',
+  subheadline: 'The chart below illustrates our consistent growth in key areas of innovation, reflecting our commitment to pushing boundaries and achieving new milestones.',
+  chartTitle: 'Growth Overview',
+  chartSubheadline: 'Projects and patents filed over the years',
   chartData: [
     { year: '2020', projects: 40, patents: 24 },
     { year: '2021', projects: 30, patents: 13 },

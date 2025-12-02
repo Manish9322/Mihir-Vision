@@ -19,12 +19,20 @@ const chartConfig = {
 
 export default function GrowthChart() {
   return (
-    <section id="growth-chart" className="py-16 md:py-24 bg-secondary">
+    <section id="growth" className="py-16 md:py-24 bg-secondary">
       <div className="container max-w-7xl">
+        <div className="text-center max-w-3xl mx-auto mb-12">
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl font-headline">
+                {growthChartData.title}
+            </h2>
+            <p className="mt-4 text-lg text-muted-foreground">
+                {growthChartData.subheadline}
+            </p>
+        </div>
         <Card>
           <CardHeader>
-            <CardTitle>{growthChartData.title}</CardTitle>
-            <CardDescription>{growthChartData.subheadline}</CardDescription>
+            <CardTitle>{growthChartData.chartTitle}</CardTitle>
+            <CardDescription>{growthChartData.chartSubheadline}</CardDescription>
           </CardHeader>
           <CardContent>
             <ChartContainer config={chartConfig} className="h-[250px] w-full">
