@@ -18,7 +18,7 @@ export default function Hero() {
       <div className="absolute -bottom-1/4 -right-1/4 h-1/2 w-1/2 rounded-full bg-primary/10 blur-3xl" />
 
       <div className="relative z-10 flex h-full flex-col items-center justify-center">
-        <div className="container max-w-7xl px-4 text-center mt-10 sm:mt-10">
+        <div className="container px-4 text-center mt-0 sm:mt-0">
           <h1 className="animate-fade-in-up text-4xl font-extrabold tracking-tighter text-foreground sm:text-5xl lg:text-6xl/none">
             {heroData.headline}
           </h1>
@@ -50,7 +50,7 @@ export default function Hero() {
           </div>
         </div>
 
-        <div className="container max-w-7xl mt-20 md:mt-28 pb-16 md:pb-24">
+        <div className="container max-w-7xl mt-12 md:mt-16 pb-16 md:pb-24">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
             {statsData.stats.map((stat) => (
                 <Card key={stat.label} className="flex flex-col items-center justify-center p-6 bg-background/30 border-0 backdrop-blur-sm">
