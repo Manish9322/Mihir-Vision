@@ -25,12 +25,12 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 const navItems = [
     { href: "/admin/dashboard", icon: LayoutDashboard, label: "Dashboard" },
     { href: "/admin/dashboard?page=hero", icon: ImageIcon, label: "Hero" },
-    { href: "/admin/dashboard?page=about", icon: BookText, label: "About" },
-    { href: "/admin/dashboard?page=activities", icon: Settings, label: "Activities" },
+    { href: "/admin/about", icon: BookText, label: "About" },
+    { href: "/admin/activities", icon: Settings, label: "Activities" },
+    { href: "/admin/missions", icon: Rocket, label: "Missions" },
+    { href: "/admin/timeline", icon: Milestone, label: "Timeline" },
     { href: "/admin/contacts", icon: Users, label: "Contacts" },
     { href: "#", icon: LineChart, label: "Stats" },
-    { href: "#", icon: Rocket, label: "Missions" },
-    { href: "#", icon: Milestone, label: "Timeline" },
 ]
 
 export default function AdminLayout({
