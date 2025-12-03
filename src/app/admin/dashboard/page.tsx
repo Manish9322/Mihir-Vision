@@ -1,10 +1,6 @@
 'use client';
 import {
-    Activity,
     ArrowUpRight,
-    BookText,
-    Mail,
-    Users,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -55,7 +51,7 @@ const chartConfig = {
 const AdminDashboardPage = () => {
     return (
         <div className="flex flex-col gap-4 md:gap-8">
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 {dashboardData.stats.map(stat => (
                     <Card key={stat.title}>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
