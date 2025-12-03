@@ -85,7 +85,7 @@ export default function GrowthChart() {
                     <CardDescription>{growthChartData.chartSubheadline}</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <ChartContainer config={chartConfig} className="h-[250px] w-full">
+                    <ChartContainer config={chartConfig} className="h-[200px] md:h-[250px] w-full">
                         <BarChart data={filteredData} accessibilityLayer>
                             <CartesianGrid vertical={false} />
                             <XAxis
@@ -113,7 +113,7 @@ export default function GrowthChart() {
                     <CardDescription>Millions of USD invested per year.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                     <ChartContainer config={chartConfig} className="h-[250px] w-full">
+                     <ChartContainer config={chartConfig} className="h-[200px] md:h-[250px] w-full">
                         <LineChart data={filteredData} accessibilityLayer>
                             <CartesianGrid vertical={false} />
                              <XAxis
