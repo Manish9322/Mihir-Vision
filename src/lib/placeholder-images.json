@@ -65,6 +65,42 @@
       "description": "Abstract visualization of AI network.",
       "imageUrl": "https://images.unsplash.com/photo-1697577418970-95d99b5a55cf?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxhcnRpZmljaWFsJTIwaW50ZWxsaWdlbmNlfGVufDB8fHx8MTc2NDc0MTQ1Nnww&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "artificial intelligence"
+    },
+    {
+      "id": "gallery-1",
+      "description": "Futuristic soldier in a desolate landscape.",
+      "imageUrl": "https://images.unsplash.com/photo-1759663176507-66ef6ed6d5ca?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxnYW1lJTIwY2hhcmFjdGVyfGVufDB8fHx8MTc2NDcwNzQ0M3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "game character"
+    },
+    {
+      "id": "gallery-2",
+      "description": "Vibrant alien jungle with glowing flora.",
+      "imageUrl": "https://images.unsplash.com/photo-1465056836041-7f43ac27dcb5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxmYW50YXN5JTIwbGFuZHNjYXBlfGVufDB8fHx8MTc2NDcyNjI1OXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "fantasy landscape"
+    },
+    {
+      "id": "gallery-3",
+      "description": "A massive spaceship hangar with workers.",
+      "imageUrl": "https://images.unsplash.com/photo-1669040620781-3227ccd160fa?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxzY2ktZmklMjBpbnRlcmlvcnxlbnwwfHx8fDE3NjQ3NDEyNTl8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "sci-fi interior"
+    },
+    {
+      "id": "gallery-4",
+      "description": "Close-up of a high-tech weapon.",
+      "imageUrl": "https://images.unsplash.com/photo-1617228827249-467df4b55e95?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxzY2ktZmklMjB3ZWFwb258ZW58MHx8fHwxNzY0NzQ0MzkwfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "sci-fi weapon"
+    },
+    {
+      "id": "gallery-5",
+      "description": "A sprawling futuristic city at night.",
+      "imageUrl": "https://images.unsplash.com/photo-1514439827219-9137a0b99245?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxjeWJlcnB1bmslMjBjaXR5fGVufDB8fHx8MTc2NDY4NzU1MHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "cyberpunk city"
+    },
+    {
+      "id": "gallery-6",
+      "description": "A player character overlooking a vast canyon.",
+      "imageUrl": "https://images.unsplash.com/photo-1692685820393-fcf174d59b2f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxhZHZlbnR1cmUlMjBsYW5kc2NhcGV8ZW58MHx8fHwxNzY0NzQ0MzkwfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "adventure landscape"
     }
   ]
 }

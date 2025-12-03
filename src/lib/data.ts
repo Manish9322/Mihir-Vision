@@ -110,6 +110,19 @@ export const futureMissionsData = {
   ],
 };
 
+export const galleryData = {
+    title: 'Screenshot Gallery',
+    subheadline: 'A glimpse into the worlds we are creating. Explore a selection of screenshots from our flagship projects.',
+    images: [
+        getImage('gallery-1'),
+        getImage('gallery-2'),
+        getImage('gallery-3'),
+        getImage('gallery-4'),
+        getImage('gallery-5'),
+        getImage('gallery-6'),
+    ]
+}
+
 export const timelineData = {
   title: 'Our DNA Timeline',
   subheadline: 'A look back at the key milestones that have shaped our journey and defined who we are today.',

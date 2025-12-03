@@ -5,6 +5,7 @@ import About from '@/components/sections/about';
 import Activities from '@/components/sections/activities';
 import GrowthChart from '@/components/sections/growth-chart';
 import FutureMissions from '@/components/sections/future-missions';
+import Gallery from '@/components/sections/gallery';
 import Timeline from '@/components/sections/timeline';
 import Faq from '@/components/sections/faq';
 import Contact from '@/components/sections/contact';
@@ -21,6 +22,7 @@ export default function Home() {
         <Activities />
         <GrowthChart />
         <FutureMissions />
+        <Gallery />
         <Timeline />
         <Faq />
         <Contact />
