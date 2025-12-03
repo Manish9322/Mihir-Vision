@@ -27,7 +27,7 @@ export default function Header() {
         <div className="flex items-center">
           <Link href="/" className="flex items-center gap-2 font-bold">
             <Mountain className="h-6 w-6" />
-            <span className="hidden sm:inline-block font-headline">Pinnacle Pathways</span>
+            <span className="hidden sm:inline-block font-headline"></span>
           </Link>
         </div>
         <nav className="hidden items-center justify-center gap-4 text-sm font-medium lg:flex">
@@ -51,7 +51,7 @@ export default function Header() {
                 <div className="flex items-center justify-between border-b pb-4">
                   <Link href="/" className="flex items-center gap-2 font-bold" onClick={() => setSheetOpen(false)}>
                     <Mountain className="h-6 w-6" />
-                    <span className="font-headline">Pinnacle Pathways</span>
+                    <span className="font-headline"></span>
                   </Link>
                 </div>
                 <nav className="flex flex-col gap-4 py-4">

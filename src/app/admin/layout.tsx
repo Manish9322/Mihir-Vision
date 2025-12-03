@@ -58,7 +58,7 @@ export default function AdminLayout({
                 className="flex items-center gap-2 font-semibold"
             >
                 <Home className="h-6 w-6" />
-                <span>Pinnacle Pathways</span>
+                <span></span>
             </Link>
         </div>
         <div className="flex flex-col justify-between flex-1">
