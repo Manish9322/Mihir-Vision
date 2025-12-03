@@ -11,6 +11,8 @@ const navLinks = [
   { href: '#about', label: 'About' },
   { href: '#activities', label: 'Activities' },
   { href: '#growth', label: 'Growth' },
+  { href: '#video-showcase', label: 'Our Work' },
+  { href: '#gallery', label: 'Gallery' },
   { href: '#missions', label: 'Missions' },
   { href: '#timeline', label: 'Timeline' },
   { href: '#contact', label: 'Contact' },
@@ -22,20 +24,20 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-14 items-center">
-        <div className="mr-4 flex items-center">
+        <div className="flex items-center">
           <Link href="/" className="flex items-center gap-2 font-bold">
             <Mountain className="h-6 w-6" />
             <span className="font-headline">Pinnacle Pathways</span>
           </Link>
         </div>
-        <nav className="hidden items-center gap-4 text-sm font-medium md:flex">
+        <nav className="hidden flex-1 items-center justify-center gap-4 text-sm font-medium md:flex">
           {navLinks.map((link) => (
             <Link key={link.href} href={link.href} className="transition-colors hover:text-foreground/80 text-foreground/60">
               {link.label}
             </Link>
           ))}
         </nav>
-        <div className="flex flex-1 items-center justify-end gap-2">
+        <div className="flex items-center justify-end md:w-auto">
           <ThemeToggle />
           <Button asChild variant="ghost">
             <Link href="/admin">
