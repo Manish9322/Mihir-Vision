@@ -57,21 +57,27 @@ export function VideoPlayer({ video, isLoading }: VideoPlayerProps) {
     };
     
     const handleFullscreenChange = () => {
+      if (document) {
         setIsFullscreen(!!document.fullscreenElement);
+      }
     };
 
 
     videoElement.addEventListener('timeupdate', handleTimeUpdate);
     videoElement.addEventListener('durationchange', handleDurationChange);
     videoElement.addEventListener('ended', handleVideoEnd);
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    if (document) {
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+    }
 
 
     return () => {
       videoElement.removeEventListener('timeupdate', handleTimeUpdate);
       videoElement.removeEventListener('durationchange', handleDurationChange);
       videoElement.removeEventListener('ended', handleVideoEnd);
-      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      if (document) {
+        document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      }
     };
   }, []);
 
@@ -139,6 +145,7 @@ export function VideoPlayer({ video, isLoading }: VideoPlayerProps) {
   };
 
   const formatTime = (time: number) => {
+    if (isNaN(time) || time < 0) return '0:00';
     const minutes = Math.floor(time / 60);
     const seconds = Math.floor(time % 60);
     return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
@@ -192,7 +199,7 @@ export function VideoPlayer({ video, isLoading }: VideoPlayerProps) {
               
               <Slider
                 value={[progress]}
-                max={duration}
+                max={duration || 1}
                 step={1}
                 onValueChange={handleSeek}
                 className="flex-1"
