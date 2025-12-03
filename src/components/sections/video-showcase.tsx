@@ -21,8 +21,8 @@ export default function VideoShowcase() {
                 {videoSectionData.subheadline}
             </p>
         </div>
-        <div className="grid lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2">
+        <div className="grid lg:grid-cols-5 gap-8">
+          <div className="lg:col-span-3">
             <Card className="overflow-hidden border-0">
               <CardContent className="p-0">
                 <div className="relative aspect-video w-full">
@@ -31,7 +31,7 @@ export default function VideoShowcase() {
                     alt={activeVideo.title}
                     fill
                     className="object-cover"
-                    sizes="(max-width: 1024px) 100vw, 67vw"
+                    sizes="(max-width: 1024px) 100vw, 60vw"
                   />
                    <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
                     <PlayCircle className="h-20 w-20 text-white/80 hover:text-white transition-colors cursor-pointer" />
@@ -45,7 +45,7 @@ export default function VideoShowcase() {
             </Card>
           </div>
 
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-2">
             <ScrollArea className="h-[450px] w-full">
                 <div className="space-y-4 pr-4">
                 {videoData.map((video) => (
