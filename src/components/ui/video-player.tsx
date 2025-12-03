@@ -26,20 +26,28 @@ interface VideoPlayerProps {
 export function VideoPlayer({ video, isLoading }: VideoPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [volume, setVolume] = useState(1);
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [showControls, setShowControls] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [areControlsVisible, setAreControlsVisible] = useState(true);
 
   useEffect(() => {
     setIsPlaying(false);
     setIsFinished(false);
     setProgress(0);
   }, [video]);
+
+  const handleFullscreenChange = () => {
+    if (document) {
+      setIsFullscreen(!!document.fullscreenElement);
+    }
+  };
 
   useEffect(() => {
     const videoElement = videoRef.current;
@@ -55,13 +63,6 @@ export function VideoPlayer({ video, isLoading }: VideoPlayerProps) {
       setIsPlaying(false);
       setIsFinished(true);
     };
-    
-    const handleFullscreenChange = () => {
-      if (document) {
-        setIsFullscreen(!!document.fullscreenElement);
-      }
-    };
-
 
     videoElement.addEventListener('timeupdate', handleTimeUpdate);
     videoElement.addEventListener('durationchange', handleDurationChange);
@@ -80,6 +81,36 @@ export function VideoPlayer({ video, isLoading }: VideoPlayerProps) {
       }
     };
   }, []);
+
+  const hideControls = () => {
+    if (controlsTimeoutRef.current) {
+      clearTimeout(controlsTimeoutRef.current);
+    }
+    controlsTimeoutRef.current = setTimeout(() => {
+        if (isPlaying) {
+            setAreControlsVisible(false);
+        }
+    }, 5000);
+  };
+
+  useEffect(() => {
+    if (isFullscreen && isPlaying) {
+      hideControls();
+    } else {
+        if (controlsTimeoutRef.current) {
+            clearTimeout(controlsTimeoutRef.current);
+        }
+        setAreControlsVisible(true);
+    }
+  }, [isFullscreen, isPlaying]);
+
+
+  const handleMouseMove = () => {
+    if (isFullscreen && isPlaying) {
+      setAreControlsVisible(true);
+      hideControls();
+    }
+  };
 
   const togglePlay = () => {
     const videoElement = videoRef.current;
@@ -157,7 +188,7 @@ export function VideoPlayer({ video, isLoading }: VideoPlayerProps) {
   };
 
   return (
-    <Card ref={containerRef} className="overflow-hidden border-0 relative w-full group/player bg-black">
+    <Card ref={containerRef} onMouseMove={handleMouseMove} className="overflow-hidden border-0 relative w-full group/player bg-black">
       <CardContent className="p-0">
         <div className="relative aspect-video w-full">
           <video
@@ -180,7 +211,7 @@ export function VideoPlayer({ video, isLoading }: VideoPlayerProps) {
                 </Button>
               ) : (
                 <Button size="icon" className="h-28 w-28 rounded-full bg-primary/80 dark:bg-transparent text-primary-foreground dark:text-white/80 hover:bg-primary dark:hover:text-white pointer-events-auto" onClick={togglePlay}>
-                    <Play className="h-20 w-20 fill-current" />
+                    <Play className="h-20 w-20 pl-2 fill-current" />
                 </Button>
               )}
             </div>
@@ -189,7 +220,7 @@ export function VideoPlayer({ video, isLoading }: VideoPlayerProps) {
           <div
             className={cn(
               "absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/60 to-transparent transition-opacity duration-300",
-              isPlaying ? "opacity-0 group-hover/player:opacity-100" : "opacity-0"
+              areControlsVisible && (isPlaying || isFullscreen) ? "opacity-100" : "opacity-0"
             )}
           >
             <div className="flex items-center gap-4 text-white">
