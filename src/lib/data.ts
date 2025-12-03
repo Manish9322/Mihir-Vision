@@ -86,8 +86,8 @@ export const growthChartData = {
 
 
 export const futureMissionsData = {
-  title: 'Future Missions',
-  subheadline: 'Our eyes are always on the horizon. These are the next great challenges we aim to conquer.',
+  title: 'Featured Projects',
+  subheadline: 'A showcase of the innovative solutions we\'ve delivered for our clients.',
   missions: [
     {
       image: getImage('mission-1'),
@@ -284,6 +284,16 @@ export const dashboardData = {
       user: 'Admin User',
       action: 'updated the DNA Timeline with a new event.',
       timestamp: '2 days ago',
+    },
+     {
+      user: 'Admin User',
+      action: 'added a new image to the gallery.',
+      timestamp: '3 days ago',
+    },
+    {
+      user: 'Admin User',
+      action: 'updated general site settings.',
+      timestamp: '4 days ago',
     },
   ]
 }

@@ -13,7 +13,7 @@ const navLinks = [
   { href: '#growth', label: 'Growth' },
   { href: '#video-showcase', label: 'Our Work' },
   { href: '#gallery', label: 'Gallery' },
-  { href: '#missions', label: 'Missions' },
+  { href: '#projects', label: 'Projects' },
   { href: '#timeline', label: 'Timeline' },
   { href: '#contact', label: 'Contact' },
 ];

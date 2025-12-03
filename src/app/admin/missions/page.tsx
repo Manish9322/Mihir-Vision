@@ -40,15 +40,15 @@ const MissionForm = ({ mission, onSave }: { mission?: Mission | null, onSave: (m
         };
         onSave(newMission);
         toast({
-            title: `Mission ${mission ? 'Updated' : 'Created'}`,
-            description: `The mission "${title}" has been saved.`,
+            title: `Project ${mission ? 'Updated' : 'Created'}`,
+            description: `The project "${title}" has been saved.`,
         });
     };
 
     return (
         <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-                <Label htmlFor="title">Mission Title</Label>
+                <Label htmlFor="title">Project Title</Label>
                 <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} required />
             </div>
             <div className="space-y-2">
@@ -60,7 +60,7 @@ const MissionForm = ({ mission, onSave }: { mission?: Mission | null, onSave: (m
                 <Input id="tags" value={tags} onChange={(e) => setTags(e.target.value)} />
             </div>
              <div className="space-y-2">
-                <Label>Mission Image</Label>
+                <Label>Project Image</Label>
                 <div className="flex items-center gap-4">
                     <Image src={mission?.image.imageUrl || 'https://placehold.co/150x100'} alt={mission?.title || 'New Mission'} width={150} height={100} className="rounded-md object-cover aspect-video" />
                     <Input type="file" className="max-w-xs" />
@@ -70,7 +70,7 @@ const MissionForm = ({ mission, onSave }: { mission?: Mission | null, onSave: (m
                 <DialogClose asChild>
                     <Button type="button" variant="outline">Cancel</Button>
                 </DialogClose>
-                <Button type="submit">Save Mission</Button>
+                <Button type="submit">Save Project</Button>
             </DialogFooter>
         </form>
     )
@@ -84,7 +84,7 @@ const ViewMissionDialog = ({ mission, open, onOpenChange }: { mission: Mission |
             <DialogContent className="sm:max-w-lg">
                 <DialogHeader>
                     <DialogTitle>{mission.title}</DialogTitle>
-                    <DialogDescription>Viewing mission details.
+                    <DialogDescription>Viewing project details.
                     </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
@@ -137,7 +137,7 @@ const MissionsAdminPage = () => {
             newMissions.splice(fullIndex + 1, 0, item);
         }
         setMissions(newMissions);
-        toast({ title: 'Mission reordered successfully!' });
+        toast({ title: 'Project reordered successfully!' });
     };
 
     const handleAddClick = () => {
@@ -164,8 +164,8 @@ const MissionsAdminPage = () => {
         setMissions(newMissions);
         toast({
             variant: "destructive",
-            title: "Mission Deleted",
-            description: "The mission has been removed.",
+            title: "Project Deleted",
+            description: "The project has been removed.",
         });
     };
     
@@ -182,102 +182,104 @@ const MissionsAdminPage = () => {
 
 
     return (
-        <Card>
-            <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div>
-                    <CardTitle>Future Missions</CardTitle>
-                    <CardDescription>Manage the content of the "Future Missions" section.</CardDescription>
-                </div>
-                <Button onClick={handleAddClick}>
-                    <PlusCircle className="mr-2 h-4 w-4" /> Add Mission
-                </Button>
-            </CardHeader>
-            <CardContent>
-                <Card className="border">
-                     <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead className="w-[50px]"></TableHead>
-                                <TableHead className="w-[120px] hidden md:table-cell">Image</TableHead>
-                                <TableHead>Title</TableHead>
-                                <TableHead className="hidden sm:table-cell">Description</TableHead>
-                                <TableHead className="text-right">Actions</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {paginatedMissions.length > 0 ? paginatedMissions.map((mission, index) => (
-                                <TableRow key={index}>
-                                     <TableCell className="text-center align-middle">
-                                        <div className="flex flex-col items-center gap-1">
-                                             <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleMove(index, 'up')} disabled={(currentPage - 1) * ITEMS_PER_PAGE + index === 0}>
-                                                <ArrowUp className="h-4 w-4" />
-                                            </Button>
-                                            <GripVertical className="h-4 w-4 text-muted-foreground" />
-                                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleMove(index, 'down')} disabled={(currentPage - 1) * ITEMS_PER_PAGE + index === missions.length - 1}>
-                                                <ArrowDown className="h-4 w-4" />
-                                            </Button>
-                                        </div>
-                                    </TableCell>
-                                    <TableCell className="hidden md:table-cell">
-                                        <Image src={mission.image.imageUrl} alt={mission.title} width={100} height={60} className="rounded-md object-cover aspect-video" />
-                                    </TableCell>
-                                    <TableCell className="font-medium">{mission.title}</TableCell>
-                                    <TableCell className="hidden sm:table-cell text-muted-foreground truncate max-w-xs">{mission.description}</TableCell>
-                                    <TableCell className="text-right">
-                                         <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button size="icon" variant="ghost">
-                                                    <MoreHorizontal className="h-4 w-4" />
-                                                </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end">
-                                                <DropdownMenuItem onClick={() => handleViewClick(mission)}>
-                                                    <Eye className="mr-2 h-4 w-4" />
-                                                    View
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem onClick={() => handleEditClick(mission, index)}>
-                                                    <FilePenLine className="mr-2 h-4 w-4" />
-                                                    Edit
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(index)}>
-                                                    <Trash2 className="mr-2 h-4 w-4" />
-                                                    Delete
-                                                </DropdownMenuItem>
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
-                                    </TableCell>
-                                </TableRow>
-                            )) : (
-                                <TableRow>
-                                    <TableCell colSpan={5} className="h-24 text-center">No missions found.</TableCell>
-                                </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
-                     <div className="flex items-center justify-between border-t p-4">
-                        <div className="text-xs text-muted-foreground">
-                            Showing <strong>{(currentPage - 1) * ITEMS_PER_PAGE + 1}-{(currentPage - 1) * ITEMS_PER_PAGE + paginatedMissions.length}</strong> of <strong>{missions.length}</strong> missions
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Button variant="outline" size="sm" onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1}>
-                                <ChevronLeft className="h-4 w-4" />
-                                <span className="sr-only">Previous</span>
-                            </Button>
-                            <Button variant="outline" size="sm" onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages}>
-                                <span className="sr-only">Next</span>
-                                <ChevronRight className="h-4 w-4" />
-                            </Button>
-                        </div>
+        <>
+            <Card>
+                <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div>
+                        <CardTitle>Featured Projects</CardTitle>
+                        <CardDescription>Manage the content of the "Featured Projects" section.</CardDescription>
                     </div>
-                </Card>
-            </CardContent>
+                    <Button onClick={handleAddClick}>
+                        <PlusCircle className="mr-2 h-4 w-4" /> Add Project
+                    </Button>
+                </CardHeader>
+                <CardContent>
+                    <Card className="border">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead className="w-[50px]"></TableHead>
+                                    <TableHead className="w-[120px] hidden md:table-cell">Image</TableHead>
+                                    <TableHead>Title</TableHead>
+                                    <TableHead className="hidden sm:table-cell">Description</TableHead>
+                                    <TableHead className="text-right">Actions</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {paginatedMissions.length > 0 ? paginatedMissions.map((mission, index) => (
+                                    <TableRow key={index}>
+                                        <TableCell className="text-center align-middle">
+                                            <div className="flex flex-col items-center gap-1">
+                                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleMove(index, 'up')} disabled={(currentPage - 1) * ITEMS_PER_PAGE + index === 0}>
+                                                    <ArrowUp className="h-4 w-4" />
+                                                </Button>
+                                                <GripVertical className="h-4 w-4 text-muted-foreground" />
+                                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleMove(index, 'down')} disabled={(currentPage - 1) * ITEMS_PER_PAGE + index === missions.length - 1}>
+                                                    <ArrowDown className="h-4 w-4" />
+                                                </Button>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="hidden md:table-cell">
+                                            <Image src={mission.image.imageUrl} alt={mission.title} width={100} height={60} className="rounded-md object-cover aspect-video" />
+                                        </TableCell>
+                                        <TableCell className="font-medium">{mission.title}</TableCell>
+                                        <TableCell className="hidden sm:table-cell text-muted-foreground truncate max-w-xs">{mission.description}</TableCell>
+                                        <TableCell className="text-right">
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button size="icon" variant="ghost">
+                                                        <MoreHorizontal className="h-4 w-4" />
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end">
+                                                    <DropdownMenuItem onClick={() => handleViewClick(mission)}>
+                                                        <Eye className="mr-2 h-4 w-4" />
+                                                        View
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => handleEditClick(mission, index)}>
+                                                        <FilePenLine className="mr-2 h-4 w-4" />
+                                                        Edit
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(index)}>
+                                                        <Trash2 className="mr-2 h-4 w-4" />
+                                                        Delete
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        </TableCell>
+                                    </TableRow>
+                                )) : (
+                                    <TableRow>
+                                        <TableCell colSpan={5} className="h-24 text-center">No projects found.</TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                        <div className="flex items-center justify-between border-t p-4">
+                            <div className="text-xs text-muted-foreground">
+                                Showing <strong>{(currentPage - 1) * ITEMS_PER_PAGE + 1}-{(currentPage - 1) * ITEMS_PER_PAGE + paginatedMissions.length}</strong> of <strong>{missions.length}</strong> projects
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Button variant="outline" size="sm" onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1}>
+                                    <ChevronLeft className="h-4 w-4" />
+                                    <span className="sr-only">Previous</span>
+                                </Button>
+                                <Button variant="outline" size="sm" onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages}>
+                                    <span className="sr-only">Next</span>
+                                    <ChevronRight className="h-4 w-4" />
+                                </Button>
+                            </div>
+                        </div>
+                    </Card>
+                </CardContent>
+            </Card>
 
             <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
                 <DialogContent className="sm:max-w-lg">
                     <DialogHeader>
-                        <DialogTitle>{selectedMission ? 'Edit Mission' : 'Add New Mission'}</DialogTitle>
+                        <DialogTitle>{selectedMission ? 'Edit Project' : 'Add New Project'}</DialogTitle>
                         <DialogDescription>
-                            {selectedMission ? 'Make changes to this mission.' : 'Fill out the details for the new mission.'}
+                            {selectedMission ? 'Make changes to this project.' : 'Fill out the details for the new project.'}
                         </DialogDescription>
                     </DialogHeader>
                     <MissionForm mission={selectedMission} onSave={handleSave} />
@@ -285,8 +287,7 @@ const MissionsAdminPage = () => {
             </Dialog>
 
             <ViewMissionDialog mission={selectedMission} open={isViewOpen} onOpenChange={setIsViewOpen} />
-
-        </Card>
+        </>
     );
 }
 

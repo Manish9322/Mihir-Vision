@@ -14,7 +14,6 @@ import {
   LogOut,
   Clapperboard,
   GalleryHorizontal,
-  Mountain,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -46,7 +45,7 @@ const navItems = [
     { href: "/admin/dashboard", icon: LayoutDashboard, label: "Dashboard" },
     { href: "/admin/about", icon: BookText, label: "About" },
     { href: "/admin/activities", icon: Settings, label: "Activities" },
-    { href: "/admin/missions", icon: Rocket, label: "Missions" },
+    { href: "/admin/missions", icon: Rocket, label: "Projects" },
     { href: "/admin/timeline", icon: Milestone, label: "Timeline" },
     { href: "/admin/videos", icon: Clapperboard, label: "Videos"},
     { href: "/admin/gallery", icon: GalleryHorizontal, label: "Gallery"},
