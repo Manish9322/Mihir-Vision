@@ -78,14 +78,14 @@ export default function GrowthChart() {
            </div>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <Card>
                 <CardHeader>
                     <CardTitle>{growthChartData.chartTitle}</CardTitle>
                     <CardDescription>{growthChartData.chartSubheadline}</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <ChartContainer config={chartConfig} className="h-[200px] md:h-[250px] w-full">
+                    <ChartContainer config={chartConfig} className="h-[250px] md:h-[300px] w-full">
                         <BarChart data={filteredData} accessibilityLayer>
                             <CartesianGrid vertical={false} />
                             <XAxis
@@ -113,7 +113,7 @@ export default function GrowthChart() {
                     <CardDescription>Millions of USD invested per year.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                     <ChartContainer config={chartConfig} className="h-[200px] md:h-[250px] w-full">
+                     <ChartContainer config={chartConfig} className="h-[250px] md:h-[300px] w-full">
                         <LineChart data={filteredData} accessibilityLayer>
                             <CartesianGrid vertical={false} />
                              <XAxis
