@@ -87,23 +87,26 @@ export const growthChartData = {
 
 export const futureMissionsData = {
   title: 'Featured Projects',
-  subheadline: 'A showcase of the innovative solutions we\'ve delivered for our clients.',
+  subheadline: "A showcase of the innovative solutions we've delivered for our clients.",
   missions: [
     {
       image: getImage('mission-1'),
       title: 'Project Nebula',
+      slug: 'project-nebula',
       description: 'Developing a decentralized global communication network to connect the unconnected.',
       tags: ['Connectivity', 'Decentralization'],
     },
     {
       image: getImage('mission-2'),
       title: 'Project Terra',
+      slug: 'project-terra',
       description: 'Creating sustainable urban ecosystems using AI-driven resource management.',
       tags: ['Sustainability', 'AI', 'Smart Cities'],
     },
     {
       image: getImage('mission-3'),
       title: 'Project Chimera',
+      slug: 'project-chimera',
       description: 'Advancing personalized medicine through rapid genomic sequencing and analysis.',
       tags: ['Biotechnology', 'Healthcare'],
     },

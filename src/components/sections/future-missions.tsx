@@ -45,8 +45,10 @@ export default function FutureMissions() {
                     ))}
                     </div>
                 </div>
-                <Button variant="link" className="p-0 h-auto self-start">
-                  Learn More <ArrowRight className="ml-1 h-4 w-4" />
+                <Button asChild variant="link" className="p-0 h-auto self-start">
+                  <Link href={`/projects/${mission.slug}`}>
+                    Learn More <ArrowRight className="ml-1 h-4 w-4" />
+                  </Link>
                 </Button>
               </CardContent>
             </Card>
