@@ -44,30 +44,30 @@ export default function VideoShowcase() {
 
           <div className="lg:col-span-2">
             <ScrollArea className="h-[400px] w-full pr-4 scrollbar-hide">
-              <div className="space-y-4">
+              <div className="space-y-2 md:space-y-4">
                 {videoData.map((video) => (
                   <Card
                     key={video.id}
-                    className={`flex items-center gap-4 p-3 cursor-pointer transition-all shadow-sm ${
+                    className={`flex items-center gap-4 p-2 md:p-3 cursor-pointer transition-all shadow-sm ${
                       activeVideo.id === video.id ? 'bg-primary/10 border-primary' : 'bg-secondary/50'
                     }`}
                     onClick={() => handleVideoSelect(video)}
                   >
-                    <div className="relative h-16 w-28 flex-shrink-0 overflow-hidden rounded-md">
+                    <div className="relative h-14 w-24 md:h-16 md:w-28 flex-shrink-0 overflow-hidden rounded-md">
                       <Image
                         src={video.thumbnail.imageUrl}
                         alt={video.title}
                         fill
                         className="object-cover"
-                        sizes="7rem"
+                        sizes="6rem"
                       />
                     </div>
-                    <div className="flex-grow min-w-0">
+                    <div className="hidden sm:block flex-grow min-w-0">
                       <h4 className="font-semibold text-sm truncate">{video.title}</h4>
                       <span className="text-xs text-muted-foreground">{video.duration}</span>
                     </div>
                     <PlayCircle
-                      className={`h-6 w-6 flex-shrink-0 transition-colors ${
+                      className={`hidden sm:block h-6 w-6 flex-shrink-0 transition-colors ${
                         activeVideo.id === video.id ? 'text-primary' : 'text-muted-foreground/50'
                       }`}
                     />
