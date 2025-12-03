@@ -4,7 +4,7 @@ import VideoShowcase from '@/components/sections/video-showcase';
 import About from '@/components/sections/about';
 import Activities from '@/components/sections/activities';
 import GrowthChart from '@/components/sections/growth-chart';
-import FutureMissions from '@/components/sections/future-missions';
+import FeaturedProjects from '@/components/sections/featured-projects';
 import Gallery from '@/components/sections/gallery';
 import Timeline from '@/components/sections/timeline';
 import Faq from '@/components/sections/faq';
@@ -22,7 +22,7 @@ export default function Home() {
         <GrowthChart />
         <VideoShowcase />
         <Gallery />
-        <FutureMissions />
+        <FeaturedProjects />
         <Timeline />
         <Faq />
         <Contact />

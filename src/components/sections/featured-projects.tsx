@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { Button } from '../ui/button';
 import { ArrowRight } from 'lucide-react';
 
-export default function FutureMissions() {
+export default function FeaturedProjects() {
   return (
     <section id="projects" className="py-16 md:py-24 bg-background">
       <div className="container max-w-7xl">
