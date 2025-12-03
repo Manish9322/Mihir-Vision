@@ -14,6 +14,11 @@ const getImage = (id: string): ImagePlaceholder => {
   return image;
 };
 
+export const videoSectionData = {
+    title: 'Explore Our Work',
+    subheadline: 'A showcase of our latest projects, breakthroughs, and team stories. Click on any video to play.'
+}
+
 export type VideoInfo = {
   id: string;
   title: string;

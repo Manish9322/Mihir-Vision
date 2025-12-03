@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import { videoData } from '@/lib/video-data';
+import { videoData, videoSectionData } from '@/lib/video-data';
 import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { PlayCircle } from 'lucide-react';
@@ -13,6 +13,14 @@ export default function VideoShowcase() {
   return (
     <section id="video-showcase" className="py-16 md:py-24 bg-background">
       <div className="container max-w-7xl">
+        <div className="text-center max-w-3xl mx-auto mb-12">
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl font-headline">
+                {videoSectionData.title}
+            </h2>
+            <p className="mt-4 text-lg text-muted-foreground">
+                {videoSectionData.subheadline}
+            </p>
+        </div>
         <div className="grid lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
             <Card className="overflow-hidden border-0">
@@ -23,7 +31,7 @@ export default function VideoShowcase() {
                     alt={activeVideo.title}
                     fill
                     className="object-cover"
-                    sizes="(max-width: 1024px) 100vw, 60vw"
+                    sizes="(max-width: 1024px) 100vw, 67vw"
                   />
                    <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
                     <PlayCircle className="h-20 w-20 text-white/80 hover:text-white transition-colors cursor-pointer" />
