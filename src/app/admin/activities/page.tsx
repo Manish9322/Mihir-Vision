@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -7,34 +7,40 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
-import { activitiesData } from '@/lib/data';
-import { PlusCircle, Trash2, ArrowUp, ArrowDown, GripVertical, ChevronLeft, ChevronRight, MoreHorizontal, FilePenLine, Eye } from 'lucide-react';
+import { PlusCircle, Trash2, ArrowUp, ArrowDown, GripVertical, ChevronLeft, ChevronRight, MoreHorizontal, FilePenLine, Eye, Loader2, Rocket } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { useGetActivitiesDataQuery, useUpdateActivitiesDataMutation } from '@/services/api';
 
 type Activity = {
-    icon: LucideIcon;
+    _id?: string;
+    icon: string; // Storing icon name as string
     title: string;
     description: string;
 };
 
+const iconMap: { [key: string]: LucideIcon } = {
+    Rocket: Rocket,
+    // ... add other icons as needed
+};
+
 const ITEMS_PER_PAGE = 3;
 
-const ActivityForm = ({ activity, onSave }: { activity?: Activity | null, onSave: (activity: Activity) => void }) => {
+const ActivityForm = ({ activity, onSave }: { activity?: Activity | null, onSave: (activity: Omit<Activity, '_id'>) => void }) => {
     const [title, setTitle] = useState(activity?.title || '');
     const [description, setDescription] = useState(activity?.description || '');
     const { toast } = useToast();
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        const newActivity: Activity = {
+        const newActivity: Omit<Activity, '_id'> = {
             title,
             description,
-            icon: activity?.icon || activitiesData.activities[0].icon,
+            icon: activity?.icon || 'Rocket', // Default icon
         };
         onSave(newActivity);
-         toast({
+        toast({
             title: `Activity ${activity ? 'Updated' : 'Created'}`,
             description: `The activity "${title}" has been saved.`,
         });
@@ -62,12 +68,14 @@ const ActivityForm = ({ activity, onSave }: { activity?: Activity | null, onSave
 
 const ViewActivityDialog = ({ activity, open, onOpenChange }: { activity: Activity | null; open: boolean; onOpenChange: (open: boolean) => void; }) => {
     if (!activity) return null;
+    const Icon = iconMap[activity.icon] || Rocket;
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-md">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
+                        <Icon className="h-5 w-5" />
                         {activity.title}
                     </DialogTitle>
                     <DialogDescription>Viewing activity details.</DialogDescription>
@@ -88,19 +96,44 @@ const ViewActivityDialog = ({ activity, open, onOpenChange }: { activity: Activi
 
 const ActivitiesAdminPage = () => {
     const { toast } = useToast();
-    const [items, setItems] = useState<Activity[]>(activitiesData.activities);
+    const { data: activities = [], isLoading: isQueryLoading, isError } = useGetActivitiesDataQuery();
+    const [updateActivities, { isLoading: isMutationLoading }] = useUpdateActivitiesDataMutation();
+    const [items, setItems] = useState<Activity[]>([]);
+
     const [currentPage, setCurrentPage] = useState(1);
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [isViewOpen, setIsViewOpen] = useState(false);
     const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
     const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
+    useEffect(() => {
+        if (activities) {
+            setItems(activities);
+        }
+    }, [activities]);
 
     const totalPages = Math.ceil(items.length / ITEMS_PER_PAGE);
     const paginatedItems = items.slice(
         (currentPage - 1) * ITEMS_PER_PAGE,
         currentPage * ITEMS_PER_PAGE
     );
+    
+    const triggerUpdate = async (updatedItems: Activity[]) => {
+        try {
+            await updateActivities(updatedItems).unwrap();
+            toast({
+                title: `Content Saved`,
+                description: `Activities section has been updated successfully.`,
+            });
+        } catch (error) {
+            toast({
+                variant: 'destructive',
+                title: `Save Failed`,
+                description: `There was an error saving the activities.`,
+            });
+        }
+    };
+
 
     const handleMove = (index: number, direction: 'up' | 'down') => {
         const fullIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;
@@ -115,6 +148,7 @@ const ActivitiesAdminPage = () => {
             newItems.splice(fullIndex + 1, 0, item);
         }
         setItems(newItems);
+        triggerUpdate(newItems);
     };
 
     const handleAddClick = () => {
@@ -139,6 +173,7 @@ const ActivitiesAdminPage = () => {
         const fullIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;
         const newItems = items.filter((_, i) => i !== fullIndex);
         setItems(newItems);
+        triggerUpdate(newItems);
         toast({
             variant: "destructive",
             title: "Activity Deleted",
@@ -146,16 +181,31 @@ const ActivitiesAdminPage = () => {
         });
     };
     
-    const handleSave = (activity: Activity) => {
+    const handleSave = (activityData: Omit<Activity, '_id'>) => {
+        let newItems: Activity[];
         if (editingIndex !== null) {
-            const newItems = [...items];
-            newItems[editingIndex] = activity;
-            setItems(newItems);
+            newItems = [...items];
+            newItems[editingIndex] = { ...newItems[editingIndex], ...activityData };
         } else {
-            setItems([activity, ...items]);
+            const newActivity = { ...activityData, _id: `new_${Date.now()}`};
+            newItems = [newActivity, ...items];
         }
+        setItems(newItems);
+        triggerUpdate(newItems);
         setIsFormOpen(false);
     };
+
+     if (isQueryLoading) {
+        return (
+            <div className="flex items-center justify-center h-full">
+                <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+        );
+    }
+    
+    if (isError) {
+        return <div>Error loading data. Please try again.</div>;
+    }
 
     return (
         <>
@@ -167,7 +217,7 @@ const ActivitiesAdminPage = () => {
                             Manage the items in the "What We Do" section.
                         </CardDescription>
                     </div>
-                     <Button onClick={handleAddClick}>
+                     <Button onClick={handleAddClick} disabled={isMutationLoading}>
                         <PlusCircle className="mr-2 h-4 w-4" /> Add Activity
                     </Button>
                 </CardHeader>
@@ -187,14 +237,14 @@ const ActivitiesAdminPage = () => {
                                     <TableBody>
                                         {paginatedItems.map((activity, index) => {
                                             return (
-                                                <TableRow key={index}>
+                                                <TableRow key={activity._id || index}>
                                                     <TableCell className="text-center align-middle">
                                                         <div className="flex flex-col items-center gap-1">
-                                                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleMove(index, 'up')} disabled={(currentPage - 1) * ITEMS_PER_PAGE + index === 0}>
+                                                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleMove(index, 'up')} disabled={isMutationLoading || (currentPage - 1) * ITEMS_PER_PAGE + index === 0}>
                                                                 <ArrowUp className="h-4 w-4" />
                                                             </Button>
                                                             <GripVertical className="h-4 w-4 text-muted-foreground" />
-                                                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleMove(index, 'down')} disabled={(currentPage - 1) * ITEMS_PER_PAGE + index === items.length - 1}>
+                                                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleMove(index, 'down')} disabled={isMutationLoading || (currentPage - 1) * ITEMS_PER_PAGE + index === items.length - 1}>
                                                                 <ArrowDown className="h-4 w-4" />
                                                             </Button>
                                                         </div>
@@ -204,7 +254,7 @@ const ActivitiesAdminPage = () => {
                                                     <TableCell className="text-right">
                                                         <DropdownMenu>
                                                             <DropdownMenuTrigger asChild>
-                                                                <Button size="icon" variant="ghost">
+                                                                <Button size="icon" variant="ghost" disabled={isMutationLoading}>
                                                                     <MoreHorizontal className="h-4 w-4" />
                                                                 </Button>
                                                             </DropdownMenuTrigger>
@@ -229,6 +279,11 @@ const ActivitiesAdminPage = () => {
                                         })}
                                     </TableBody>
                                 </Table>
+                                {isMutationLoading && (
+                                    <div className="absolute inset-0 bg-background/50 flex items-center justify-center">
+                                        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                                    </div>
+                                )}
                                 <div className="flex items-center justify-between border-t p-4">
                                     <div className="text-xs text-muted-foreground">
                                         Showing <strong>{(currentPage - 1) * ITEMS_PER_PAGE + 1}-{(currentPage - 1) * ITEMS_PER_PAGE + paginatedItems.length}</strong> of <strong>{items.length}</strong> items
@@ -268,5 +323,3 @@ const ActivitiesAdminPage = () => {
 }
 
 export default ActivitiesAdminPage;
-
-    
