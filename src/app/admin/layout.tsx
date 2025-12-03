@@ -1,10 +1,8 @@
 import Link from 'next/link';
 import {
-  Home,
   LayoutDashboard,
   PanelLeft,
   Settings,
-  Image as ImageIcon,
   BookText,
   LineChart,
   Rocket,
@@ -15,6 +13,7 @@ import {
   LogOut,
   Clapperboard,
   GalleryHorizontal,
+  Mountain,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -56,7 +55,7 @@ export default function AdminLayout({
                 href="/"
                 className="flex items-center gap-2 font-semibold"
             >
-                <Home className="h-6 w-6" />
+                <Mountain className="h-6 w-6" />
                 <span></span>
             </Link>
         </div>
@@ -108,7 +107,7 @@ export default function AdminLayout({
                   href="/"
                   className="group flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:text-base"
                 >
-                  <Home className="h-5 w-5 transition-all group-hover:scale-110" />
+                  <Mountain className="h-5 w-5 transition-all group-hover:scale-110" />
                   <span className="sr-only">Pinnacle Pathways</span>
                 </Link>
                 {navItems.map(item => (
