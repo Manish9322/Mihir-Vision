@@ -11,12 +11,14 @@ import { PlusCircle, Trash2, ArrowUp, ArrowDown, GripVertical, ChevronLeft, Chev
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useGetFaqDataQuery, useUpdateFaqDataMutation } from '@/services/api';
+import { Switch } from '@/components/ui/switch';
 
 
 type FAQ = {
     _id?: string;
     question: string;
     answer: string;
+    isVisible: boolean;
 };
 
 const ITEMS_PER_PAGE = 3;
@@ -28,7 +30,7 @@ const FaqForm = ({ faq, onSave }: { faq?: FAQ | null, onSave: (faq: Omit<FAQ, '_
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        const newFaq: Omit<FAQ, '_id'> = { question, answer };
+        const newFaq: Omit<FAQ, '_id'> = { question, answer, isVisible: faq?.isVisible ?? true };
         onSave(newFaq);
         toast({
             title: `FAQ ${faq ? 'Updated' : 'Created'}`,
@@ -179,6 +181,14 @@ const FaqAdminPage = () => {
         triggerUpdate(newItems);
         setIsFormOpen(false);
     };
+
+    const handleVisibilityChange = (index: number, isVisible: boolean) => {
+        const fullIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;
+        const newItems = [...items];
+        newItems[fullIndex].isVisible = isVisible;
+        setItems(newItems);
+        triggerUpdate(newItems);
+    }
     
     if (isQueryLoading) {
         return (
@@ -212,6 +222,7 @@ const FaqAdminPage = () => {
                                     <TableHead className="w-[50px]"></TableHead>
                                     <TableHead>Question</TableHead>
                                     <TableHead className="hidden md:table-cell">Answer</TableHead>
+                                    <TableHead className="w-[100px]">Visible</TableHead>
                                     <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -231,6 +242,13 @@ const FaqAdminPage = () => {
                                         </TableCell>
                                         <TableCell className="font-medium max-w-xs truncate">{faq.question}</TableCell>
                                         <TableCell className="hidden md:table-cell text-muted-foreground truncate max-w-sm">{faq.answer}</TableCell>
+                                        <TableCell>
+                                            <Switch
+                                                checked={faq.isVisible}
+                                                onCheckedChange={(checked) => handleVisibilityChange(index, checked)}
+                                                disabled={isMutationLoading}
+                                            />
+                                        </TableCell>
                                         <TableCell className="text-right">
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>

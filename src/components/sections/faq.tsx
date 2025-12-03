@@ -11,6 +11,7 @@ type FAQ = {
     _id?: string;
     question: string;
     answer: string;
+    isVisible: boolean;
 };
 
 const faqSectionData = {
@@ -37,7 +38,7 @@ async function getFaqData(): Promise<FAQ[] | null> {
         }
 
         const data = await res.json();
-        return data;
+        return data.filter(faq => faq.isVisible);
     } catch (error) {
         console.error('An error occurred while fetching FAQ data:', error);
         return null;

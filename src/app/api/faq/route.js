@@ -6,22 +6,26 @@ const seedFaqs = [
     {
         question: 'What is the primary focus of Pinnacle Pathways?',
         answer: 'Our primary focus is on pioneering solutions for next-generation challenges through advanced research, technology development, and strategic partnerships. We aim to create a significant impact in areas like connectivity, sustainability, and healthcare.',
-        order: 0
+        order: 0,
+        isVisible: true,
     },
     {
         question: 'How can my organization partner with you?',
         answer: 'We are always open to collaborating with organizations that share our vision. Please reach out to us via our contact form with your proposal, and our partnerships team will get back to you to discuss potential synergies.',
-        order: 1
+        order: 1,
+        isVisible: true,
     },
     {
         question: 'Are you currently hiring?',
         answer: 'We are constantly looking for talented individuals to join our team. Please visit our careers page for open positions and information on how to apply. We look for passionate innovators from diverse backgrounds.',
-        order: 2
+        order: 2,
+        isVisible: true,
     },
     {
         question: 'What are some of your key technological achievements?',
         answer: 'One of our key achievements was the development of a proprietary algorithm that revolutionized data processing. We have also made significant strides in AI integration and are leading research in decentralized communication networks.',
-        order: 3
+        order: 3,
+        isVisible: true,
     },
 ];
 
