@@ -30,3 +30,18 @@ export async function GET() {
     return NextResponse.json({ message: 'Error fetching about data.', error: error.message }, { status: 500 });
   }
 }
+
+export async function POST(request) {
+    try {
+        await _db();
+        const body = await request.json();
+        const updatedAbout = await About.findOneAndUpdate({}, body, {
+            new: true,
+            upsert: true, 
+            runValidators: true,
+        });
+        return NextResponse.json(updatedAbout, { status: 200 });
+    } catch (error) {
+        return NextResponse.json({ message: 'Error updating about data.', error: error.message }, { status: 500 });
+    }
+}

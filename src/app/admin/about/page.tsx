@@ -5,21 +5,63 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { aboutData } from '@/lib/data';
-import { PlusCircle, Trash2 } from 'lucide-react';
+import { aboutData as initialAboutData } from '@/lib/data';
+import { useGetAboutDataQuery, useUpdateAboutDataMutation } from '@/services/api';
+import { PlusCircle, Trash2, Loader2 } from 'lucide-react';
 import Image from 'next/image';
+import { useForm, useFieldArray, Controller } from 'react-hook-form';
+import { useEffect } from 'react';
 
 const AboutAdminPage = () => {
     const { toast } = useToast();
+    const { data: aboutData, isLoading: isQueryLoading, isError } = useGetAboutDataQuery();
+    const [updateAboutData, { isLoading: isMutationLoading }] = useUpdateAboutDataMutation();
+    
+    const { register, control, handleSubmit, reset, watch } = useForm({
+        defaultValues: aboutData || initialAboutData
+    });
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        toast({
-            title: `Content Saved`,
-            description: `About section has been updated.`,
-        });
+    const { fields, append, remove } = useFieldArray({
+        control,
+        name: "highlights",
+    });
+
+    const watchedImage = watch("image.imageUrl", aboutData?.image.imageUrl);
+
+    useEffect(() => {
+        if (aboutData) {
+            reset(aboutData);
+        }
+    }, [aboutData, reset]);
+
+    const onSubmit = async (data) => {
+        try {
+            await updateAboutData(data).unwrap();
+            toast({
+                title: `Content Saved`,
+                description: `About section has been updated successfully.`,
+            });
+        } catch (error) {
+            toast({
+                variant: 'destructive',
+                title: `Save Failed`,
+                description: `There was an error saving the about section.`,
+            });
+        }
     };
     
+    if (isQueryLoading) {
+        return (
+            <div className="flex items-center justify-center h-full">
+                <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+        );
+    }
+    
+    if (isError) {
+        return <div>Error loading data.</div>;
+    }
+
     return (
         <Card>
             <CardHeader>
@@ -29,33 +71,33 @@ const AboutAdminPage = () => {
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                     <div className="space-y-2">
                         <Label htmlFor="about-title">Title</Label>
-                        <Input id="about-title" defaultValue={aboutData.title} />
+                        <Input id="about-title" {...register("title")} />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="about-p1">Paragraph</Label>
-                        <Textarea id="about-p1" defaultValue={aboutData.paragraph1} rows={4} />
+                        <Textarea id="about-p1" {...register("paragraph1")} rows={4} />
                     </div>
 
                     <div className="space-y-4">
                         <Label>Highlights</Label>
-                        {aboutData.highlights.map((highlight, index) => (
-                            <Card key={index} className="p-4">
+                        {fields.map((field, index) => (
+                            <Card key={field.id} className="p-4">
                                 <div className="flex items-center gap-4">
-                                    <Input
-                                        id={`highlight-${index}`}
-                                        defaultValue={highlight}
-                                        className="flex-grow"
+                                    <Controller
+                                        render={({ field }) => <Input {...field} className="flex-grow" />}
+                                        name={`highlights.${index}`}
+                                        control={control}
                                     />
-                                    <Button variant="outline" size="icon">
+                                    <Button variant="outline" size="icon" onClick={() => remove(index)}>
                                         <Trash2 className="h-4 w-4" />
                                     </Button>
                                 </div>
                             </Card>
                         ))}
-                         <Button variant="outline" className="w-full">
+                         <Button variant="outline" type="button" className="w-full" onClick={() => append("")}>
                             <PlusCircle className="mr-2 h-4 w-4" />
                             Add Highlight
                         </Button>
@@ -65,12 +107,15 @@ const AboutAdminPage = () => {
                         <Label>Image</Label>
                         <Card className='p-2'>
                             <div className="relative aspect-[4/3] w-full max-w-sm rounded-md overflow-hidden">
-                                <Image src={aboutData.image.imageUrl} alt="About section image" fill className='object-cover' />
+                                <Image src={watchedImage} alt="About section image" fill className='object-cover' />
                             </div>
                             <Input type="file" className="mt-2" />
                         </Card>
                     </div>
-                    <Button type="submit">Save Changes</Button>
+                    <Button type="submit" disabled={isMutationLoading}>
+                        {isMutationLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Save Changes
+                    </Button>
                 </form>
             </CardContent>
         </Card>
