@@ -55,7 +55,7 @@ const chartConfig = {
 const AdminDashboardPage = () => {
     return (
         <div className="flex flex-col gap-4 md:gap-8">
-            <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {dashboardData.stats.map(stat => (
                     <Card key={stat.title}>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -161,7 +161,7 @@ const AdminDashboardPage = () => {
                                     <TableRow key={message.id}>
                                         <TableCell>
                                             <div className="font-medium">{message.name}</div>
-                                            <div className="hidden text-sm text-muted-foreground md:inline">
+                                            <div className="hidden text-sm text-muted-foreground sm:inline">
                                                 {message.email}
                                             </div>
                                         </TableCell>
@@ -185,7 +185,7 @@ const AdminDashboardPage = () => {
                     <CardContent className="grid gap-6">
                         {dashboardData.activities.map((activity, index) => (
                              <div key={index} className="flex items-center gap-4">
-                                <Avatar className="hidden h-9 w-9 sm:flex">
+                                <Avatar className="h-9 w-9 sm:flex">
                                     <AvatarImage src={`https://picsum.photos/seed/${activity.user.split(' ')[0]}/32/32`} alt="Avatar" />
                                     <AvatarFallback>{activity.user.charAt(0)}</AvatarFallback>
                                 </Avatar>
