@@ -15,7 +15,7 @@ export default function VideoShowcase() {
       <div className="container max-w-7xl">
         <div className="grid lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
-            <Card className="overflow-hidden shadow-lg">
+            <Card className="overflow-hidden">
               <CardContent className="p-0">
                 <div className="relative aspect-video w-full">
                   <Image
