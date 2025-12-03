@@ -3,7 +3,7 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 export const aboutApi = createApi({
   reducerPath: 'contentApi',
   baseQuery: fetchBaseQuery({ baseUrl: '/api/' }),
-  tagTypes: ['About', 'Activities', 'Videos'],
+  tagTypes: ['About', 'Activities', 'Videos', 'Gallery'],
   endpoints: (builder) => ({
     getAboutData: builder.query({
       query: () => 'about',
@@ -41,6 +41,18 @@ export const aboutApi = createApi({
       }),
       invalidatesTags: ['Videos'],
     }),
+    getGalleryData: builder.query({
+      query: () => 'gallery',
+      providesTags: ['Gallery'],
+    }),
+    updateGalleryData: builder.mutation({
+      query: (updatedData) => ({
+        url: 'gallery',
+        method: 'POST',
+        body: updatedData,
+      }),
+      invalidatesTags: ['Gallery'],
+    }),
   }),
 });
 
@@ -50,5 +62,7 @@ export const {
   useGetActivitiesDataQuery,
   useUpdateActivitiesDataMutation,
   useGetVideosDataQuery,
-  useUpdateVideosDataMutation
+  useUpdateVideosDataMutation,
+  useGetGalleryDataQuery,
+  useUpdateGalleryDataMutation
 } = aboutApi;

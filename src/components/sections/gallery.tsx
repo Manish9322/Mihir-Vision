@@ -1,64 +1,60 @@
-'use client';
+'use server';
 
-import { useState } from 'react';
-import Image from 'next/image';
-import { galleryData } from '@/lib/data';
+import { MONGODB_URI } from '@/config/config';
 import type { ImagePlaceholder } from '@/lib/placeholder-images';
-import { ImagePreview } from '@/components/ui/image-preview';
+import GalleryClient from './gallery-client';
 
-export default function Gallery() {
-  const [selectedImage, setSelectedImage] = useState<ImagePlaceholder | null>(null);
+const gallerySectionData = {
+    title: 'Screenshot Gallery',
+    subheadline: 'A glimpse into the worlds we are creating. Explore a selection of screenshots from our flagship projects.',
+};
+
+async function getGalleryData(): Promise<ImagePlaceholder[] | null> {
+    if (!MONGODB_URI) {
+        console.error('MongoDB URI is not configured, skipping fetch for Gallery section.');
+        return null;
+    }
+
+    try {
+        const baseUrl = process.env.NODE_ENV === 'production'
+            ? `https://` + process.env.NEXT_PUBLIC_VERCEL_URL
+            : 'http://localhost:9002';
+        
+        const res = await fetch(`${baseUrl}/api/gallery`, { cache: 'no-store' });
+
+        if (!res.ok) {
+            console.error(`Failed to fetch gallery data: ${res.status} ${res.statusText}`);
+            return null;
+        }
+
+        const data = await res.json();
+        return data;
+    } catch (error) {
+        console.error('An error occurred while fetching gallery data:', error);
+        return null;
+    }
+}
+
+export default async function Gallery() {
+  const galleryData = await getGalleryData();
+
+  if (!galleryData || galleryData.length === 0) {
+    return null;
+  }
 
   return (
-    <>
-      <section id="gallery" className="py-16 md:py-24 bg-secondary">
+    <section id="gallery" className="py-16 md:py-24 bg-secondary">
         <div className="container max-w-7xl">
-          <div className="text-center max-w-3xl mx-auto mb-12">
+            <div className="text-center max-w-3xl mx-auto mb-12">
             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl font-headline">
-              {galleryData.title}
+                {gallerySectionData.title}
             </h2>
             <p className="mt-4 text-lg text-muted-foreground">
-              {galleryData.subheadline}
+                {gallerySectionData.subheadline}
             </p>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-            {galleryData.images.map((image, index) => (
-              <div
-                key={index}
-                className="group relative aspect-video w-full rounded-xl overflow-hidden cursor-pointer"
-                onClick={() => setSelectedImage(image)}
-              >
-                <Image
-                  src={image.imageUrl}
-                  alt={image.description}
-                  fill
-                  className="object-cover transition-transform duration-300 ease-in-out group-hover:scale-105"
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                  data-ai-hint={image.imageHint}
-                />
-                <div className="absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors" />
-                <div className="absolute bottom-4 left-4">
-                  <p className="text-white text-sm font-semibold opacity-0 group-hover:opacity-100 transition-opacity duration-300 translate-y-2 group-hover:translate-y-0">
-                    {image.description}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
+            </div>
+            <GalleryClient galleryData={galleryData} />
         </div>
-      </section>
-
-      {selectedImage && (
-        <ImagePreview
-          image={selectedImage}
-          open={!!selectedImage}
-          onOpenChange={(isOpen) => {
-            if (!isOpen) {
-              setSelectedImage(null);
-            }
-          }}
-        />
-      )}
-    </>
+    </section>
   );
 }

@@ -1,17 +1,17 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
-import { galleryData } from '@/lib/data';
 import type { ImagePlaceholder } from '@/lib/placeholder-images';
-import { PlusCircle, Trash2, ArrowUp, ArrowDown, GripVertical, ChevronLeft, ChevronRight, MoreHorizontal, Eye, FilePenLine } from 'lucide-react';
+import { PlusCircle, Trash2, ArrowUp, ArrowDown, GripVertical, ChevronLeft, ChevronRight, MoreHorizontal, Eye, FilePenLine, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { useGetGalleryDataQuery, useUpdateGalleryDataMutation } from '@/services/api';
 
 const ITEMS_PER_PAGE = 3;
 
@@ -22,7 +22,7 @@ const ImageForm = ({ image, onSave }: { image?: ImagePlaceholder | null, onSave:
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         const newImage: ImagePlaceholder = {
-            id: image?.id || `gallery${Date.now()}`,
+            id: image?.id || `new_${Date.now()}`,
             description,
             imageUrl: image?.imageUrl || 'https://placehold.co/600x400', // Placeholder
             imageHint: image?.imageHint || 'placeholder',
@@ -83,22 +83,48 @@ const ViewImageDialog = ({ image, open, onOpenChange }: { image: ImagePlaceholde
 
 const GalleryAdminPage = () => {
     const { toast } = useToast();
-    const [images, setImages] = useState<ImagePlaceholder[]>(galleryData.images);
+    const { data: images = [], isLoading: isQueryLoading, isError } = useGetGalleryDataQuery();
+    const [updateGallery, { isLoading: isMutationLoading }] = useUpdateGalleryDataMutation();
+    const [items, setItems] = useState<ImagePlaceholder[]>([]);
+
     const [currentPage, setCurrentPage] = useState(1);
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [isViewOpen, setIsViewOpen] = useState(false);
     const [selectedImage, setSelectedImage] = useState<ImagePlaceholder | null>(null);
     const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
-    const totalPages = Math.ceil(images.length / ITEMS_PER_PAGE);
-    const paginatedImages = images.slice(
+    useEffect(() => {
+        if(images) {
+            setItems(images);
+        }
+    }, [images]);
+
+    const totalPages = Math.ceil(items.length / ITEMS_PER_PAGE);
+    const paginatedImages = items.slice(
         (currentPage - 1) * ITEMS_PER_PAGE,
         currentPage * ITEMS_PER_PAGE
     );
 
+    const triggerUpdate = async (updatedItems: ImagePlaceholder[]) => {
+        try {
+            await updateGallery(updatedItems).unwrap();
+            toast({
+                title: 'Content Saved',
+                description: 'Gallery section has been updated successfully.',
+            });
+        } catch (error) {
+            toast({
+                variant: 'destructive',
+                title: 'Save Failed',
+                description: 'There was an error saving the gallery.',
+            });
+        }
+    };
+
+
     const handleMove = (index: number, direction: 'up' | 'down') => {
         const fullIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;
-        const newImages = [...images];
+        const newImages = [...items];
         const item = newImages[fullIndex];
 
         if (direction === 'up' && fullIndex > 0) {
@@ -108,7 +134,8 @@ const GalleryAdminPage = () => {
             newImages.splice(fullIndex, 1);
             newImages.splice(fullIndex + 1, 0, item);
         }
-        setImages(newImages);
+        setItems(newImages);
+        triggerUpdate(newImages);
     };
 
     const handleAddClick = () => {
@@ -131,8 +158,9 @@ const GalleryAdminPage = () => {
 
     const handleDelete = (index: number) => {
         const fullIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;
-        const newImages = images.filter((_, i) => i !== fullIndex);
-        setImages(newImages);
+        const newImages = items.filter((_, i) => i !== fullIndex);
+        setItems(newImages);
+        triggerUpdate(newImages);
         toast({
             variant: "destructive",
             title: "Image Deleted",
@@ -141,15 +169,29 @@ const GalleryAdminPage = () => {
     };
     
     const handleSave = (image: ImagePlaceholder) => {
+        let newItems: ImagePlaceholder[];
         if (editingIndex !== null) {
-            const newImages = [...images];
-            newImages[editingIndex] = image;
-            setImages(newImages);
+            newItems = [...items];
+            newItems[editingIndex] = image;
         } else {
-            setImages([image, ...images]);
+            newItems = [image, ...items];
         }
+        setItems(newItems);
+        triggerUpdate(newItems);
         setIsFormOpen(false);
     };
+
+    if (isQueryLoading) {
+        return (
+            <div className="flex items-center justify-center h-full">
+                <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+        );
+    }
+    
+    if (isError) {
+        return <div>Error loading data. Please try again.</div>;
+    }
 
 
     return (
@@ -160,12 +202,12 @@ const GalleryAdminPage = () => {
                         <CardTitle>Screenshot Gallery Section</CardTitle>
                         <CardDescription>Manage the images in the screenshot gallery.</CardDescription>
                     </div>
-                    <Button onClick={handleAddClick}>
+                     <Button onClick={handleAddClick} disabled={isMutationLoading}>
                         <PlusCircle className="mr-2 h-4 w-4" /> Add Image
                     </Button>
                 </CardHeader>
                 <CardContent>
-                    <Card>
+                    <Card className="relative">
                             <Table>
                             <TableHeader>
                                 <TableRow>
@@ -180,11 +222,11 @@ const GalleryAdminPage = () => {
                                     <TableRow key={image.id}>
                                         <TableCell className="text-center align-middle">
                                             <div className="flex flex-col items-center gap-1">
-                                                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleMove(index, 'up')} disabled={(currentPage - 1) * ITEMS_PER_PAGE + index === 0}>
+                                                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleMove(index, 'up')} disabled={isMutationLoading || (currentPage - 1) * ITEMS_PER_PAGE + index === 0}>
                                                     <ArrowUp className="h-4 w-4" />
                                                 </Button>
                                                 <GripVertical className="h-4 w-4 text-muted-foreground" />
-                                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleMove(index, 'down')} disabled={(currentPage - 1) * ITEMS_PER_PAGE + index === images.length - 1}>
+                                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleMove(index, 'down')} disabled={isMutationLoading || (currentPage - 1) * ITEMS_PER_PAGE + index === items.length - 1}>
                                                     <ArrowDown className="h-4 w-4" />
                                                 </Button>
                                             </div>
@@ -196,7 +238,7 @@ const GalleryAdminPage = () => {
                                         <TableCell className="text-right">
                                                 <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
-                                                    <Button size="icon" variant="ghost">
+                                                    <Button size="icon" variant="ghost" disabled={isMutationLoading}>
                                                         <MoreHorizontal className="h-4 w-4" />
                                                     </Button>
                                                 </DropdownMenuTrigger>
@@ -220,9 +262,14 @@ const GalleryAdminPage = () => {
                                 ))}
                             </TableBody>
                         </Table>
+                         {isMutationLoading && (
+                            <div className="absolute inset-0 bg-background/50 flex items-center justify-center">
+                                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                            </div>
+                        )}
                             <div className="flex items-center justify-between border-t p-4">
                             <div className="text-xs text-muted-foreground">
-                                Showing <strong>{(currentPage - 1) * ITEMS_PER_PAGE + 1}-{(currentPage - 1) * ITEMS_PER_PAGE + paginatedImages.length}</strong> of <strong>{images.length}</strong> images
+                                Showing <strong>{(currentPage - 1) * ITEMS_PER_PAGE + 1}-{(currentPage - 1) * ITEMS_PER_PAGE + paginatedImages.length}</strong> of <strong>{items.length}</strong> images
                             </div>
                             <div className="flex items-center gap-2">
                                 <Button variant="outline" size="sm" onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1}>
