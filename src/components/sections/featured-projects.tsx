@@ -20,16 +20,17 @@ export default function FeaturedProjects() {
         </div>
         <div className="grid md:grid-cols-3 gap-8">
           {futureMissionsData.missions.map((mission) => (
-            <Card key={mission.title} className="overflow-hidden flex flex-col">
-              <div className="relative h-48 w-full">
+            <Card key={mission.title} className="group overflow-hidden flex flex-col transition-all duration-300 ease-in-out hover:scale-[1.02] hover:-translate-y-2 hover:shadow-xl hover:shadow-primary/10">
+              <div className="relative h-48 w-full overflow-hidden">
                 <Image
                   src={mission.image.imageUrl}
                   alt={mission.image.description}
                   fill
-                  className="object-cover"
+                  className="object-cover transition-transform duration-300 ease-in-out group-hover:scale-110"
                   sizes="(max-width: 768px) 100vw, 33vw"
                   data-ai-hint={mission.image.imageHint}
                 />
+                 <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
               </div>
               <CardHeader>
                 <CardTitle className="font-headline">{mission.title}</CardTitle>
@@ -45,9 +46,9 @@ export default function FeaturedProjects() {
                     ))}
                     </div>
                 </div>
-                <Button asChild variant="link" className="p-0 h-auto self-start">
+                <Button asChild variant="link" className="p-0 h-auto self-start group/link">
                   <Link href={`/projects/${mission.slug}`}>
-                    Learn More <ArrowRight className="ml-1 h-4 w-4" />
+                    Learn More <ArrowRight className="ml-1 h-4 w-4 transition-transform duration-300 ease-in-out group-hover/link:translate-x-1" />
                   </Link>
                 </Button>
               </CardContent>
