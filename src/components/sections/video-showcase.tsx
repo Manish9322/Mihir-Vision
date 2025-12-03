@@ -35,6 +35,11 @@ export default function VideoShowcase() {
         <div className="grid lg:grid-cols-5 gap-8">
           <div className="lg:col-span-3">
             <VideoPlayer video={activeVideo} isLoading={isLoading} />
+            <div className="mt-4">
+              <h3 className="text-2xl font-bold font-headline">{activeVideo.title}</h3>
+              <p className="text-muted-foreground mt-1">{activeVideo.subtitle}</p>
+              <p className="text-sm text-muted-foreground mt-2">Duration: {activeVideo.duration}</p>
+            </div>
           </div>
 
           <div className="lg:col-span-2">
