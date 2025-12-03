@@ -15,6 +15,7 @@ import { useGetGalleryDataQuery, useUpdateGalleryDataMutation } from '@/services
 import { Switch } from '@/components/ui/switch';
 
 interface GalleryImage extends ImagePlaceholder {
+    _id?: string;
     isVisible: boolean;
 }
 
@@ -91,7 +92,6 @@ const GalleryAdminPage = () => {
     const { toast } = useToast();
     const { data: images = [], isLoading: isQueryLoading, isError } = useGetGalleryDataQuery();
     const [updateGallery, { isLoading: isMutationLoading }] = useUpdateGalleryDataMutation();
-    const [items, setItems] = useState<GalleryImage[]>([]);
 
     const [currentPage, setCurrentPage] = useState(1);
     const [isFormOpen, setIsFormOpen] = useState(false);
@@ -99,14 +99,8 @@ const GalleryAdminPage = () => {
     const [selectedImage, setSelectedImage] = useState<GalleryImage | null>(null);
     const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
-    useEffect(() => {
-        if(images) {
-            setItems(images.map(img => ({ ...img, isVisible: img.isVisible ?? true })));
-        }
-    }, [images]);
-
-    const totalPages = Math.ceil(items.length / ITEMS_PER_PAGE);
-    const paginatedImages = items.slice(
+    const totalPages = Math.ceil(images.length / ITEMS_PER_PAGE);
+    const paginatedImages = images.slice(
         (currentPage - 1) * ITEMS_PER_PAGE,
         currentPage * ITEMS_PER_PAGE
     );
@@ -130,7 +124,7 @@ const GalleryAdminPage = () => {
 
     const handleMove = (index: number, direction: 'up' | 'down') => {
         const fullIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;
-        const newImages = [...items];
+        const newImages = [...images];
         const item = newImages[fullIndex];
 
         if (direction === 'up' && fullIndex > 0) {
@@ -140,7 +134,6 @@ const GalleryAdminPage = () => {
             newImages.splice(fullIndex, 1);
             newImages.splice(fullIndex + 1, 0, item);
         }
-        setItems(newImages);
         triggerUpdate(newImages);
     };
 
@@ -164,8 +157,7 @@ const GalleryAdminPage = () => {
 
     const handleDelete = (index: number) => {
         const fullIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;
-        const newImages = items.filter((_, i) => i !== fullIndex);
-        setItems(newImages);
+        const newImages = images.filter((_, i) => i !== fullIndex);
         triggerUpdate(newImages);
         toast({
             variant: "destructive",
@@ -177,21 +169,23 @@ const GalleryAdminPage = () => {
     const handleSave = (image: Omit<GalleryImage, '_id'>) => {
         let newItems: GalleryImage[];
         if (editingIndex !== null) {
-            newItems = [...items];
-            newItems[editingIndex] = { ...items[editingIndex], ...image };
+            newItems = [...images];
+            newItems[editingIndex] = { ...images[editingIndex], ...image } as GalleryImage;
         } else {
-            newItems = [image as GalleryImage, ...items];
+            newItems = [image as GalleryImage, ...images];
         }
-        setItems(newItems);
         triggerUpdate(newItems);
         setIsFormOpen(false);
     };
 
     const handleVisibilityChange = (index: number, isVisible: boolean) => {
         const fullIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;
-        const newItems = [...items];
-        newItems[fullIndex].isVisible = isVisible;
-        setItems(newItems);
+        const newItems = images.map((item, i) => {
+            if (i === fullIndex) {
+                return { ...item, isVisible };
+            }
+            return item;
+        });
         triggerUpdate(newItems);
     }
 
@@ -241,7 +235,7 @@ const GalleryAdminPage = () => {
                                                     <ArrowUp className="h-4 w-4" />
                                                 </Button>
                                                 <GripVertical className="h-4 w-4 text-muted-foreground" />
-                                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleMove(index, 'down')} disabled={isMutationLoading || (currentPage - 1) * ITEMS_PER_PAGE + index === items.length - 1}>
+                                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleMove(index, 'down')} disabled={isMutationLoading || (currentPage - 1) * ITEMS_PER_PAGE + index === images.length - 1}>
                                                     <ArrowDown className="h-4 w-4" />
                                                 </Button>
                                             </div>
@@ -291,7 +285,7 @@ const GalleryAdminPage = () => {
                         )}
                             <div className="flex items-center justify-between border-t p-4">
                             <div className="text-xs text-muted-foreground">
-                                Showing <strong>{(currentPage - 1) * ITEMS_PER_PAGE + 1}-{(currentPage - 1) * ITEMS_PER_PAGE + paginatedImages.length}</strong> of <strong>{items.length}</strong> images
+                                Showing <strong>{(currentPage - 1) * ITEMS_PER_PAGE + 1}-{(currentPage - 1) * ITEMS_PER_PAGE + paginatedImages.length}</strong> of <strong>{images.length}</strong> images
                             </div>
                             <div className="flex items-center gap-2">
                                 <Button variant="outline" size="sm" onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1}>
@@ -326,3 +320,5 @@ const GalleryAdminPage = () => {
 }
 
 export default GalleryAdminPage;
+
+    

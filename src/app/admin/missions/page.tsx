@@ -131,7 +131,6 @@ const MissionsAdminPage = () => {
     const { toast } = useToast();
     const { data: projects = [], isLoading: isQueryLoading, isError } = useGetProjectsDataQuery();
     const [updateProjects, { isLoading: isMutationLoading }] = useUpdateProjectsDataMutation();
-    const [items, setItems] = useState<Project[]>([]);
 
     const [currentPage, setCurrentPage] = useState(1);
     const [isFormOpen, setIsFormOpen] = useState(false);
@@ -139,14 +138,8 @@ const MissionsAdminPage = () => {
     const [selectedMission, setSelectedMission] = useState<Project | null>(null);
     const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
-    useEffect(() => {
-        if(projects) {
-            setItems(projects);
-        }
-    }, [projects]);
-
-    const totalPages = Math.ceil(items.length / ITEMS_PER_PAGE);
-    const paginatedMissions = items.slice(
+    const totalPages = Math.ceil(projects.length / ITEMS_PER_PAGE);
+    const paginatedMissions = projects.slice(
         (currentPage - 1) * ITEMS_PER_PAGE,
         currentPage * ITEMS_PER_PAGE
     );
@@ -169,7 +162,7 @@ const MissionsAdminPage = () => {
 
     const handleMove = (index: number, direction: 'up' | 'down') => {
         const fullIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;
-        const newItems = [...items];
+        const newItems = [...projects];
         const item = newItems[fullIndex];
 
         if (direction === 'up' && fullIndex > 0) {
@@ -179,7 +172,6 @@ const MissionsAdminPage = () => {
             newItems.splice(fullIndex, 1);
             newItems.splice(fullIndex + 1, 0, item);
         }
-        setItems(newItems);
         triggerUpdate(newItems);
     };
 
@@ -203,8 +195,7 @@ const MissionsAdminPage = () => {
 
     const handleDelete = (index: number) => {
         const fullIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;
-        const newItems = items.filter((_, i) => i !== fullIndex);
-        setItems(newItems);
+        const newItems = projects.filter((_, i) => i !== fullIndex);
         triggerUpdate(newItems);
         toast({
             variant: "destructive",
@@ -216,22 +207,24 @@ const MissionsAdminPage = () => {
     const handleSave = (project: Omit<Project, '_id'>) => {
         let newItems: Project[];
         if (editingIndex !== null) {
-            newItems = [...items];
+            newItems = [...projects];
             newItems[editingIndex] = { ...newItems[editingIndex], ...project };
         } else {
-            const newProject = { ...project, _id: `new_${Date.now()}` };
-            newItems = [newProject, ...items];
+            const newProject = { ...project, _id: `new_${Date.now()}` } as Project;
+            newItems = [newProject, ...projects];
         }
-        setItems(newItems);
         triggerUpdate(newItems);
         setIsFormOpen(false);
     };
 
     const handleVisibilityChange = (index: number, isVisible: boolean) => {
         const fullIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;
-        const newItems = [...items];
-        newItems[fullIndex].isVisible = isVisible;
-        setItems(newItems);
+        const newItems = projects.map((item, i) => {
+            if (i === fullIndex) {
+                return { ...item, isVisible };
+            }
+            return item;
+        });
         triggerUpdate(newItems);
     }
 
@@ -282,7 +275,7 @@ const MissionsAdminPage = () => {
                                                     <ArrowUp className="h-4 w-4" />
                                                 </Button>
                                                 <GripVertical className="h-4 w-4 text-muted-foreground" />
-                                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleMove(index, 'down')} disabled={isMutationLoading || (currentPage - 1) * ITEMS_PER_PAGE + index === items.length - 1}>
+                                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleMove(index, 'down')} disabled={isMutationLoading || (currentPage - 1) * ITEMS_PER_PAGE + index === projects.length - 1}>
                                                     <ArrowDown className="h-4 w-4" />
                                                 </Button>
                                             </div>
@@ -337,7 +330,7 @@ const MissionsAdminPage = () => {
                         )}
                         <div className="flex items-center justify-between border-t p-4">
                             <div className="text-xs text-muted-foreground">
-                                Showing <strong>{(currentPage - 1) * ITEMS_PER_PAGE + 1}-{(currentPage - 1) * ITEMS_PER_PAGE + paginatedMissions.length}</strong> of <strong>{items.length}</strong> projects
+                                Showing <strong>{(currentPage - 1) * ITEMS_PER_PAGE + 1}-{(currentPage - 1) * ITEMS_PER_PAGE + paginatedMissions.length}</strong> of <strong>{projects.length}</strong> projects
                             </div>
                             <div className="flex items-center gap-2">
                                 <Button variant="outline" size="sm" onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1}>
@@ -372,3 +365,5 @@ const MissionsAdminPage = () => {
 }
 
 export default MissionsAdminPage;
+
+    

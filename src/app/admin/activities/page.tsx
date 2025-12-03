@@ -102,22 +102,15 @@ const ActivitiesAdminPage = () => {
     const { toast } = useToast();
     const { data: activities = [], isLoading: isQueryLoading, isError } = useGetActivitiesDataQuery();
     const [updateActivities, { isLoading: isMutationLoading }] = useUpdateActivitiesDataMutation();
-    const [items, setItems] = useState<Activity[]>([]);
-
+    
     const [currentPage, setCurrentPage] = useState(1);
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [isViewOpen, setIsViewOpen] = useState(false);
     const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
     const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
-    useEffect(() => {
-        if (activities) {
-            setItems(activities);
-        }
-    }, [activities]);
-
-    const totalPages = Math.ceil(items.length / ITEMS_PER_PAGE);
-    const paginatedItems = items.slice(
+    const totalPages = Math.ceil(activities.length / ITEMS_PER_PAGE);
+    const paginatedItems = activities.slice(
         (currentPage - 1) * ITEMS_PER_PAGE,
         currentPage * ITEMS_PER_PAGE
     );
@@ -141,7 +134,7 @@ const ActivitiesAdminPage = () => {
 
     const handleMove = (index: number, direction: 'up' | 'down') => {
         const fullIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;
-        const newItems = [...items];
+        const newItems = [...activities];
         const item = newItems[fullIndex];
 
         if (direction === 'up' && fullIndex > 0) {
@@ -151,7 +144,6 @@ const ActivitiesAdminPage = () => {
             newItems.splice(fullIndex, 1);
             newItems.splice(fullIndex + 1, 0, item);
         }
-        setItems(newItems);
         triggerUpdate(newItems);
     };
 
@@ -175,8 +167,7 @@ const ActivitiesAdminPage = () => {
 
     const handleDelete = (index: number) => {
         const fullIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;
-        const newItems = items.filter((_, i) => i !== fullIndex);
-        setItems(newItems);
+        const newItems = activities.filter((_, i) => i !== fullIndex);
         triggerUpdate(newItems);
         toast({
             variant: "destructive",
@@ -188,22 +179,24 @@ const ActivitiesAdminPage = () => {
     const handleSave = (activityData: Omit<Activity, '_id'>) => {
         let newItems: Activity[];
         if (editingIndex !== null) {
-            newItems = [...items];
+            newItems = [...activities];
             newItems[editingIndex] = { ...newItems[editingIndex], ...activityData };
         } else {
-            const newActivity = { ...activityData, _id: `new_${Date.now()}`}; 
-            newItems = [newActivity, ...items];
+            const newActivity = { ...activityData, isVisible: true } as Activity; 
+            newItems = [newActivity, ...activities];
         }
-        setItems(newItems);
-        triggerUpdate(newItems.map(({ _id, ...rest }) => _id?.startsWith('new_') ? rest : { _id, ...rest }));
+        triggerUpdate(newItems);
         setIsFormOpen(false);
     };
 
     const handleVisibilityChange = (index: number, isVisible: boolean) => {
         const fullIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;
-        const newItems = [...items];
-        newItems[fullIndex].isVisible = isVisible;
-        setItems(newItems);
+        const newItems = activities.map((item, i) => {
+            if (i === fullIndex) {
+                return { ...item, isVisible };
+            }
+            return item;
+        });
         triggerUpdate(newItems);
     }
 
@@ -258,7 +251,7 @@ const ActivitiesAdminPage = () => {
                                                                 <ArrowUp className="h-4 w-4" />
                                                             </Button>
                                                             <GripVertical className="h-4 w-4 text-muted-foreground" />
-                                                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleMove(index, 'down')} disabled={isMutationLoading || (currentPage - 1) * ITEMS_PER_PAGE + index === items.length - 1}>
+                                                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleMove(index, 'down')} disabled={isMutationLoading || (currentPage - 1) * ITEMS_PER_PAGE + index === activities.length - 1}>
                                                                 <ArrowDown className="h-4 w-4" />
                                                             </Button>
                                                         </div>
@@ -307,7 +300,7 @@ const ActivitiesAdminPage = () => {
                                 )}
                                 <div className="flex items-center justify-between border-t p-4">
                                     <div className="text-xs text-muted-foreground">
-                                        Showing <strong>{(currentPage - 1) * ITEMS_PER_PAGE + 1}-{(currentPage - 1) * ITEMS_PER_PAGE + paginatedItems.length}</strong> of <strong>{items.length}</strong> items
+                                        Showing <strong>{(currentPage - 1) * ITEMS_PER_PAGE + 1}-{(currentPage - 1) * ITEMS_PER_PAGE + paginatedItems.length}</strong> of <strong>{activities.length}</strong> items
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <Button variant="outline" size="sm" onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1}>
@@ -344,3 +337,5 @@ const ActivitiesAdminPage = () => {
 }
 
 export default ActivitiesAdminPage;
+
+    

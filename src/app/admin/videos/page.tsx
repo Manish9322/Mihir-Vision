@@ -109,23 +109,15 @@ const VideosAdminPage = () => {
     const { toast } = useToast();
     const { data: videos = [], isLoading: isQueryLoading, isError } = useGetVideosDataQuery();
     const [updateVideos, { isLoading: isMutationLoading }] = useUpdateVideosDataMutation();
-    const [items, setItems] = useState<VideoInfo[]>([]);
-
+    
     const [currentPage, setCurrentPage] = useState(1);
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [isViewOpen, setIsViewOpen] = useState(false);
     const [selectedVideo, setSelectedVideo] = useState<VideoInfo | null>(null);
     const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
-    useEffect(() => {
-        if(videos) {
-            setItems(videos);
-        }
-    }, [videos]);
-
-
-    const totalPages = Math.ceil(items.length / ITEMS_PER_PAGE);
-    const paginatedVideos = items.slice(
+    const totalPages = Math.ceil(videos.length / ITEMS_PER_PAGE);
+    const paginatedVideos = videos.slice(
         (currentPage - 1) * ITEMS_PER_PAGE,
         currentPage * ITEMS_PER_PAGE
     );
@@ -149,7 +141,7 @@ const VideosAdminPage = () => {
 
     const handleMove = (index: number, direction: 'up' | 'down') => {
         const fullIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;
-        const newVideos = [...items];
+        const newVideos = [...videos];
         const item = newVideos[fullIndex];
         
         if (direction === 'up' && fullIndex > 0) {
@@ -159,7 +151,6 @@ const VideosAdminPage = () => {
             newVideos.splice(fullIndex, 1);
             newVideos.splice(fullIndex + 1, 0, item);
         }
-        setItems(newVideos);
         triggerUpdate(newVideos);
     };
 
@@ -183,8 +174,7 @@ const VideosAdminPage = () => {
 
     const handleDelete = (index: number) => {
         const fullIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;
-        const newVideos = items.filter((_, i) => i !== fullIndex);
-        setItems(newVideos);
+        const newVideos = videos.filter((_, i) => i !== fullIndex);
         triggerUpdate(newVideos);
         toast({
             variant: "destructive",
@@ -196,21 +186,23 @@ const VideosAdminPage = () => {
     const handleSave = (video: VideoInfo) => {
         let newItems: VideoInfo[];
         if (editingIndex !== null) {
-            newItems = [...items];
+            newItems = [...videos];
             newItems[editingIndex] = video;
         } else {
-            newItems = [video, ...items];
+            newItems = [video, ...videos];
         }
-        setItems(newItems);
         triggerUpdate(newItems);
         setIsFormOpen(false);
     };
     
     const handleVisibilityChange = (index: number, isVisible: boolean) => {
         const fullIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;
-        const newItems = [...items];
-        newItems[fullIndex].isVisible = isVisible;
-        setItems(newItems);
+        const newItems = videos.map((item, i) => {
+            if (i === fullIndex) {
+                return { ...item, isVisible };
+            }
+            return item;
+        });
         triggerUpdate(newItems);
     }
 
@@ -262,7 +254,7 @@ const VideosAdminPage = () => {
                                                     <ArrowUp className="h-4 w-4" />
                                                 </Button>
                                                 <GripVertical className="h-4 w-4 text-muted-foreground" />
-                                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleMove(index, 'down')} disabled={isMutationLoading || (currentPage - 1) * ITEMS_PER_PAGE + index === items.length - 1}>
+                                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleMove(index, 'down')} disabled={isMutationLoading || (currentPage - 1) * ITEMS_PER_PAGE + index === videos.length - 1}>
                                                     <ArrowDown className="h-4 w-4" />
                                                 </Button>
                                             </div>
@@ -314,7 +306,7 @@ const VideosAdminPage = () => {
                         )}
                             <div className="flex items-center justify-between border-t p-4">
                             <div className="text-xs text-muted-foreground">
-                                Showing <strong>{(currentPage - 1) * ITEMS_PER_PAGE + 1}-{(currentPage - 1) * ITEMS_PER_PAGE + paginatedVideos.length}</strong> of <strong>{items.length}</strong> videos
+                                Showing <strong>{(currentPage - 1) * ITEMS_PER_PAGE + 1}-{(currentPage - 1) * ITEMS_PER_PAGE + paginatedVideos.length}</strong> of <strong>{videos.length}</strong> videos
                             </div>
                             <div className="flex items-center gap-2">
                                 <Button variant="outline" size="sm" onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1}>
@@ -349,3 +341,5 @@ const VideosAdminPage = () => {
 }
 
 export default VideosAdminPage;
+
+    

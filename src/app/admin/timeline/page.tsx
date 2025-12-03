@@ -108,22 +108,15 @@ const TimelineAdminPage = () => {
     const { toast } = useToast();
     const { data: events = [], isLoading: isQueryLoading, isError } = useGetTimelineDataQuery();
     const [updateTimeline, { isLoading: isMutationLoading }] = useUpdateTimelineDataMutation();
-    const [items, setItems] = useState<TimelineEvent[]>([]);
-
+    
     const [currentPage, setCurrentPage] = useState(1);
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [isViewOpen, setIsViewOpen] = useState(false);
     const [selectedEvent, setSelectedEvent] = useState<TimelineEvent | null>(null);
     const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
-    useEffect(() => {
-        if(events) {
-            setItems(events);
-        }
-    }, [events]);
-
-    const totalPages = Math.ceil(items.length / ITEMS_PER_PAGE);
-    const paginatedEvents = items.slice(
+    const totalPages = Math.ceil(events.length / ITEMS_PER_PAGE);
+    const paginatedEvents = events.slice(
         (currentPage - 1) * ITEMS_PER_PAGE,
         currentPage * ITEMS_PER_PAGE
     );
@@ -146,7 +139,7 @@ const TimelineAdminPage = () => {
 
     const handleMove = (index: number, direction: 'up' | 'down') => {
         const fullIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;
-        const newEvents = [...items];
+        const newEvents = [...events];
         const item = newEvents[fullIndex];
 
         if (direction === 'up' && fullIndex > 0) {
@@ -156,7 +149,6 @@ const TimelineAdminPage = () => {
             newEvents.splice(fullIndex, 1);
             newEvents.splice(fullIndex + 1, 0, item);
         }
-        setItems(newEvents);
         triggerUpdate(newEvents);
     };
 
@@ -180,8 +172,7 @@ const TimelineAdminPage = () => {
 
     const handleDelete = (index: number) => {
         const fullIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;
-        const newEvents = items.filter((_, i) => i !== fullIndex);
-        setItems(newEvents);
+        const newEvents = events.filter((_, i) => i !== fullIndex);
         triggerUpdate(newEvents);
         toast({
             variant: "destructive",
@@ -193,22 +184,24 @@ const TimelineAdminPage = () => {
     const handleSave = (event: Omit<TimelineEvent, '_id'>) => {
         let newItems: TimelineEvent[];
         if (editingIndex !== null) {
-            newItems = [...items];
+            newItems = [...events];
             newItems[editingIndex] = { ...newItems[editingIndex], ...event };
         } else {
-            const newEvent = { ...event, _id: `new_${Date.now()}` };
-            newItems = [newEvent, ...items];
+            const newEvent = { ...event, _id: `new_${Date.now()}` } as TimelineEvent;
+            newItems = [newEvent, ...events];
         }
-        setItems(newItems);
         triggerUpdate(newItems);
         setIsFormOpen(false);
     };
 
     const handleVisibilityChange = (index: number, isVisible: boolean) => {
         const fullIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;
-        const newItems = [...items];
-        newItems[fullIndex].isVisible = isVisible;
-        setItems(newItems);
+        const newItems = events.map((item, i) => {
+            if (i === fullIndex) {
+                return { ...item, isVisible };
+            }
+            return item;
+        });
         triggerUpdate(newItems);
     }
 
@@ -261,7 +254,7 @@ const TimelineAdminPage = () => {
                                                     <ArrowUp className="h-4 w-4" />
                                                 </Button>
                                                 <GripVertical className="h-4 w-4 text-muted-foreground" />
-                                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleMove(index, 'down')} disabled={isMutationLoading || (currentPage - 1) * ITEMS_PER_PAGE + index === items.length - 1}>
+                                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleMove(index, 'down')} disabled={isMutationLoading || (currentPage - 1) * ITEMS_PER_PAGE + index === events.length - 1}>
                                                     <ArrowDown className="h-4 w-4" />
                                                 </Button>
                                             </div>
@@ -310,7 +303,7 @@ const TimelineAdminPage = () => {
                         )}
                             <div className="flex items-center justify-between border-t p-4">
                             <div className="text-xs text-muted-foreground">
-                                Showing <strong>{(currentPage - 1) * ITEMS_PER_PAGE + 1}-{(currentPage - 1) * ITEMS_PER_PAGE + paginatedEvents.length}</strong> of <strong>{items.length}</strong> events
+                                Showing <strong>{(currentPage - 1) * ITEMS_PER_PAGE + 1}-{(currentPage - 1) * ITEMS_PER_PAGE + paginatedEvents.length}</strong> of <strong>{events.length}</strong> events
                             </div>
                             <div className="flex items-center gap-2">
                                 <Button variant="outline" size="sm" onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1}>
@@ -345,3 +338,5 @@ const TimelineAdminPage = () => {
 }
 
 export default TimelineAdminPage;
+
+    
