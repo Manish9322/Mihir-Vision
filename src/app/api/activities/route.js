@@ -34,17 +34,13 @@ export async function POST(request) {
         await Activity.deleteMany({});
         
         const activitiesToInsert = body.map((activity, index) => {
-            const { _id, ...rest } = activity;
-            // If the _id is a temporary one from the frontend, we remove it
+            const newActivity = { ...activity, order: index };
+            // If the _id is a temporary one from the frontend, remove it
             // so Mongoose can generate a new, valid ObjectId.
-            // We only keep valid ObjectIds if they exist.
-            if (_id && _id.startsWith('new_')) {
-                return { ...rest, order: index };
+            if (newActivity._id && typeof newActivity._id === 'string' && newActivity._id.startsWith('new_')) {
+                delete newActivity._id;
             }
-            if (_id) {
-                 return { _id, ...rest, order: index };
-            }
-            return { ...rest, order: index };
+            return newActivity;
         });
 
         const newActivities = await Activity.insertMany(activitiesToInsert);
@@ -54,5 +50,3 @@ export async function POST(request) {
         return NextResponse.json({ message: 'Error updating activities.', error: error.message }, { status: 500 });
     }
 }
-
-    
