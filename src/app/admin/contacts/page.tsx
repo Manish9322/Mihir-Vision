@@ -1,28 +1,38 @@
+
 'use client';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { contactsData } from '@/lib/data';
-import { Mail, Trash2, ChevronLeft, ChevronRight, Inbox, MailCheck, ListFilter, Search } from 'lucide-react';
+import { Mail, Trash2, ChevronLeft, ChevronRight, Inbox, MailCheck, ListFilter, Search, Loader2 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuCheckboxItem } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
+import { useGetContactsQuery, useDeleteContactMutation } from '@/services/api';
+import { useToast } from '@/hooks/use-toast';
+import { format } from 'date-fns';
 
 const ITEMS_PER_PAGE = 5;
 
 const ContactsPage = () => {
+    const { toast } = useToast();
+    const { data: messages = [], isLoading, isError } = useGetContactsQuery();
+    const [deleteContact, { isLoading: isDeleting }] = useDeleteContactMutation();
+    
     const [filter, setFilter] = useState<string>('all');
     const [currentPage, setCurrentPage] = useState(1);
     const [searchQuery, setSearchQuery] = useState('');
 
-    const filteredMessages = contactsData.messages.filter(message => {
-        const statusMatch = filter === 'all' || message.status.toLowerCase() === filter;
-        const searchMatch = !searchQuery ||
-            message.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            message.email.toLowerCase().includes(searchQuery.toLowerCase());
-        return statusMatch && searchMatch;
-    });
+    const filteredMessages = useMemo(() => {
+        return (messages || []).filter(message => {
+            const statusMatch = filter === 'all' || message.status.toLowerCase() === filter;
+            const searchMatch = !searchQuery ||
+                message.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                message.email.toLowerCase().includes(searchQuery.toLowerCase());
+            return statusMatch && searchMatch;
+        });
+    }, [messages, filter, searchQuery]);
+
 
     const totalPages = Math.ceil(filteredMessages.length / ITEMS_PER_PAGE);
     const paginatedMessages = filteredMessages.slice(
@@ -30,9 +40,38 @@ const ContactsPage = () => {
         currentPage * ITEMS_PER_PAGE
     );
 
-    const totalMessages = contactsData.messages.length;
-    const newMessages = contactsData.messages.filter(m => m.status === 'New').length;
-    const repliedMessages = contactsData.messages.filter(m => m.status === 'Replied').length;
+    const totalMessages = messages.length;
+    const newMessages = messages.filter(m => m.status === 'New').length;
+    const repliedMessages = messages.filter(m => m.status === 'Replied').length;
+    
+    const handleDelete = async (id: string) => {
+        try {
+            await deleteContact(id).unwrap();
+            toast({
+                title: "Message Deleted",
+                description: "The contact message has been removed.",
+            });
+        } catch (error) {
+            toast({
+                variant: "destructive",
+                title: "Deletion Failed",
+                description: "There was an error deleting the message.",
+            });
+        }
+    };
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center h-full">
+                <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+        );
+    }
+
+    if (isError) {
+        return <div>Error loading contact messages. Please try again.</div>;
+    }
+
 
     return (
         <div className="space-y-6">
@@ -128,7 +167,7 @@ const ContactsPage = () => {
                         <TableBody>
                             {paginatedMessages.length > 0 ? (
                                 paginatedMessages.map((message) => (
-                                    <TableRow key={message.id}>
+                                    <TableRow key={message._id}>
                                         <TableCell>
                                             <div className="font-medium">{message.name}</div>
                                             <div className="hidden text-sm text-muted-foreground md:inline">
@@ -140,14 +179,18 @@ const ContactsPage = () => {
                                                 {message.status}
                                             </Badge>
                                         </TableCell>
-                                        <TableCell className="hidden md:table-cell">{message.date}</TableCell>
+                                        <TableCell className="hidden md:table-cell">
+                                            {format(new Date(message.createdAt), 'PP')}
+                                        </TableCell>
                                         <TableCell className="text-right">
                                             <div className="flex justify-end gap-2">
-                                                <Button size="icon" variant="outline" className="h-8 w-8">
-                                                    <Mail className="h-4 w-4" />
-                                                    <span className="sr-only">Reply</span>
+                                                <Button size="icon" variant="outline" className="h-8 w-8" asChild>
+                                                    <a href={`mailto:${message.email}`}>
+                                                        <Mail className="h-4 w-4" />
+                                                        <span className="sr-only">Reply</span>
+                                                    </a>
                                                 </Button>
-                                                <Button size="icon" variant="outline" className="h-8 w-8">
+                                                <Button size="icon" variant="outline" className="h-8 w-8" onClick={() => handleDelete(message._id)} disabled={isDeleting}>
                                                     <Trash2 className="h-4 w-4" />
                                                     <span className="sr-only">Delete</span>
                                                 </Button>
@@ -167,7 +210,7 @@ const ContactsPage = () => {
                 </CardContent>
                 <div className="flex items-center justify-between border-t p-4">
                     <div className="text-xs text-muted-foreground">
-                        Showing <strong>{(currentPage - 1) * ITEMS_PER_PAGE + 1}-{(currentPage - 1) * ITEMS_PER_PAGE + paginatedMessages.length}</strong> of <strong>{filteredMessages.length}</strong> messages
+                        Showing <strong>{paginatedMessages.length > 0 ? (currentPage - 1) * ITEMS_PER_PAGE + 1 : 0}-{(currentPage - 1) * ITEMS_PER_PAGE + paginatedMessages.length}</strong> of <strong>{filteredMessages.length}</strong> messages
                     </div>
                     <div className="flex items-center gap-2">
                         <Button

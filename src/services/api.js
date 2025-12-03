@@ -4,7 +4,7 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 export const contentApi = createApi({
   reducerPath: 'contentApi',
   baseQuery: fetchBaseQuery({ baseUrl: '/api/' }),
-  tagTypes: ['About', 'Activities', 'Videos', 'Gallery', 'Projects', 'Timeline', 'Faq'],
+  tagTypes: ['About', 'Activities', 'Videos', 'Gallery', 'Projects', 'Timeline', 'Faq', 'Contacts'],
   endpoints: (builder) => ({
     getAboutData: builder.query({
       query: () => 'about',
@@ -90,6 +90,33 @@ export const contentApi = createApi({
         }),
         invalidatesTags: ['Faq'],
     }),
+    getContacts: builder.query({
+      query: () => 'contacts',
+      providesTags: ['Contacts'],
+    }),
+    addContact: builder.mutation({
+      query: (newContact) => ({
+        url: 'contacts',
+        method: 'POST',
+        body: newContact,
+      }),
+      invalidatesTags: ['Contacts'],
+    }),
+    updateContact: builder.mutation({
+      query: ({ id, ...patch }) => ({
+        url: `contacts/${id}`,
+        method: 'PATCH',
+        body: patch,
+      }),
+      invalidatesTags: (result, error, { id }) => [{ type: 'Contacts', id }],
+    }),
+    deleteContact: builder.mutation({
+      query: (id) => ({
+        url: `contacts/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Contacts'],
+    }),
   }),
 });
 
@@ -107,5 +134,9 @@ export const {
   useGetTimelineDataQuery,
   useUpdateTimelineDataMutation,
   useGetFaqDataQuery,
-  useUpdateFaqDataMutation
+  useUpdateFaqDataMutation,
+  useGetContactsQuery,
+  useAddContactMutation,
+  useUpdateContactMutation,
+  useDeleteContactMutation,
 } = contentApi;

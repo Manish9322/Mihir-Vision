@@ -3,6 +3,7 @@ import { Toaster } from '@/components/ui/toaster';
 import './globals.css';
 import { ThemeProvider } from '@/components/theme-provider';
 import { Manrope, Inter } from 'next/font/google';
+import { StoreProvider } from '@/store/provider';
 
 const headlineFont = Manrope({
   subsets: ['latin'],
@@ -31,15 +32,17 @@ export default function RootLayout({
       <body
         className={`${headlineFont.variable} ${bodyFont.variable} font-body antialiased`}
       >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="light"
-          enableSystem={false}
-          disableTransitionOnChange
-        >
-          {children}
-          <Toaster />
-        </ThemeProvider>
+        <StoreProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="light"
+            enableSystem={false}
+            disableTransitionOnChange
+          >
+            {children}
+            <Toaster />
+          </ThemeProvider>
+        </StoreProvider>
       </body>
     </html>
   );

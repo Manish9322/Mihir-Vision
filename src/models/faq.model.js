@@ -15,6 +15,6 @@ const faqSchema = new mongoose.Schema({
   }
 }, { timestamps: true });
 
-const Faq = mongoose.models.Faq || mongoose.model('Faq', faqSchema);
+const Faq = mongoose.models.Faq ?? mongoose.model('Faq', faqSchema);
 
 export default Faq;
