@@ -13,9 +13,9 @@ export default function VideoShowcase() {
   return (
     <section id="video-showcase" className="py-16 md:py-24 bg-background">
       <div className="container max-w-7xl">
-        <div className="grid lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2">
-            <Card className="overflow-hidden">
+        <div className="grid lg:grid-cols-5 gap-8">
+          <div className="lg:col-span-3">
+            <Card className="overflow-hidden border-0">
               <CardContent className="p-0">
                 <div className="relative aspect-video w-full">
                   <Image
@@ -23,7 +23,7 @@ export default function VideoShowcase() {
                     alt={activeVideo.title}
                     fill
                     className="object-cover"
-                    sizes="(max-width: 1024px) 100vw, 66vw"
+                    sizes="(max-width: 1024px) 100vw, 60vw"
                   />
                    <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
                     <PlayCircle className="h-20 w-20 text-white/80 hover:text-white transition-colors cursor-pointer" />
@@ -37,7 +37,7 @@ export default function VideoShowcase() {
             </Card>
           </div>
 
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-2">
             <ScrollArea className="h-[450px] w-full">
                 <div className="space-y-4 pr-4">
                 {videoData.map((video) => (
