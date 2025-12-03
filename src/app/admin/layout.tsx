@@ -13,7 +13,8 @@ import {
   HelpCircle,
   User,
   LogOut,
-  ArrowUpRight,
+  Clapperboard,
+  GalleryHorizontal,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -35,6 +36,8 @@ const navItems = [
     { href: "/admin/activities", icon: Settings, label: "Activities" },
     { href: "/admin/missions", icon: Rocket, label: "Missions" },
     { href: "/admin/timeline", icon: Milestone, label: "Timeline" },
+    { href: "/admin/videos", icon: Clapperboard, label: "Videos"},
+    { href: "/admin/gallery", icon: GalleryHorizontal, label: "Gallery"},
     { href: "/admin/faq", icon: HelpCircle, label: "FAQs" },
     { href: "/admin/contacts", icon: Users, label: "Contacts" },
     { href: "/admin/profile", icon: User, label: "Profile" },

@@ -35,7 +35,7 @@ export default function Hero() {
           </div>
 
           <div className="animate-fade-in-up animation-delay-600 mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button asChild size="lg" className="group rounded-full shadow-lg shadow-primary/20 transition-all duration-300 hover:shadow-primary/40 hover:scale-105 w-full sm:w-auto">
+            <Button asChild size="lg" className="group rounded-full shadow-lg shadow-primary/20 transition-all duration-300 hover:shadow-primary/40 hover:scale-102 w-full sm:w-auto">
               <a href="tel:+15551234567">
                 <Phone className="mr-2 h-5 w-5" />
                 +1 (555) 123-4567
