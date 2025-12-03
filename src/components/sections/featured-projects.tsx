@@ -1,12 +1,60 @@
+'use server';
 import Image from 'next/image';
-import { futureMissionsData } from '@/lib/data';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { Button } from '../ui/button';
 import { ArrowRight } from 'lucide-react';
+import { MONGODB_URI } from '@/config/config';
+import type { ImagePlaceholder } from '@/lib/placeholder-images';
 
-export default function FeaturedProjects() {
+type Project = {
+    _id?: string;
+    image: ImagePlaceholder;
+    title: string;
+    slug: string;
+    description: string;
+    tags: string[];
+};
+
+const futureMissionsData = {
+  title: 'Featured Projects',
+  subheadline: "A showcase of the innovative solutions we've delivered for our clients.",
+};
+
+async function getProjectsData(): Promise<Project[] | null> {
+  if (!MONGODB_URI) {
+    console.error('MongoDB URI is not configured, skipping fetch for Projects section.');
+    return null;
+  }
+
+  try {
+    const baseUrl = process.env.NODE_ENV === 'production' 
+      ? `https://` + process.env.NEXT_PUBLIC_VERCEL_URL
+      : 'http://localhost:9002';
+      
+    const res = await fetch(`${baseUrl}/api/projects`, { cache: 'no-store' });
+
+    if (!res.ok) {
+      console.error(`Failed to fetch projects data: ${res.status} ${res.statusText}`);
+      return null;
+    }
+
+    const data = await res.json();
+    return data;
+  } catch (error) {
+    console.error('An error occurred while fetching projects data:', error);
+    return null;
+  }
+}
+
+export default async function FeaturedProjects() {
+  const projects = await getProjectsData();
+
+  if (!projects || projects.length === 0) {
+    return null;
+  }
+
   return (
     <section id="projects" className="py-16 md:py-24 bg-background">
       <div className="container max-w-7xl">
@@ -19,7 +67,7 @@ export default function FeaturedProjects() {
           </p>
         </div>
         <div className="grid md:grid-cols-3 gap-8">
-          {futureMissionsData.missions.map((mission) => (
+          {projects.map((mission) => (
             <Card key={mission.title} className="group overflow-hidden flex flex-col transition-all duration-300 ease-in-out hover:scale-[1.02] hover:-translate-y-2 hover:shadow-xl hover:shadow-primary/10">
               <div className="relative h-48 w-full overflow-hidden">
                 <Image

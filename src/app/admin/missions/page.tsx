@@ -1,46 +1,52 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { futureMissionsData } from '@/lib/data';
 import type { ImagePlaceholder } from '@/lib/placeholder-images';
-import { PlusCircle, Trash2, MoreHorizontal, FilePenLine, Eye, ChevronLeft, ChevronRight, GripVertical, ArrowUp, ArrowDown } from 'lucide-react';
+import { PlusCircle, Trash2, MoreHorizontal, FilePenLine, Eye, ChevronLeft, ChevronRight, GripVertical, ArrowUp, ArrowDown, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import { useGetProjectsDataQuery, useUpdateProjectsDataMutation } from '@/services/api';
 
-type Mission = {
+type Project = {
+    _id?: string;
     image: ImagePlaceholder;
     title: string;
+    slug: string;
     description: string;
+    details: string;
     tags: string[];
 };
 
 const ITEMS_PER_PAGE = 3;
 
-const MissionForm = ({ mission, onSave }: { mission?: Mission | null, onSave: (mission: Mission) => void }) => {
-    const [title, setTitle] = useState(mission?.title || '');
-    const [description, setDescription] = useState(mission?.description || '');
-    const [tags, setTags] = useState(mission?.tags?.join(', ') || '');
+const MissionForm = ({ project, onSave }: { project?: Project | null, onSave: (project: Omit<Project, '_id'>) => void }) => {
+    const [title, setTitle] = useState(project?.title || '');
+    const [description, setDescription] = useState(project?.description || '');
+    const [details, setDetails] = useState(project?.details || '');
+    const [tags, setTags] = useState(project?.tags?.join(', ') || '');
     const { toast } = useToast();
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        const newMission: Mission = {
+        const newMission: Omit<Project, '_id'> = {
             title,
+            slug: title.toLowerCase().replace(/\s+/g, '-'),
             description,
+            details,
             tags: tags.split(',').map(tag => tag.trim()).filter(Boolean),
-            image: mission?.image || futureMissionsData.missions[0].image, // Placeholder
+            image: project?.image || { id: 'placeholder', description: 'Placeholder', imageUrl: 'https://placehold.co/600x400', imageHint: 'placeholder' },
         };
         onSave(newMission);
         toast({
-            title: `Project ${mission ? 'Updated' : 'Created'}`,
+            title: `Project ${project ? 'Updated' : 'Created'}`,
             description: `The project "${title}" has been saved.`,
         });
     };
@@ -52,8 +58,12 @@ const MissionForm = ({ mission, onSave }: { mission?: Mission | null, onSave: (m
                 <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} required />
             </div>
             <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
+                <Label htmlFor="description">Short Description (for cards)</Label>
                 <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} required />
+            </div>
+             <div className="space-y-2">
+                <Label htmlFor="details">Full Details (for project page)</Label>
+                <Textarea id="details" value={details} onChange={(e) => setDetails(e.target.value)} required rows={6}/>
             </div>
             <div className="space-y-2">
                 <Label htmlFor="tags">Tags (comma-separated)</Label>
@@ -62,7 +72,7 @@ const MissionForm = ({ mission, onSave }: { mission?: Mission | null, onSave: (m
              <div className="space-y-2">
                 <Label>Project Image</Label>
                 <div className="flex items-center gap-4">
-                    <Image src={mission?.image.imageUrl || 'https://placehold.co/150x100'} alt={mission?.title || 'New Mission'} width={150} height={100} className="rounded-md object-cover aspect-video" />
+                    <Image src={project?.image.imageUrl || 'https://placehold.co/150x100'} alt={project?.title || 'New Mission'} width={150} height={100} className="rounded-md object-cover aspect-video" />
                     <Input type="file" className="max-w-xs" />
                 </div>
             </div>
@@ -76,26 +86,31 @@ const MissionForm = ({ mission, onSave }: { mission?: Mission | null, onSave: (m
     )
 }
 
-const ViewMissionDialog = ({ mission, open, onOpenChange }: { mission: Mission | null; open: boolean; onOpenChange: (open: boolean) => void; }) => {
-    if (!mission) return null;
+const ViewMissionDialog = ({ project, open, onOpenChange }: { project: Project | null; open: boolean; onOpenChange: (open: boolean) => void; }) => {
+    if (!project) return null;
 
     return (
          <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-lg">
                 <DialogHeader>
-                    <DialogTitle>{mission.title}</DialogTitle>
+                    <DialogTitle>{project.title}</DialogTitle>
                     <DialogDescription>Viewing project details.
                     </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
                     <div className="relative aspect-video w-full rounded-md overflow-hidden mt-4">
-                        <Image src={mission.image.imageUrl} alt={mission.title} fill className="object-cover" />
+                        <Image src={project.image.imageUrl} alt={project.title} fill className="object-cover" />
                     </div>
                     <div>
-                        <p className="text-sm text-muted-foreground">{mission.description}</p>
+                        <p className="font-semibold">Short Description</p>
+                        <p className="text-sm text-muted-foreground">{project.description}</p>
+                    </div>
+                     <div>
+                        <p className="font-semibold">Full Details</p>
+                        <p className="text-sm text-muted-foreground">{project.details}</p>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                        {mission.tags.map(tag => <Badge key={tag} variant="secondary">{tag}</Badge>)}
+                        {project.tags.map(tag => <Badge key={tag} variant="secondary">{tag}</Badge>)}
                     </div>
                 </div>
                  <DialogFooter>
@@ -111,33 +126,58 @@ const ViewMissionDialog = ({ mission, open, onOpenChange }: { mission: Mission |
 
 const MissionsAdminPage = () => {
     const { toast } = useToast();
-    const [missions, setMissions] = useState<Mission[]>(futureMissionsData.missions);
+    const { data: projects = [], isLoading: isQueryLoading, isError } = useGetProjectsDataQuery();
+    const [updateProjects, { isLoading: isMutationLoading }] = useUpdateProjectsDataMutation();
+    const [items, setItems] = useState<Project[]>([]);
+
     const [currentPage, setCurrentPage] = useState(1);
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [isViewOpen, setIsViewOpen] = useState(false);
-    const [selectedMission, setSelectedMission] = useState<Mission | null>(null);
+    const [selectedMission, setSelectedMission] = useState<Project | null>(null);
     const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
-    const totalPages = Math.ceil(missions.length / ITEMS_PER_PAGE);
-    const paginatedMissions = missions.slice(
+    useEffect(() => {
+        if(projects) {
+            setItems(projects);
+        }
+    }, [projects]);
+
+    const totalPages = Math.ceil(items.length / ITEMS_PER_PAGE);
+    const paginatedMissions = items.slice(
         (currentPage - 1) * ITEMS_PER_PAGE,
         currentPage * ITEMS_PER_PAGE
     );
 
+    const triggerUpdate = async (updatedItems: Project[]) => {
+        try {
+            await updateProjects(updatedItems).unwrap();
+            toast({
+                title: 'Content Saved',
+                description: 'Projects section has been updated successfully.',
+            });
+        } catch (error) {
+            toast({
+                variant: 'destructive',
+                title: 'Save Failed',
+                description: 'There was an error saving the projects.',
+            });
+        }
+    };
+
     const handleMove = (index: number, direction: 'up' | 'down') => {
         const fullIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;
-        const newMissions = [...missions];
-        const item = newMissions[fullIndex];
+        const newItems = [...items];
+        const item = newItems[fullIndex];
 
         if (direction === 'up' && fullIndex > 0) {
-            newMissions.splice(fullIndex, 1);
-            newMissions.splice(fullIndex - 1, 0, item);
-        } else if (direction === 'down' && fullIndex < newMissions.length - 1) {
-            newMissions.splice(fullIndex, 1);
-            newMissions.splice(fullIndex + 1, 0, item);
+            newItems.splice(fullIndex, 1);
+            newItems.splice(fullIndex - 1, 0, item);
+        } else if (direction === 'down' && fullIndex < newItems.length - 1) {
+            newItems.splice(fullIndex, 1);
+            newItems.splice(fullIndex + 1, 0, item);
         }
-        setMissions(newMissions);
-        toast({ title: 'Project reordered successfully!' });
+        setItems(newItems);
+        triggerUpdate(newItems);
     };
 
     const handleAddClick = () => {
@@ -146,22 +186,23 @@ const MissionsAdminPage = () => {
         setIsFormOpen(true);
     };
 
-    const handleEditClick = (mission: Mission, index: number) => {
+    const handleEditClick = (mission: Project, index: number) => {
         const fullIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;
         setSelectedMission(mission);
         setEditingIndex(fullIndex);
         setIsFormOpen(true);
     };
 
-    const handleViewClick = (mission: Mission) => {
+    const handleViewClick = (mission: Project) => {
         setSelectedMission(mission);
         setIsViewOpen(true);
     };
 
     const handleDelete = (index: number) => {
         const fullIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;
-        const newMissions = missions.filter((_, i) => i !== fullIndex);
-        setMissions(newMissions);
+        const newItems = items.filter((_, i) => i !== fullIndex);
+        setItems(newItems);
+        triggerUpdate(newItems);
         toast({
             variant: "destructive",
             title: "Project Deleted",
@@ -169,16 +210,31 @@ const MissionsAdminPage = () => {
         });
     };
     
-    const handleSave = (mission: Mission) => {
+    const handleSave = (project: Omit<Project, '_id'>) => {
+        let newItems: Project[];
         if (editingIndex !== null) {
-            const newMissions = [...missions];
-            newMissions[editingIndex] = mission;
-            setMissions(newMissions);
+            newItems = [...items];
+            newItems[editingIndex] = { ...newItems[editingIndex], ...project };
         } else {
-            setMissions([mission, ...missions]);
+            const newProject = { ...project, _id: `new_${Date.now()}` };
+            newItems = [newProject, ...items];
         }
+        setItems(newItems);
+        triggerUpdate(newItems);
         setIsFormOpen(false);
     };
+
+    if (isQueryLoading) {
+        return (
+            <div className="flex items-center justify-center h-full">
+                <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+        );
+    }
+    
+    if (isError) {
+        return <div>Error loading data. Please try again.</div>;
+    }
 
 
     return (
@@ -189,12 +245,12 @@ const MissionsAdminPage = () => {
                         <CardTitle>Featured Projects</CardTitle>
                         <CardDescription>Manage the content of the "Featured Projects" section.</CardDescription>
                     </div>
-                    <Button onClick={handleAddClick}>
+                    <Button onClick={handleAddClick} disabled={isMutationLoading}>
                         <PlusCircle className="mr-2 h-4 w-4" /> Add Project
                     </Button>
                 </CardHeader>
                 <CardContent>
-                    <Card className="border">
+                    <Card className="border relative">
                         <Table>
                             <TableHeader>
                                 <TableRow>
@@ -207,14 +263,14 @@ const MissionsAdminPage = () => {
                             </TableHeader>
                             <TableBody>
                                 {paginatedMissions.length > 0 ? paginatedMissions.map((mission, index) => (
-                                    <TableRow key={index}>
+                                    <TableRow key={mission._id || index}>
                                         <TableCell className="text-center align-middle">
                                             <div className="flex flex-col items-center gap-1">
-                                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleMove(index, 'up')} disabled={(currentPage - 1) * ITEMS_PER_PAGE + index === 0}>
+                                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleMove(index, 'up')} disabled={isMutationLoading || (currentPage - 1) * ITEMS_PER_PAGE + index === 0}>
                                                     <ArrowUp className="h-4 w-4" />
                                                 </Button>
                                                 <GripVertical className="h-4 w-4 text-muted-foreground" />
-                                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleMove(index, 'down')} disabled={(currentPage - 1) * ITEMS_PER_PAGE + index === missions.length - 1}>
+                                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleMove(index, 'down')} disabled={isMutationLoading || (currentPage - 1) * ITEMS_PER_PAGE + index === items.length - 1}>
                                                     <ArrowDown className="h-4 w-4" />
                                                 </Button>
                                             </div>
@@ -227,7 +283,7 @@ const MissionsAdminPage = () => {
                                         <TableCell className="text-right">
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
-                                                    <Button size="icon" variant="ghost">
+                                                    <Button size="icon" variant="ghost" disabled={isMutationLoading}>
                                                         <MoreHorizontal className="h-4 w-4" />
                                                     </Button>
                                                 </DropdownMenuTrigger>
@@ -255,9 +311,14 @@ const MissionsAdminPage = () => {
                                 )}
                             </TableBody>
                         </Table>
+                        {isMutationLoading && (
+                            <div className="absolute inset-0 bg-background/50 flex items-center justify-center">
+                                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                            </div>
+                        )}
                         <div className="flex items-center justify-between border-t p-4">
                             <div className="text-xs text-muted-foreground">
-                                Showing <strong>{(currentPage - 1) * ITEMS_PER_PAGE + 1}-{(currentPage - 1) * ITEMS_PER_PAGE + paginatedMissions.length}</strong> of <strong>{missions.length}</strong> projects
+                                Showing <strong>{(currentPage - 1) * ITEMS_PER_PAGE + 1}-{(currentPage - 1) * ITEMS_PER_PAGE + paginatedMissions.length}</strong> of <strong>{items.length}</strong> projects
                             </div>
                             <div className="flex items-center gap-2">
                                 <Button variant="outline" size="sm" onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1}>
@@ -282,11 +343,11 @@ const MissionsAdminPage = () => {
                             {selectedMission ? 'Make changes to this project.' : 'Fill out the details for the new project.'}
                         </DialogDescription>
                     </DialogHeader>
-                    <MissionForm mission={selectedMission} onSave={handleSave} />
+                    <MissionForm project={selectedMission} onSave={handleSave} />
                 </DialogContent>
             </Dialog>
 
-            <ViewMissionDialog mission={selectedMission} open={isViewOpen} onOpenChange={setIsViewOpen} />
+            <ViewMissionDialog project={selectedMission} open={isViewOpen} onOpenChange={setIsViewOpen} />
         </>
     );
 }

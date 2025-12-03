@@ -1,21 +1,56 @@
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
-import { futureMissionsData } from '@/lib/data';
 import Header from '@/components/layout/header';
 import Footer from '@/components/layout/footer';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { MONGODB_URI } from '@/config/config';
+import type { ImagePlaceholder } from '@/lib/placeholder-images';
 
-export function generateStaticParams() {
-  return futureMissionsData.missions.map((mission) => ({
-    slug: mission.slug,
+type Project = {
+    _id?: string;
+    image: ImagePlaceholder;
+    title: string;
+    slug: string;
+    description: string;
+    details: string;
+    tags: string[];
+};
+
+async function getProjects(): Promise<Project[] | null> {
+  if (!MONGODB_URI) {
+    return null;
+  }
+  try {
+    const baseUrl = process.env.NODE_ENV === 'production' 
+      ? `https://` + process.env.NEXT_PUBLIC_VERCEL_URL
+      : 'http://localhost:9002';
+    const res = await fetch(`${baseUrl}/api/projects`, { cache: 'no-store' });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (error) {
+    console.error('Failed to fetch projects:', error);
+    return null;
+  }
+}
+
+export async function generateStaticParams() {
+  const projects = await getProjects();
+
+  if (!projects) {
+    return [];
+  }
+
+  return projects.map((project) => ({
+    slug: project.slug,
   }));
 }
 
-export default function ProjectDetailPage({ params }: { params: { slug: string } }) {
-  const mission = futureMissionsData.missions.find(m => m.slug === params.slug);
+export default async function ProjectDetailPage({ params }: { params: { slug: string } }) {
+  const projects = await getProjects();
+  const mission = projects?.find(m => m.slug === params.slug);
 
   if (!mission) {
     notFound();
@@ -48,10 +83,7 @@ export default function ProjectDetailPage({ params }: { params: { slug: string }
             ))}
           </div>
           <div className="prose prose-lg dark:prose-invert max-w-none text-muted-foreground">
-            <p>{mission.description}</p>
-            {/* You can add more detailed content here */}
-             <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
-             <p>Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+            <p>{mission.details}</p>
           </div>
         </div>
       </main>
