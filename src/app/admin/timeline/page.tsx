@@ -1,5 +1,6 @@
+
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -7,22 +8,30 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
-import { timelineData } from '@/lib/data';
-import { PlusCircle, Trash2, ArrowUp, ArrowDown, GripVertical, ChevronLeft, ChevronRight, MoreHorizontal, Eye, FilePenLine } from 'lucide-react';
+import { PlusCircle, Trash2, ArrowUp, ArrowDown, GripVertical, ChevronLeft, ChevronRight, MoreHorizontal, Eye, FilePenLine, Loader2, Lightbulb, Target, Users, Bot } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { useGetTimelineDataQuery, useUpdateTimelineDataMutation } from '@/services/api';
 
 type TimelineEvent = {
+    _id?: string;
     year: string;
     title: string;
     description: string;
-    icon: LucideIcon;
+    icon: string; // Store icon name as a string
+};
+
+const iconMap: { [key: string]: LucideIcon } = {
+    Lightbulb: Lightbulb,
+    Target: Target,
+    Users: Users,
+    Bot: Bot,
 };
 
 const ITEMS_PER_PAGE = 3;
 
-const EventForm = ({ event, onSave }: { event?: TimelineEvent | null, onSave: (event: TimelineEvent) => void }) => {
+const EventForm = ({ event, onSave }: { event?: TimelineEvent | null, onSave: (event: Omit<TimelineEvent, '_id'>) => void }) => {
     const [year, setYear] = useState(event?.year || '');
     const [title, setTitle] = useState(event?.title || '');
     const [description, setDescription] = useState(event?.description || '');
@@ -30,11 +39,11 @@ const EventForm = ({ event, onSave }: { event?: TimelineEvent | null, onSave: (e
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        const newEvent: TimelineEvent = {
+        const newEvent: Omit<TimelineEvent, '_id'> = {
             year,
             title,
             description,
-            icon: event?.icon || timelineData.events[0].icon,
+            icon: event?.icon || 'Lightbulb', // Default icon
         };
         onSave(newEvent);
         toast({
@@ -69,7 +78,7 @@ const EventForm = ({ event, onSave }: { event?: TimelineEvent | null, onSave: (e
 
 const ViewEventDialog = ({ event, open, onOpenChange }: { event: TimelineEvent | null; open: boolean; onOpenChange: (open: boolean) => void; }) => {
     if (!event) return null;
-    const Icon = event.icon;
+    const Icon = iconMap[event.icon] || Lightbulb;
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -95,22 +104,47 @@ const ViewEventDialog = ({ event, open, onOpenChange }: { event: TimelineEvent |
 
 const TimelineAdminPage = () => {
     const { toast } = useToast();
-    const [events, setEvents] = useState<TimelineEvent[]>(timelineData.events);
+    const { data: events = [], isLoading: isQueryLoading, isError } = useGetTimelineDataQuery();
+    const [updateTimeline, { isLoading: isMutationLoading }] = useUpdateTimelineDataMutation();
+    const [items, setItems] = useState<TimelineEvent[]>([]);
+
     const [currentPage, setCurrentPage] = useState(1);
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [isViewOpen, setIsViewOpen] = useState(false);
     const [selectedEvent, setSelectedEvent] = useState<TimelineEvent | null>(null);
     const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
-    const totalPages = Math.ceil(events.length / ITEMS_PER_PAGE);
-    const paginatedEvents = events.slice(
+    useEffect(() => {
+        if(events) {
+            setItems(events);
+        }
+    }, [events]);
+
+    const totalPages = Math.ceil(items.length / ITEMS_PER_PAGE);
+    const paginatedEvents = items.slice(
         (currentPage - 1) * ITEMS_PER_PAGE,
         currentPage * ITEMS_PER_PAGE
     );
+    
+    const triggerUpdate = async (updatedItems: TimelineEvent[]) => {
+        try {
+            await updateTimeline(updatedItems).unwrap();
+            toast({
+                title: 'Content Saved',
+                description: 'Timeline section has been updated successfully.',
+            });
+        } catch (error) {
+            toast({
+                variant: 'destructive',
+                title: 'Save Failed',
+                description: 'There was an error saving the timeline.',
+            });
+        }
+    };
 
     const handleMove = (index: number, direction: 'up' | 'down') => {
         const fullIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;
-        const newEvents = [...events];
+        const newEvents = [...items];
         const item = newEvents[fullIndex];
 
         if (direction === 'up' && fullIndex > 0) {
@@ -120,7 +154,8 @@ const TimelineAdminPage = () => {
             newEvents.splice(fullIndex, 1);
             newEvents.splice(fullIndex + 1, 0, item);
         }
-        setEvents(newEvents);
+        setItems(newEvents);
+        triggerUpdate(newEvents);
     };
 
     const handleAddClick = () => {
@@ -143,8 +178,9 @@ const TimelineAdminPage = () => {
 
     const handleDelete = (index: number) => {
         const fullIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;
-        const newEvents = events.filter((_, i) => i !== fullIndex);
-        setEvents(newEvents);
+        const newEvents = items.filter((_, i) => i !== fullIndex);
+        setItems(newEvents);
+        triggerUpdate(newEvents);
         toast({
             variant: "destructive",
             title: "Event Deleted",
@@ -152,16 +188,32 @@ const TimelineAdminPage = () => {
         });
     };
     
-    const handleSave = (event: TimelineEvent) => {
+    const handleSave = (event: Omit<TimelineEvent, '_id'>) => {
+        let newItems: TimelineEvent[];
         if (editingIndex !== null) {
-            const newEvents = [...events];
-            newEvents[editingIndex] = event;
-            setEvents(newEvents);
+            newItems = [...items];
+            newItems[editingIndex] = { ...newItems[editingIndex], ...event };
         } else {
-            setEvents([event, ...events]);
+            const newEvent = { ...event, _id: `new_${Date.now()}` };
+            newItems = [newEvent, ...items];
         }
+        setItems(newItems);
+        triggerUpdate(newItems);
         setIsFormOpen(false);
     };
+
+    if (isQueryLoading) {
+        return (
+            <div className="flex items-center justify-center h-full">
+                <Loader2 className="h-8 w-8 animate-spin" />
+            </div>
+        );
+    }
+    
+    if (isError) {
+        return <div>Error loading data. Please try again.</div>;
+    }
+
 
     return (
         <>
@@ -173,84 +225,87 @@ const TimelineAdminPage = () => {
                             Manage the items in the "DNA Timeline" section.
                         </CardDescription>
                     </div>
-                     <Button onClick={handleAddClick}>
+                     <Button onClick={handleAddClick} disabled={isMutationLoading}>
                         <PlusCircle className="mr-2 h-4 w-4" /> Add Event
                     </Button>
                 </CardHeader>
                 <CardContent>
-                    <div className="space-y-4">
-                        <Card>
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead className="w-[50px]"></TableHead>
-                                        <TableHead className="w-[100px]">Year</TableHead>
-                                        <TableHead>Title</TableHead>
-                                        <TableHead className="hidden md:table-cell">Description</TableHead>
-                                        <TableHead className="text-right">Actions</TableHead>
+                    <Card className="relative">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead className="w-[50px]"></TableHead>
+                                    <TableHead className="w-[100px]">Year</TableHead>
+                                    <TableHead>Title</TableHead>
+                                    <TableHead className="hidden md:table-cell">Description</TableHead>
+                                    <TableHead className="text-right">Actions</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {paginatedEvents.map((event, index) => (
+                                    <TableRow key={event._id || index}>
+                                        <TableCell className="text-center align-middle">
+                                            <div className="flex flex-col items-center gap-1">
+                                                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleMove(index, 'up')} disabled={isMutationLoading || (currentPage - 1) * ITEMS_PER_PAGE + index === 0}>
+                                                    <ArrowUp className="h-4 w-4" />
+                                                </Button>
+                                                <GripVertical className="h-4 w-4 text-muted-foreground" />
+                                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleMove(index, 'down')} disabled={isMutationLoading || (currentPage - 1) * ITEMS_PER_PAGE + index === items.length - 1}>
+                                                    <ArrowDown className="h-4 w-4" />
+                                                </Button>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="font-medium">{event.year}</TableCell>
+                                        <TableCell className="font-medium">{event.title}</TableCell>
+                                        <TableCell className="hidden md:table-cell text-muted-foreground truncate max-w-sm">{event.description}</TableCell>
+                                        <TableCell className="text-right">
+                                                <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button size="icon" variant="ghost" disabled={isMutationLoading}>
+                                                        <MoreHorizontal className="h-4 w-4" />
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end">
+                                                    <DropdownMenuItem onClick={() => handleViewClick(event)}>
+                                                        <Eye className="mr-2 h-4 w-4" />
+                                                        View
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => handleEditClick(event, index)}>
+                                                        <FilePenLine className="mr-2 h-4 w-4" />
+                                                        Edit
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(index)}>
+                                                        <Trash2 className="mr-2 h-4 w-4" />
+                                                        Delete
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        </TableCell>
                                     </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {paginatedEvents.map((event, index) => (
-                                        <TableRow key={index}>
-                                            <TableCell className="text-center align-middle">
-                                                <div className="flex flex-col items-center gap-1">
-                                                     <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleMove(index, 'up')} disabled={(currentPage - 1) * ITEMS_PER_PAGE + index === 0}>
-                                                        <ArrowUp className="h-4 w-4" />
-                                                    </Button>
-                                                    <GripVertical className="h-4 w-4 text-muted-foreground" />
-                                                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleMove(index, 'down')} disabled={(currentPage - 1) * ITEMS_PER_PAGE + index === events.length - 1}>
-                                                        <ArrowDown className="h-4 w-4" />
-                                                    </Button>
-                                                </div>
-                                            </TableCell>
-                                            <TableCell className="font-medium">{event.year}</TableCell>
-                                            <TableCell className="font-medium">{event.title}</TableCell>
-                                            <TableCell className="hidden md:table-cell text-muted-foreground truncate max-w-sm">{event.description}</TableCell>
-                                            <TableCell className="text-right">
-                                                 <DropdownMenu>
-                                                    <DropdownMenuTrigger asChild>
-                                                        <Button size="icon" variant="ghost">
-                                                            <MoreHorizontal className="h-4 w-4" />
-                                                        </Button>
-                                                    </DropdownMenuTrigger>
-                                                    <DropdownMenuContent align="end">
-                                                        <DropdownMenuItem onClick={() => handleViewClick(event)}>
-                                                            <Eye className="mr-2 h-4 w-4" />
-                                                            View
-                                                        </DropdownMenuItem>
-                                                        <DropdownMenuItem onClick={() => handleEditClick(event, index)}>
-                                                            <FilePenLine className="mr-2 h-4 w-4" />
-                                                            Edit
-                                                        </DropdownMenuItem>
-                                                        <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(index)}>
-                                                            <Trash2 className="mr-2 h-4 w-4" />
-                                                            Delete
-                                                        </DropdownMenuItem>
-                                                    </DropdownMenuContent>
-                                                </DropdownMenu>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                             <div className="flex items-center justify-between border-t p-4">
-                                <div className="text-xs text-muted-foreground">
-                                    Showing <strong>{(currentPage - 1) * ITEMS_PER_PAGE + 1}-{(currentPage - 1) * ITEMS_PER_PAGE + paginatedEvents.length}</strong> of <strong>{events.length}</strong> events
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <Button variant="outline" size="sm" onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1}>
-                                        <ChevronLeft className="h-4 w-4" />
-                                        <span className="sr-only">Previous</span>
-                                    </Button>
-                                    <Button variant="outline" size="sm" onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages}>
-                                        <span className="sr-only">Next</span>
-                                        <ChevronRight className="h-4 w-4" />
-                                    </Button>
-                                </div>
+                                ))}
+                            </TableBody>
+                        </Table>
+                        {isMutationLoading && (
+                            <div className="absolute inset-0 bg-background/50 flex items-center justify-center">
+                                <Loader2 className="h-6 w-6 animate-spin text-primary" />
                             </div>
-                        </Card>
-                    </div>
+                        )}
+                            <div className="flex items-center justify-between border-t p-4">
+                            <div className="text-xs text-muted-foreground">
+                                Showing <strong>{(currentPage - 1) * ITEMS_PER_PAGE + 1}-{(currentPage - 1) * ITEMS_PER_PAGE + paginatedEvents.length}</strong> of <strong>{items.length}</strong> events
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Button variant="outline" size="sm" onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1}>
+                                    <ChevronLeft className="h-4 w-4" />
+                                    <span className="sr-only">Previous</span>
+                                </Button>
+                                <Button variant="outline" size="sm" onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages}>
+                                    <span className="sr-only">Next</span>
+                                    <ChevronRight className="h-4 w-4" />
+                                </Button>
+                            </div>
+                        </div>
+                    </Card>
                 </CardContent>
             </Card>
 

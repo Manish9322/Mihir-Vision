@@ -1,9 +1,10 @@
+
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
 export const contentApi = createApi({
   reducerPath: 'contentApi',
   baseQuery: fetchBaseQuery({ baseUrl: '/api/' }),
-  tagTypes: ['About', 'Activities', 'Videos', 'Gallery', 'Projects'],
+  tagTypes: ['About', 'Activities', 'Videos', 'Gallery', 'Projects', 'Timeline'],
   endpoints: (builder) => ({
     getAboutData: builder.query({
       query: () => 'about',
@@ -65,6 +66,18 @@ export const contentApi = createApi({
       }),
       invalidatesTags: ['Projects'],
     }),
+    getTimelineData: builder.query({
+        query: () => 'timeline',
+        providesTags: ['Timeline'],
+    }),
+    updateTimelineData: builder.mutation({
+        query: (updatedData) => ({
+            url: 'timeline',
+            method: 'POST',
+            body: updatedData,
+        }),
+        invalidatesTags: ['Timeline'],
+    }),
   }),
 });
 
@@ -78,5 +91,7 @@ export const {
   useGetGalleryDataQuery,
   useUpdateGalleryDataMutation,
   useGetProjectsDataQuery,
-  useUpdateProjectsDataMutation
+  useUpdateProjectsDataMutation,
+  useGetTimelineDataQuery,
+  useUpdateTimelineDataMutation
 } = contentApi;
