@@ -39,7 +39,6 @@ export default function VideoShowcase() {
                 </div>
                 <div className="p-4 bg-muted/50">
                     <h3 className="font-bold text-lg">{activeVideo.title}</h3>
-                    <p className="text-sm text-muted-foreground">{activeVideo.subtitle}</p>
                 </div>
               </CardContent>
             </Card>
@@ -51,7 +50,7 @@ export default function VideoShowcase() {
                 {videoData.map((video) => (
                     <Card
                     key={video.id}
-                    className={`flex items-center gap-4 p-3 cursor-pointer transition-all hover:shadow-md hover:-translate-y-1 ${
+                    className={`flex items-center gap-4 p-3 cursor-pointer transition-all ${
                         activeVideo.id === video.id ? 'bg-primary/10 border-primary' : 'bg-secondary/50'
                     }`}
                     onClick={() => setActiveVideo(video)}
