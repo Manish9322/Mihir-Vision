@@ -175,12 +175,12 @@ export function VideoPlayer({ video, isLoading }: VideoPlayerProps) {
               {isLoading ? (
                 <Loader2 className="h-16 w-16 text-white/80 animate-spin" />
               ) : isFinished ? (
-                 <Button variant="ghost" size="icon" className="h-20 w-20 text-white/80 hover:text-white pointer-events-auto" onClick={togglePlay}>
-                    <RefreshCcw className="h-12 w-12" />
+                 <Button variant="ghost" size="icon" className="h-28 w-28 text-white/80 hover:text-white pointer-events-auto" onClick={togglePlay}>
+                    <RefreshCcw className="h-16 w-16" />
                 </Button>
               ) : (
-                <Button size="icon" className="h-24 w-24 rounded-full bg-primary/80 dark:bg-transparent text-primary-foreground dark:text-white/80 hover:bg-primary dark:hover:text-white pointer-events-auto" onClick={togglePlay}>
-                    <Play className="h-16 w-16 fill-current" />
+                <Button size="icon" className="h-28 w-28 rounded-full bg-primary/80 dark:bg-transparent text-primary-foreground dark:text-white/80 hover:bg-primary dark:hover:text-white pointer-events-auto" onClick={togglePlay}>
+                    <Play className="h-20 w-20 fill-current" />
                 </Button>
               )}
             </div>
