@@ -7,6 +7,7 @@ import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { PlayCircle } from 'lucide-react';
 import { VideoPlayer } from '@/components/ui/video-player';
+import { cn } from '@/lib/utils';
 
 export default function VideoShowcase() {
   const [activeVideo, setActiveVideo] = useState(videoData[0]);
@@ -43,35 +44,54 @@ export default function VideoShowcase() {
           </div>
 
           <div className="lg:col-span-2">
-            <ScrollArea className="h-[400px] w-full pr-4 scrollbar-hide">
-              <div className="space-y-2 md:space-y-4">
+            <ScrollArea className="h-full max-h-[400px] w-full lg:pr-4 scrollbar-hide">
+              <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-1 gap-2">
                 {videoData.map((video) => (
-                  <Card
-                    key={video.id}
-                    className={`flex items-center gap-4 p-2 md:p-3 cursor-pointer transition-all shadow-sm ${
-                      activeVideo.id === video.id ? 'bg-primary/10 border-primary' : 'bg-secondary/50'
-                    }`}
-                    onClick={() => handleVideoSelect(video)}
-                  >
-                    <div className="relative h-14 w-24 md:h-16 md:w-28 flex-shrink-0 overflow-hidden rounded-md">
+                  <div key={video.id} onClick={() => handleVideoSelect(video)} className="cursor-pointer">
+                    {/* Mobile/Tablet view - Thumbnail only */}
+                    <div
+                      className={cn(
+                        "relative aspect-video w-full flex-shrink-0 overflow-hidden rounded-md lg:hidden",
+                        activeVideo.id === video.id && "ring-2 ring-primary ring-offset-2 ring-offset-background"
+                      )}
+                    >
                       <Image
                         src={video.thumbnail.imageUrl}
                         alt={video.title}
                         fill
                         className="object-cover"
-                        sizes="6rem"
+                        sizes="(max-width: 1024px) 33vw, 6rem"
                       />
                     </div>
-                    <div className="hidden sm:block flex-grow min-w-0">
-                      <h4 className="font-semibold text-sm truncate">{video.title}</h4>
-                      <span className="text-xs text-muted-foreground">{video.duration}</span>
-                    </div>
-                    <PlayCircle
-                      className={`hidden sm:block h-6 w-6 flex-shrink-0 transition-colors ${
-                        activeVideo.id === video.id ? 'text-primary' : 'text-muted-foreground/50'
-                      }`}
-                    />
-                  </Card>
+                    
+                    {/* Desktop view - Card with details */}
+                    <Card
+                      className={cn(
+                        `hidden lg:flex items-center gap-4 p-2 md:p-3 transition-all shadow-sm`,
+                        activeVideo.id === video.id ? 'bg-primary/10 border-primary' : 'bg-secondary/50'
+                      )}
+                    >
+                      <div className="relative h-14 w-24 flex-shrink-0 overflow-hidden rounded-md">
+                        <Image
+                          src={video.thumbnail.imageUrl}
+                          alt={video.title}
+                          fill
+                          className="object-cover"
+                          sizes="6rem"
+                        />
+                      </div>
+                      <div className="flex-grow min-w-0">
+                        <h4 className="font-semibold text-sm truncate">{video.title}</h4>
+                        <span className="text-xs text-muted-foreground">{video.duration}</span>
+                      </div>
+                      <PlayCircle
+                        className={cn(
+                          'h-6 w-6 flex-shrink-0 transition-colors',
+                          activeVideo.id === video.id ? 'text-primary' : 'text-muted-foreground/50'
+                        )}
+                      />
+                    </Card>
+                  </div>
                 ))}
               </div>
             </ScrollArea>
