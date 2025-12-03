@@ -15,14 +15,29 @@ export default function Activities() {
         </div>
         <div className="grid md:grid-cols-3 gap-8">
           {activitiesData.activities.map((activity) => (
-            <Card key={activity.title} className="text-center p-4 transition-transform transform hover:-translate-y-2 hover:shadow-lg">
-              <CardHeader>
-                <div className="mx-auto bg-primary/10 text-primary rounded-full h-16 w-16 flex items-center justify-center mb-4">
-                  <activity.icon className="h-8 w-8" />
-                </div>
-                <CardTitle className="font-headline text-xl">{activity.title}</CardTitle>
-                <CardDescription className="pt-2 text-base">{activity.description}</CardDescription>
-              </CardHeader>
+            <Card
+              key={activity.title}
+              className="relative group overflow-hidden rounded-xl p-6 text-center bg-card transition-all duration-300 ease-in-out hover:-translate-y-2"
+            >
+              <div
+                className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                aria-hidden="true"
+              />
+              <div
+                className="absolute inset-0 bg-gradient-to-t from-background/50 to-transparent"
+                aria-hidden="true"
+              />
+              <div className="relative z-10 flex flex-col items-center h-full">
+                <CardHeader className="p-0">
+                  <div className="mx-auto bg-primary/10 text-primary rounded-full h-20 w-20 flex items-center justify-center mb-6 shadow-inner ring-1 ring-primary/20">
+                    <activity.icon className="h-10 w-10" />
+                  </div>
+                  <CardTitle className="font-headline text-2xl mb-2">{activity.title}</CardTitle>
+                  <CardDescription className="text-base text-muted-foreground/80 leading-relaxed">
+                    {activity.description}
+                  </CardDescription>
+                </CardHeader>
+              </div>
             </Card>
           ))}
         </div>
