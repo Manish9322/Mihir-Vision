@@ -4,7 +4,7 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 export const contentApi = createApi({
   reducerPath: 'contentApi',
   baseQuery: fetchBaseQuery({ baseUrl: '/api/' }),
-  tagTypes: ['About', 'Activities', 'Videos', 'Gallery', 'Projects', 'Timeline', 'Faq', 'Contacts'],
+  tagTypes: ['About', 'Activities', 'Videos', 'Gallery', 'Projects', 'Timeline', 'Faq', 'Contacts', 'Profile'],
   endpoints: (builder) => ({
     getAboutData: builder.query({
       query: () => 'about',
@@ -117,6 +117,18 @@ export const contentApi = createApi({
       }),
       invalidatesTags: ['Contacts'],
     }),
+    getProfileData: builder.query({
+      query: () => 'profile',
+      providesTags: ['Profile'],
+    }),
+    updateProfileData: builder.mutation({
+      query: (updatedData) => ({
+        url: 'profile',
+        method: 'POST',
+        body: updatedData,
+      }),
+      invalidatesTags: ['Profile'],
+    }),
   }),
 });
 
@@ -139,4 +151,6 @@ export const {
   useAddContactMutation,
   useUpdateContactMutation,
   useDeleteContactMutation,
+  useGetProfileDataQuery,
+  useUpdateProfileDataMutation,
 } = contentApi;
