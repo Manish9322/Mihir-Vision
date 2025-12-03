@@ -1,9 +1,12 @@
+import 'dotenv/config';
 import { MONGODB_URI } from "@/config/config.js";
 import mongoose from "mongoose";
 
+mongoose.set('strictQuery', false);
+
 const _db = async () => {
   if (!MONGODB_URI) {
-    console.warn("MONGODB_URI is missing");
+    console.warn("MONGODB_URI is missing from .env file");
     return null;
   }
 
