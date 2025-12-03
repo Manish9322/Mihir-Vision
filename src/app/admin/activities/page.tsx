@@ -69,7 +69,7 @@ const ViewActivityDialog = ({ activity, open, onOpenChange }: { activity: Activi
             <DialogContent className="sm:max-w-md">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
-                        <Icon className="h-5 w-5" /> {activity.title}
+                        {activity.title}
                     </DialogTitle>
                     <DialogDescription>Viewing activity details.</DialogDescription>
                 </DialogHeader>
@@ -201,8 +201,7 @@ const ActivitiesAdminPage = () => {
                                                             </Button>
                                                         </div>
                                                     </TableCell>
-                                                    <TableCell className="font-medium flex items-center gap-2">
-                                                         <Icon className="h-5 w-5 text-primary hidden sm:inline-block"/>
+                                                    <TableCell className="font-medium">
                                                         {activity.title}
                                                     </TableCell>
                                                     <TableCell className="hidden sm:table-cell text-muted-foreground truncate max-w-xs">{activity.description}</TableCell>
