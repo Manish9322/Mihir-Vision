@@ -45,7 +45,7 @@ export default function VideoShowcase() {
           </div>
 
           <div className="lg:col-span-2">
-            <ScrollArea className="h-[450px] w-full">
+            <ScrollArea className="h-[450px] w-full [&>div>div]:!pr-0">
                 <div className="space-y-4 pr-4">
                 {videoData.map((video) => (
                     <Card
