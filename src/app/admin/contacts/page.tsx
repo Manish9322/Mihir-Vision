@@ -5,18 +5,23 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { contactsData } from '@/lib/data';
-import { Mail, Trash2, ChevronLeft, ChevronRight, Inbox, MailCheck, ListFilter } from 'lucide-react';
+import { Mail, Trash2, ChevronLeft, ChevronRight, Inbox, MailCheck, ListFilter, Search } from 'lucide-react';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuCheckboxItem } from '@/components/ui/dropdown-menu';
+import { Input } from '@/components/ui/input';
 
 const ITEMS_PER_PAGE = 5;
 
 const ContactsPage = () => {
     const [filter, setFilter] = useState<string>('all');
     const [currentPage, setCurrentPage] = useState(1);
+    const [searchQuery, setSearchQuery] = useState('');
 
     const filteredMessages = contactsData.messages.filter(message => {
-        if (filter === 'all') return true;
-        return message.status.toLowerCase() === filter;
+        const statusMatch = filter === 'all' || message.status.toLowerCase() === filter;
+        const searchMatch = !searchQuery ||
+            message.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            message.email.toLowerCase().includes(searchQuery.toLowerCase());
+        return statusMatch && searchMatch;
     });
 
     const totalPages = Math.ceil(filteredMessages.length / ITEMS_PER_PAGE);
@@ -64,17 +69,30 @@ const ContactsPage = () => {
                 </Card>
             </div>
             <Card>
-                <CardHeader className="px-7 flex-row items-center justify-between">
+                <CardHeader className="px-7 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div>
                         <CardTitle>Contact Messages</CardTitle>
                         <CardDescription>
                             Recent messages received from the contact form.
                         </CardDescription>
                     </div>
-                    <div>
+                    <div className="flex items-center gap-2 w-full sm:w-auto">
+                        <div className="relative flex-1 sm:flex-initial">
+                            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                type="search"
+                                placeholder="Search by name or email..."
+                                className="pl-8 sm:w-[300px] md:w-[200px] lg:w-[300px]"
+                                value={searchQuery}
+                                onChange={(e) => {
+                                    setSearchQuery(e.target.value);
+                                    setCurrentPage(1);
+                                }}
+                            />
+                        </div>
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button variant="outline" size="sm" className="h-8 gap-1">
+                                <Button variant="outline" size="sm" className="h-10 gap-1">
                                     <ListFilter className="h-3.5 w-3.5" />
                                     <span className="sr-only sm:not-sr-only sm:whitespace-nowrap">
                                         Filter
