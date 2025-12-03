@@ -128,6 +128,11 @@ export function VideoPlayer({ video, isLoading }: VideoPlayerProps) {
     if (videoElement) {
       videoElement.currentTime = seekTime;
       setProgress(seekTime);
+      if (isFinished) {
+        setIsFinished(false);
+        setIsPlaying(true);
+        videoElement.play();
+      }
     }
   };
 
@@ -174,8 +179,8 @@ export function VideoPlayer({ video, isLoading }: VideoPlayerProps) {
                     <RefreshCcw className="h-12 w-12" />
                 </Button>
               ) : (
-                <Button variant="ghost" size="icon" className="h-24 w-24 text-white/80 hover:text-white pointer-events-auto" onClick={togglePlay}>
-                    <Play className="h-16 w-16 fill-white/80" />
+                <Button size="icon" className="h-24 w-24 rounded-full bg-primary/80 dark:bg-transparent text-primary-foreground dark:text-white/80 hover:bg-primary dark:hover:text-white pointer-events-auto" onClick={togglePlay}>
+                    <Play className="h-16 w-16 fill-current" />
                 </Button>
               )}
             </div>
