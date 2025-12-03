@@ -1,26 +1,47 @@
-'use client';
+'use server';
 
-import { useState } from 'react';
-import Image from 'next/image';
-import { videoData, videoSectionData } from '@/lib/video-data';
-import { Card } from '@/components/ui/card';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { PlayCircle } from 'lucide-react';
-import { VideoPlayer } from '@/components/ui/video-player';
-import { cn } from '@/lib/utils';
+import { MONGODB_URI } from '@/config/config';
+import type { VideoInfo } from '@/lib/video-data';
+import VideoPlayerClient from './video-player-client';
 
-export default function VideoShowcase() {
-  const [activeVideo, setActiveVideo] = useState(videoData[0]);
-  const [isLoading, setIsLoading] = useState(false);
+const videoSectionData = {
+    title: 'Explore Our Work',
+    subheadline: 'A showcase of our latest projects, breakthroughs, and team stories. Click on any video to play.'
+}
 
-  const handleVideoSelect = (video: typeof videoData[0]) => {
-    if (activeVideo.id !== video.id) {
-      setIsLoading(true);
-      setActiveVideo(video);
-      // Simulate loading time for the new video
-      setTimeout(() => setIsLoading(false), 500);
+async function getVideosData(): Promise<VideoInfo[] | null> {
+    if (!MONGODB_URI) {
+        console.error('MongoDB URI is not configured, skipping fetch for Videos section.');
+        return null;
     }
-  };
+
+    try {
+        const baseUrl = process.env.NODE_ENV === 'production'
+            ? `https://` + process.env.NEXT_PUBLIC_VERCEL_URL
+            : 'http://localhost:9002';
+        
+        const res = await fetch(`${baseUrl}/api/videos`, { cache: 'no-store' });
+
+        if (!res.ok) {
+            console.error(`Failed to fetch videos data: ${res.status} ${res.statusText}`);
+            return null;
+        }
+
+        const data = await res.json();
+        return data;
+    } catch (error) {
+        console.error('An error occurred while fetching videos data:', error);
+        return null;
+    }
+}
+
+
+export default async function VideoShowcase() {
+  const videoData = await getVideosData();
+
+  if (!videoData || videoData.length === 0) {
+    return null;
+  }
 
   return (
     <section id="video-showcase" className="py-16 md:py-24 bg-background">
@@ -33,70 +54,7 @@ export default function VideoShowcase() {
             {videoSectionData.subheadline}
           </p>
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-          <div className="lg:col-span-3">
-            <VideoPlayer video={activeVideo} isLoading={isLoading} />
-            <div className="mt-4">
-              <h3 className="text-2xl font-bold font-headline">{activeVideo.title}</h3>
-              <p className="text-muted-foreground mt-1">{activeVideo.subtitle}</p>
-              <p className="text-sm text-muted-foreground mt-2">Duration: {activeVideo.duration}</p>
-            </div>
-          </div>
-
-          <div className="lg:col-span-2">
-            <ScrollArea className="h-full max-h-[400px] w-full lg:pr-4 scrollbar-hide">
-              <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-1 gap-2">
-                {videoData.map((video) => (
-                  <div key={video.id} onClick={() => handleVideoSelect(video)} className="cursor-pointer">
-                    {/* Mobile/Tablet view - Thumbnail only */}
-                    <div
-                      className={cn(
-                        "relative aspect-video w-full flex-shrink-0 overflow-hidden rounded-md lg:hidden",
-                        activeVideo.id === video.id && "ring-2 ring-primary ring-offset-2 ring-offset-background"
-                      )}
-                    >
-                      <Image
-                        src={video.thumbnail.imageUrl}
-                        alt={video.title}
-                        fill
-                        className="object-cover"
-                        sizes="(max-width: 1024px) 33vw, 6rem"
-                      />
-                    </div>
-                    
-                    {/* Desktop view - Card with details */}
-                    <Card
-                      className={cn(
-                        `hidden lg:flex items-center gap-4 p-2 md:p-3 transition-all shadow-sm`,
-                        activeVideo.id === video.id ? 'bg-primary/10 border-primary' : 'bg-secondary/50'
-                      )}
-                    >
-                      <div className="relative h-14 w-24 flex-shrink-0 overflow-hidden rounded-md">
-                        <Image
-                          src={video.thumbnail.imageUrl}
-                          alt={video.title}
-                          fill
-                          className="object-cover"
-                          sizes="6rem"
-                        />
-                      </div>
-                      <div className="flex-grow min-w-0">
-                        <h4 className="font-semibold text-sm truncate">{video.title}</h4>
-                        <span className="text-xs text-muted-foreground">{video.duration}</span>
-                      </div>
-                      <PlayCircle
-                        className={cn(
-                          'h-6 w-6 flex-shrink-0 transition-colors',
-                          activeVideo.id === video.id ? 'text-primary' : 'text-muted-foreground/50'
-                        )}
-                      />
-                    </Card>
-                  </div>
-                ))}
-              </div>
-            </ScrollArea>
-          </div>
-        </div>
+        <VideoPlayerClient videoData={videoData} />
       </div>
     </section>
   );
