@@ -32,7 +32,7 @@ export default function VideoShowcase() {
             {videoSectionData.subheadline}
           </p>
         </div>
-        <div className="grid lg:grid-cols-5 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
           <div className="lg:col-span-3">
             <VideoPlayer video={activeVideo} isLoading={isLoading} />
             <div className="mt-4">
