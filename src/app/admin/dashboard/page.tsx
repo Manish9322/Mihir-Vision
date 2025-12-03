@@ -185,7 +185,7 @@ const AdminDashboardPage = () => {
                     <CardContent className="grid gap-6">
                         {dashboardData.activities.map((activity, index) => (
                              <div key={index} className="flex items-center gap-4">
-                                <Avatar className="h-9 w-9 sm:flex">
+                                <Avatar className="hidden h-9 w-9 sm:flex">
                                     <AvatarImage src={`https://picsum.photos/seed/${activity.user.split(' ')[0]}/32/32`} alt="Avatar" />
                                     <AvatarFallback>{activity.user.charAt(0)}</AvatarFallback>
                                 </Avatar>
