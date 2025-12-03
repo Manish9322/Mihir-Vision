@@ -67,7 +67,6 @@ export default function VideoShowcase() {
                     </div>
                     <div className="flex-grow min-w-0">
                         <h4 className="font-semibold text-sm truncate">{video.title}</h4>
-                        <p className="text-xs text-muted-foreground truncate">{video.subtitle}</p>
                         <span className="text-xs text-muted-foreground">{video.duration}</span>
                     </div>
                     <PlayCircle className={`h-6 w-6 flex-shrink-0 transition-colors ${activeVideo.id === video.id ? 'text-primary' : 'text-muted-foreground/50' }`} />
