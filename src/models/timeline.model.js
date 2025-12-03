@@ -24,6 +24,6 @@ const timelineEventSchema = new mongoose.Schema({
   }
 }, { timestamps: true });
 
-const Timeline = mongoose.models.Timeline || mongoose.model('Timeline', timelineEventSchema);
+const Timeline = mongoose.models.Timeline ?? mongoose.model('Timeline', timelineEventSchema);
 
 export default Timeline;
