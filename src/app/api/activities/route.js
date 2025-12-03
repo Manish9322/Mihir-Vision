@@ -27,17 +27,25 @@ export async function POST(request) {
         await _db();
         const body = await request.json();
         
-        // Ensure body is an array
         if (!Array.isArray(body)) {
             return NextResponse.json({ message: 'Request body must be an array of activities.' }, { status: 400 });
         }
 
         await Activity.deleteMany({});
         
-        const activitiesToInsert = body.map((activity, index) => ({
-            ...activity,
-            order: index, 
-        }));
+        const activitiesToInsert = body.map((activity, index) => {
+            const { _id, ...rest } = activity;
+            // If the _id is a temporary one from the frontend, we remove it
+            // so Mongoose can generate a new, valid ObjectId.
+            // We only keep valid ObjectIds if they exist.
+            if (_id && _id.startsWith('new_')) {
+                return { ...rest, order: index };
+            }
+            if (_id) {
+                 return { _id, ...rest, order: index };
+            }
+            return { ...rest, order: index };
+        });
 
         const newActivities = await Activity.insertMany(activitiesToInsert);
 
@@ -46,3 +54,5 @@ export async function POST(request) {
         return NextResponse.json({ message: 'Error updating activities.', error: error.message }, { status: 500 });
     }
 }
+
+    

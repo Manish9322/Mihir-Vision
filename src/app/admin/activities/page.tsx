@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
-import { PlusCircle, Trash2, ArrowUp, ArrowDown, GripVertical, ChevronLeft, ChevronRight, MoreHorizontal, FilePenLine, Eye, Loader2, Rocket } from 'lucide-react';
+import { PlusCircle, Trash2, ArrowUp, ArrowDown, GripVertical, ChevronLeft, ChevronRight, MoreHorizontal, FilePenLine, Eye, Loader2, Rocket, Dna, Users } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -22,7 +22,8 @@ type Activity = {
 
 const iconMap: { [key: string]: LucideIcon } = {
     Rocket: Rocket,
-    // ... add other icons as needed
+    Dna: Dna,
+    Users: Users,
 };
 
 const ITEMS_PER_PAGE = 3;
@@ -187,7 +188,8 @@ const ActivitiesAdminPage = () => {
             newItems = [...items];
             newItems[editingIndex] = { ...newItems[editingIndex], ...activityData };
         } else {
-            const newActivity = { ...activityData, _id: `new_${Date.now()}`};
+            // Add a temporary ID for React's key prop. This will be stripped on the backend.
+            const newActivity = { ...activityData, _id: `new_${Date.now()}`}; 
             newItems = [newActivity, ...items];
         }
         setItems(newItems);
@@ -236,6 +238,7 @@ const ActivitiesAdminPage = () => {
                                     </TableHeader>
                                     <TableBody>
                                         {paginatedItems.map((activity, index) => {
+                                            const Icon = iconMap[activity.icon] || Rocket;
                                             return (
                                                 <TableRow key={activity._id || index}>
                                                     <TableCell className="text-center align-middle">
@@ -323,3 +326,5 @@ const ActivitiesAdminPage = () => {
 }
 
 export default ActivitiesAdminPage;
+
+    
