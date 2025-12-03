@@ -13,8 +13,8 @@ export default function VideoShowcase() {
   return (
     <section id="video-showcase" className="py-16 md:py-24 bg-background">
       <div className="container max-w-7xl">
-        <div className="grid lg:grid-cols-5 gap-8">
-          <div className="lg:col-span-3">
+        <div className="grid lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2">
             <Card className="overflow-hidden border-0">
               <CardContent className="p-0">
                 <div className="relative aspect-video w-full">
@@ -37,7 +37,7 @@ export default function VideoShowcase() {
             </Card>
           </div>
 
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-1">
             <ScrollArea className="h-[450px] w-full">
                 <div className="space-y-4 pr-4">
                 {videoData.map((video) => (
