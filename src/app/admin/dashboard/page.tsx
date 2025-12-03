@@ -153,7 +153,7 @@ const AdminDashboardPage = () => {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {contactsData.messages.slice(0, 4).map((message) => (
+                                {contactsData.messages.slice(0, 6).map((message) => (
                                     <TableRow key={message.id}>
                                         <TableCell>
                                             <div className="font-medium">{message.name}</div>
@@ -174,12 +174,20 @@ const AdminDashboardPage = () => {
                 </Card>
 
                 <Card>
-                    <CardHeader>
-                        <CardTitle>Recent Activity</CardTitle>
-                        <CardDescription>A log of recent actions taken in the admin panel.</CardDescription>
+                    <CardHeader className="flex flex-row items-center">
+                        <div className="grid gap-2">
+                            <CardTitle>Recent Activity</CardTitle>
+                            <CardDescription>A log of recent actions taken in the admin panel.</CardDescription>
+                        </div>
+                         <Button asChild size="sm" className="ml-auto gap-1">
+                            <Link href="#">
+                                View All
+                                <ArrowUpRight className="h-4 w-4" />
+                            </Link>
+                        </Button>
                     </CardHeader>
                     <CardContent className="grid gap-6">
-                        {dashboardData.activities.map((activity, index) => (
+                        {dashboardData.activities.slice(0, 6).map((activity, index) => (
                              <div key={index} className="flex items-center gap-4">
                                 <Avatar className="hidden h-9 w-9 sm:flex">
                                     <AvatarImage src={`https://picsum.photos/seed/${activity.user.split(' ')[0]}/32/32`} alt="Avatar" />
