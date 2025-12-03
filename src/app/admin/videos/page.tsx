@@ -8,22 +8,33 @@ import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import { videoData, videoSectionData } from '@/lib/video-data';
-import { PlusCircle, Trash2, ArrowUp, ArrowDown, GripVertical } from 'lucide-react';
+import { PlusCircle, Trash2, ArrowUp, ArrowDown, GripVertical, ChevronLeft, ChevronRight } from 'lucide-react';
 import Image from 'next/image';
+
+const ITEMS_PER_PAGE = 3;
 
 const VideosAdminPage = () => {
     const { toast } = useToast();
     const [videos, setVideos] = useState(videoData);
+    const [currentPage, setCurrentPage] = useState(1);
+
+    const totalPages = Math.ceil(videos.length / ITEMS_PER_PAGE);
+    const paginatedVideos = videos.slice(
+        (currentPage - 1) * ITEMS_PER_PAGE,
+        currentPage * ITEMS_PER_PAGE
+    );
 
     const handleMove = (index: number, direction: 'up' | 'down') => {
+        const fullIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;
         const newVideos = [...videos];
-        const item = newVideos[index];
-        if (direction === 'up' && index > 0) {
-            newVideos.splice(index, 1);
-            newVideos.splice(index - 1, 0, item);
-        } else if (direction === 'down' && index < newVideos.length - 1) {
-            newVideos.splice(index, 1);
-            newVideos.splice(index + 1, 0, item);
+        const item = newVideos[fullIndex];
+        
+        if (direction === 'up' && fullIndex > 0) {
+            newVideos.splice(fullIndex, 1);
+            newVideos.splice(fullIndex - 1, 0, item);
+        } else if (direction === 'down' && fullIndex < newVideos.length - 1) {
+            newVideos.splice(fullIndex, 1);
+            newVideos.splice(fullIndex + 1, 0, item);
         }
         setVideos(newVideos);
     };
@@ -71,16 +82,16 @@ const VideosAdminPage = () => {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {videos.map((video, index) => (
+                                    {paginatedVideos.map((video, index) => (
                                         <TableRow key={video.id}>
-                                            <TableCell className="text-center">
+                                            <TableCell className="text-center align-middle">
                                                 <div className="flex flex-col items-center gap-1">
                                                      <Button
                                                         variant="ghost"
                                                         size="icon"
                                                         className="h-6 w-6"
                                                         onClick={() => handleMove(index, 'up')}
-                                                        disabled={index === 0}
+                                                        disabled={(currentPage - 1) * ITEMS_PER_PAGE + index === 0}
                                                     >
                                                         <ArrowUp className="h-4 w-4" />
                                                     </Button>
@@ -90,7 +101,7 @@ const VideosAdminPage = () => {
                                                         size="icon"
                                                         className="h-6 w-6"
                                                         onClick={() => handleMove(index, 'down')}
-                                                        disabled={index === videos.length - 1}
+                                                        disabled={(currentPage - 1) * ITEMS_PER_PAGE + index === videos.length - 1}
                                                     >
                                                         <ArrowDown className="h-4 w-4" />
                                                     </Button>
@@ -122,6 +133,31 @@ const VideosAdminPage = () => {
                                     ))}
                                 </TableBody>
                             </Table>
+                             <div className="flex items-center justify-between border-t p-4">
+                                <div className="text-xs text-muted-foreground">
+                                    Showing <strong>{(currentPage - 1) * ITEMS_PER_PAGE + 1}-{(currentPage - 1) * ITEMS_PER_PAGE + paginatedVideos.length}</strong> of <strong>{videos.length}</strong> videos
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                        disabled={currentPage === 1}
+                                    >
+                                        <ChevronLeft className="h-4 w-4" />
+                                        <span className="sr-only">Previous</span>
+                                    </Button>
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                        disabled={currentPage === totalPages}
+                                    >
+                                        <span className="sr-only">Next</span>
+                                        <ChevronRight className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            </div>
                         </Card>
                         <Button variant="outline" className="w-full">
                             <PlusCircle className="mr-2 h-4 w-4" />
