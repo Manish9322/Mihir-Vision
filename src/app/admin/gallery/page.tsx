@@ -12,20 +12,26 @@ import Image from 'next/image';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useGetGalleryDataQuery, useUpdateGalleryDataMutation } from '@/services/api';
+import { Switch } from '@/components/ui/switch';
+
+interface GalleryImage extends ImagePlaceholder {
+    isVisible: boolean;
+}
 
 const ITEMS_PER_PAGE = 3;
 
-const ImageForm = ({ image, onSave }: { image?: ImagePlaceholder | null, onSave: (image: ImagePlaceholder) => void }) => {
+const ImageForm = ({ image, onSave }: { image?: GalleryImage | null, onSave: (image: Omit<GalleryImage, '_id'>) => void }) => {
     const [description, setDescription] = useState(image?.description || '');
     const { toast } = useToast();
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        const newImage: ImagePlaceholder = {
+        const newImage: Omit<GalleryImage, '_id'> = {
             id: image?.id || `new_${Date.now()}`,
             description,
             imageUrl: image?.imageUrl || 'https://placehold.co/600x400', // Placeholder
             imageHint: image?.imageHint || 'placeholder',
+            isVisible: image?.isVisible ?? true,
         };
         onSave(newImage);
         toast({
@@ -57,7 +63,7 @@ const ImageForm = ({ image, onSave }: { image?: ImagePlaceholder | null, onSave:
     )
 }
 
-const ViewImageDialog = ({ image, open, onOpenChange }: { image: ImagePlaceholder | null; open: boolean; onOpenChange: (open: boolean) => void; }) => {
+const ViewImageDialog = ({ image, open, onOpenChange }: { image: GalleryImage | null; open: boolean; onOpenChange: (open: boolean) => void; }) => {
     if (!image) return null;
 
     return (
@@ -85,17 +91,17 @@ const GalleryAdminPage = () => {
     const { toast } = useToast();
     const { data: images = [], isLoading: isQueryLoading, isError } = useGetGalleryDataQuery();
     const [updateGallery, { isLoading: isMutationLoading }] = useUpdateGalleryDataMutation();
-    const [items, setItems] = useState<ImagePlaceholder[]>([]);
+    const [items, setItems] = useState<GalleryImage[]>([]);
 
     const [currentPage, setCurrentPage] = useState(1);
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [isViewOpen, setIsViewOpen] = useState(false);
-    const [selectedImage, setSelectedImage] = useState<ImagePlaceholder | null>(null);
+    const [selectedImage, setSelectedImage] = useState<GalleryImage | null>(null);
     const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
     useEffect(() => {
         if(images) {
-            setItems(images);
+            setItems(images.map(img => ({ ...img, isVisible: img.isVisible ?? true })));
         }
     }, [images]);
 
@@ -105,7 +111,7 @@ const GalleryAdminPage = () => {
         currentPage * ITEMS_PER_PAGE
     );
 
-    const triggerUpdate = async (updatedItems: ImagePlaceholder[]) => {
+    const triggerUpdate = async (updatedItems: GalleryImage[]) => {
         try {
             await updateGallery(updatedItems).unwrap();
             toast({
@@ -144,14 +150,14 @@ const GalleryAdminPage = () => {
         setIsFormOpen(true);
     };
 
-    const handleEditClick = (image: ImagePlaceholder, index: number) => {
+    const handleEditClick = (image: GalleryImage, index: number) => {
         const fullIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;
         setSelectedImage(image);
         setEditingIndex(fullIndex);
         setIsFormOpen(true);
     };
 
-    const handleViewClick = (image: ImagePlaceholder) => {
+    const handleViewClick = (image: GalleryImage) => {
         setSelectedImage(image);
         setIsViewOpen(true);
     };
@@ -168,18 +174,26 @@ const GalleryAdminPage = () => {
         });
     };
     
-    const handleSave = (image: ImagePlaceholder) => {
-        let newItems: ImagePlaceholder[];
+    const handleSave = (image: Omit<GalleryImage, '_id'>) => {
+        let newItems: GalleryImage[];
         if (editingIndex !== null) {
             newItems = [...items];
-            newItems[editingIndex] = image;
+            newItems[editingIndex] = { ...items[editingIndex], ...image };
         } else {
-            newItems = [image, ...items];
+            newItems = [image as GalleryImage, ...items];
         }
         setItems(newItems);
         triggerUpdate(newItems);
         setIsFormOpen(false);
     };
+
+    const handleVisibilityChange = (index: number, isVisible: boolean) => {
+        const fullIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;
+        const newItems = [...items];
+        newItems[fullIndex].isVisible = isVisible;
+        setItems(newItems);
+        triggerUpdate(newItems);
+    }
 
     if (isQueryLoading) {
         return (
@@ -214,6 +228,7 @@ const GalleryAdminPage = () => {
                                     <TableHead className="w-[50px]"></TableHead>
                                     <TableHead className="w-[150px] hidden md:table-cell">Image</TableHead>
                                     <TableHead>Description</TableHead>
+                                    <TableHead className="w-[100px]">Visible</TableHead>
                                     <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -235,6 +250,13 @@ const GalleryAdminPage = () => {
                                             <Image src={image.imageUrl} alt={image.description} width={120} height={67.5} className="rounded-md object-cover aspect-video" />
                                         </TableCell>
                                         <TableCell className="font-medium">{image.description}</TableCell>
+                                        <TableCell>
+                                            <Switch
+                                                checked={image.isVisible}
+                                                onCheckedChange={(checked) => handleVisibilityChange(index, checked)}
+                                                disabled={isMutationLoading}
+                                            />
+                                        </TableCell>
                                         <TableCell className="text-right">
                                                 <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>

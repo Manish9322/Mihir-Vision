@@ -15,6 +15,7 @@ type Project = {
     slug: string;
     description: string;
     tags: string[];
+    isVisible: boolean;
 };
 
 const futureMissionsData = {
@@ -50,8 +51,10 @@ async function getProjectsData(): Promise<Project[] | null> {
 
 export default async function FeaturedProjects() {
   const projects = await getProjectsData();
+  
+  const visibleProjects = projects?.filter(p => p.isVisible) || [];
 
-  if (!projects || projects.length === 0) {
+  if (!visibleProjects || visibleProjects.length === 0) {
     return null;
   }
 
@@ -67,7 +70,7 @@ export default async function FeaturedProjects() {
           </p>
         </div>
         <div className="grid md:grid-cols-3 gap-8">
-          {projects.map((mission) => (
+          {visibleProjects.map((mission) => (
             <Card key={mission.title} className="group overflow-hidden flex flex-col transition-all duration-300 ease-in-out hover:scale-[1.02] hover:-translate-y-2 hover:shadow-xl hover:shadow-primary/10">
               <div className="relative h-48 w-full overflow-hidden">
                 <Image

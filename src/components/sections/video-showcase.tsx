@@ -38,8 +38,10 @@ async function getVideosData(): Promise<VideoInfo[] | null> {
 
 export default async function VideoShowcase() {
   const videoData = await getVideosData();
+  
+  const visibleVideos = videoData?.filter(video => video.isVisible) || [];
 
-  if (!videoData || videoData.length === 0) {
+  if (!visibleVideos || visibleVideos.length === 0) {
     return null;
   }
 
@@ -54,7 +56,7 @@ export default async function VideoShowcase() {
             {videoSectionData.subheadline}
           </p>
         </div>
-        <VideoPlayerClient videoData={videoData} />
+        <VideoPlayerClient videoData={visibleVideos} />
       </div>
     </section>
   );

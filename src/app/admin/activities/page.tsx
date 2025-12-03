@@ -12,12 +12,14 @@ import type { LucideIcon } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useGetActivitiesDataQuery, useUpdateActivitiesDataMutation } from '@/services/api';
+import { Switch } from '@/components/ui/switch';
 
 type Activity = {
     _id?: string;
     icon: string; // Storing icon name as string
     title: string;
     description: string;
+    isVisible: boolean;
 };
 
 const iconMap: { [key: string]: LucideIcon } = {
@@ -39,6 +41,7 @@ const ActivityForm = ({ activity, onSave }: { activity?: Activity | null, onSave
             title,
             description,
             icon: activity?.icon || 'Rocket', // Default icon
+            isVisible: activity?.isVisible ?? true,
         };
         onSave(newActivity);
         toast({
@@ -188,14 +191,21 @@ const ActivitiesAdminPage = () => {
             newItems = [...items];
             newItems[editingIndex] = { ...newItems[editingIndex], ...activityData };
         } else {
-            // Add a temporary ID for React's key prop. This will be stripped on the backend.
             const newActivity = { ...activityData, _id: `new_${Date.now()}`}; 
             newItems = [newActivity, ...items];
         }
         setItems(newItems);
-        triggerUpdate(newItems);
+        triggerUpdate(newItems.map(({ _id, ...rest }) => _id?.startsWith('new_') ? rest : { _id, ...rest }));
         setIsFormOpen(false);
     };
+
+    const handleVisibilityChange = (index: number, isVisible: boolean) => {
+        const fullIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;
+        const newItems = [...items];
+        newItems[fullIndex].isVisible = isVisible;
+        setItems(newItems);
+        triggerUpdate(newItems);
+    }
 
      if (isQueryLoading) {
         return (
@@ -233,6 +243,7 @@ const ActivitiesAdminPage = () => {
                                             <TableHead className="w-[50px]"></TableHead>
                                             <TableHead>Title</TableHead>
                                             <TableHead className="hidden sm:table-cell">Description</TableHead>
+                                            <TableHead className="w-[100px]">Visible</TableHead>
                                             <TableHead className="text-right">Actions</TableHead>
                                         </TableRow>
                                     </TableHeader>
@@ -254,6 +265,13 @@ const ActivitiesAdminPage = () => {
                                                     </TableCell>
                                                     <TableCell className="font-medium max-w-[150px] truncate">{activity.title}</TableCell>
                                                     <TableCell className="hidden sm:table-cell text-muted-foreground truncate max-w-xs">{activity.description}</TableCell>
+                                                    <TableCell>
+                                                        <Switch
+                                                            checked={activity.isVisible}
+                                                            onCheckedChange={(checked) => handleVisibilityChange(index, checked)}
+                                                            disabled={isMutationLoading}
+                                                        />
+                                                    </TableCell>
                                                     <TableCell className="text-right">
                                                         <DropdownMenu>
                                                             <DropdownMenuTrigger asChild>
@@ -326,6 +344,3 @@ const ActivitiesAdminPage = () => {
 }
 
 export default ActivitiesAdminPage;
-
-    
-    

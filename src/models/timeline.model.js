@@ -1,4 +1,3 @@
-
 import mongoose from 'mongoose';
 
 const timelineEventSchema = new mongoose.Schema({
@@ -21,6 +20,10 @@ const timelineEventSchema = new mongoose.Schema({
   order: {
     type: Number,
     required: true,
+  },
+  isVisible: {
+    type: Boolean,
+    default: true,
   }
 }, { timestamps: true });
 

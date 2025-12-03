@@ -9,13 +9,8 @@ type Activity = {
     icon: string;
     title: string;
     description: string;
+    isVisible: boolean;
 };
-
-type ActivitiesData = {
-    title: string;
-    subheadline: string;
-    activities: Activity[];
-}
 
 const iconMap: { [key: string]: LucideIcon } = {
     Rocket: Rocket,
@@ -52,7 +47,9 @@ async function getActivitiesData(): Promise<Activity[] | null> {
 export default async function Activities() {
   const activities = await getActivitiesData();
 
-  if (!activities || activities.length === 0) {
+  const visibleActivities = activities?.filter(a => a.isVisible) || [];
+
+  if (!visibleActivities || visibleActivities.length === 0) {
     return null;
   }
 
@@ -73,7 +70,7 @@ export default async function Activities() {
           </p>
         </div>
         <div className="grid md:grid-cols-3 gap-8">
-          {activities.map((activity) => {
+          {visibleActivities.map((activity) => {
             const Icon = iconMap[activity.icon] || Rocket;
             return (
               <Card

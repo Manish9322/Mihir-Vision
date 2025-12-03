@@ -15,6 +15,10 @@ const videoSchema = new mongoose.Schema({
   thumbnail: { type: ImagePlaceholderSchema, required: true },
   videoUrl: { type: String, required: true },
   order: { type: Number, required: true },
+  isVisible: {
+    type: Boolean,
+    default: true,
+  }
 }, { timestamps: true });
 
 const Video = mongoose.models.Video ?? mongoose.model('Video', videoSchema);

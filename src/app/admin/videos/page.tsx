@@ -12,6 +12,7 @@ import Image from 'next/image';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useGetVideosDataQuery, useUpdateVideosDataMutation } from '@/services/api';
+import { Switch } from '@/components/ui/switch';
 
 const ITEMS_PER_PAGE = 3;
 
@@ -30,6 +31,7 @@ const VideoForm = ({ video, onSave, videoData }: { video?: VideoInfo | null, onS
             duration,
             thumbnail: video?.thumbnail || videoData[0].thumbnail, // Placeholder
             videoUrl: video?.videoUrl || videoData[0].videoUrl, // Placeholder
+            isVisible: video?.isVisible ?? true,
         };
         onSave(newVideo);
         toast({
@@ -204,6 +206,14 @@ const VideosAdminPage = () => {
         setIsFormOpen(false);
     };
     
+    const handleVisibilityChange = (index: number, isVisible: boolean) => {
+        const fullIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;
+        const newItems = [...items];
+        newItems[fullIndex].isVisible = isVisible;
+        setItems(newItems);
+        triggerUpdate(newItems);
+    }
+
     if (isQueryLoading) {
         return (
             <div className="flex items-center justify-center h-full">
@@ -239,6 +249,7 @@ const VideosAdminPage = () => {
                                     <TableHead>Title</TableHead>
                                     <TableHead className="hidden sm:table-cell">Subtitle</TableHead>
                                     <TableHead className="hidden md:table-cell">Duration</TableHead>
+                                    <TableHead className="w-[100px]">Visible</TableHead>
                                     <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -262,6 +273,13 @@ const VideosAdminPage = () => {
                                         <TableCell className="font-medium">{video.title}</TableCell>
                                         <TableCell className="hidden sm:table-cell text-muted-foreground truncate max-w-xs">{video.subtitle}</TableCell>
                                         <TableCell className="hidden md:table-cell">{video.duration}</TableCell>
+                                        <TableCell>
+                                            <Switch
+                                                checked={video.isVisible}
+                                                onCheckedChange={(checked) => handleVisibilityChange(index, checked)}
+                                                disabled={isMutationLoading}
+                                            />
+                                        </TableCell>
                                         <TableCell className="text-right">
                                              <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>

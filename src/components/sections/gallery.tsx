@@ -4,12 +4,16 @@ import { MONGODB_URI } from '@/config/config';
 import type { ImagePlaceholder } from '@/lib/placeholder-images';
 import GalleryClient from './gallery-client';
 
+interface GalleryImage extends ImagePlaceholder {
+    isVisible: boolean;
+}
+
 const gallerySectionData = {
     title: 'Screenshot Gallery',
     subheadline: 'A glimpse into the worlds we are creating. Explore a selection of screenshots from our flagship projects.',
 };
 
-async function getGalleryData(): Promise<ImagePlaceholder[] | null> {
+async function getGalleryData(): Promise<GalleryImage[] | null> {
     if (!MONGODB_URI) {
         console.error('MongoDB URI is not configured, skipping fetch for Gallery section.');
         return null;
@@ -37,8 +41,10 @@ async function getGalleryData(): Promise<ImagePlaceholder[] | null> {
 
 export default async function Gallery() {
   const galleryData = await getGalleryData();
+  
+  const visibleImages = galleryData?.filter(img => img.isVisible) || [];
 
-  if (!galleryData || galleryData.length === 0) {
+  if (!visibleImages || visibleImages.length === 0) {
     return null;
   }
 
@@ -53,7 +59,7 @@ export default async function Gallery() {
                 {gallerySectionData.subheadline}
             </p>
             </div>
-            <GalleryClient galleryData={galleryData} />
+            <GalleryClient galleryData={visibleImages} />
         </div>
     </section>
   );

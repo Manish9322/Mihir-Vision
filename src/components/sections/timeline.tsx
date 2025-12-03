@@ -1,4 +1,3 @@
-
 'use server';
 
 import { MONGODB_URI } from '@/config/config';
@@ -11,6 +10,7 @@ type TimelineEvent = {
     title: string;
     description: string;
     icon: string;
+    isVisible: boolean;
 };
 
 const iconMap: { [key: string]: LucideIcon } = {
@@ -48,12 +48,14 @@ async function getTimelineData(): Promise<TimelineEvent[] | null> {
 
 export default async function Timeline() {
     const timelineEvents = await getTimelineData();
+    const visibleEvents = timelineEvents?.filter(event => event.isVisible) || [];
+
     const timelineData = {
         title: 'Our DNA Timeline',
         subheadline: 'A look back at the key milestones that have shaped our journey and defined who we are today.',
     };
 
-    if (!timelineEvents || timelineEvents.length === 0) {
+    if (!visibleEvents || visibleEvents.length === 0) {
         return null;
     }
 
@@ -72,7 +74,7 @@ export default async function Timeline() {
         <div className="relative">
           <div className="absolute left-4 top-0 h-full w-0.5 bg-border dark:bg-primary/50 lg:left-1/2 lg:-translate-x-1/2" aria-hidden="true" />
 
-          {timelineEvents.map((event, index) => {
+          {visibleEvents.map((event, index) => {
             const Icon = iconMap[event.icon] || Lightbulb;
             return (
               <div key={event._id || event.year} className="relative mb-12 lg:flex lg:items-center">

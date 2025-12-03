@@ -14,6 +14,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { useGetProjectsDataQuery, useUpdateProjectsDataMutation } from '@/services/api';
+import { Switch } from '@/components/ui/switch';
 
 type Project = {
     _id?: string;
@@ -23,6 +24,7 @@ type Project = {
     description: string;
     details: string;
     tags: string[];
+    isVisible: boolean;
 };
 
 const ITEMS_PER_PAGE = 3;
@@ -43,6 +45,7 @@ const MissionForm = ({ project, onSave }: { project?: Project | null, onSave: (p
             details,
             tags: tags.split(',').map(tag => tag.trim()).filter(Boolean),
             image: project?.image || { id: 'placeholder', description: 'Placeholder', imageUrl: 'https://placehold.co/600x400', imageHint: 'placeholder' },
+            isVisible: project?.isVisible ?? true,
         };
         onSave(newMission);
         toast({
@@ -224,6 +227,14 @@ const MissionsAdminPage = () => {
         setIsFormOpen(false);
     };
 
+    const handleVisibilityChange = (index: number, isVisible: boolean) => {
+        const fullIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;
+        const newItems = [...items];
+        newItems[fullIndex].isVisible = isVisible;
+        setItems(newItems);
+        triggerUpdate(newItems);
+    }
+
     if (isQueryLoading) {
         return (
             <div className="flex items-center justify-center h-full">
@@ -258,6 +269,7 @@ const MissionsAdminPage = () => {
                                     <TableHead className="w-[120px] hidden md:table-cell">Image</TableHead>
                                     <TableHead>Title</TableHead>
                                     <TableHead className="hidden sm:table-cell">Description</TableHead>
+                                    <TableHead className="w-[100px]">Visible</TableHead>
                                     <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -280,6 +292,13 @@ const MissionsAdminPage = () => {
                                         </TableCell>
                                         <TableCell className="font-medium">{mission.title}</TableCell>
                                         <TableCell className="hidden sm:table-cell text-muted-foreground truncate max-w-xs">{mission.description}</TableCell>
+                                        <TableCell>
+                                            <Switch
+                                                checked={mission.isVisible}
+                                                onCheckedChange={(checked) => handleVisibilityChange(index, checked)}
+                                                disabled={isMutationLoading}
+                                            />
+                                        </TableCell>
                                         <TableCell className="text-right">
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>

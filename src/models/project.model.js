@@ -37,6 +37,10 @@ const projectSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
+  isVisible: {
+    type: Boolean,
+    default: true,
+  }
 }, { timestamps: true });
 
 const Project = mongoose.models.Project ?? mongoose.model('Project', projectSchema);

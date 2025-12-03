@@ -1,4 +1,3 @@
-
 'use client';
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
@@ -13,6 +12,7 @@ import type { LucideIcon } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useGetTimelineDataQuery, useUpdateTimelineDataMutation } from '@/services/api';
+import { Switch } from '@/components/ui/switch';
 
 type TimelineEvent = {
     _id?: string;
@@ -20,6 +20,7 @@ type TimelineEvent = {
     title: string;
     description: string;
     icon: string; // Store icon name as a string
+    isVisible: boolean;
 };
 
 const iconMap: { [key: string]: LucideIcon } = {
@@ -44,6 +45,7 @@ const EventForm = ({ event, onSave }: { event?: TimelineEvent | null, onSave: (e
             title,
             description,
             icon: event?.icon || 'Lightbulb', // Default icon
+            isVisible: event?.isVisible ?? true,
         };
         onSave(newEvent);
         toast({
@@ -202,6 +204,14 @@ const TimelineAdminPage = () => {
         setIsFormOpen(false);
     };
 
+    const handleVisibilityChange = (index: number, isVisible: boolean) => {
+        const fullIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;
+        const newItems = [...items];
+        newItems[fullIndex].isVisible = isVisible;
+        setItems(newItems);
+        triggerUpdate(newItems);
+    }
+
     if (isQueryLoading) {
         return (
             <div className="flex items-center justify-center h-full">
@@ -238,6 +248,7 @@ const TimelineAdminPage = () => {
                                     <TableHead className="w-[100px]">Year</TableHead>
                                     <TableHead>Title</TableHead>
                                     <TableHead className="hidden md:table-cell">Description</TableHead>
+                                    <TableHead className="w-[100px]">Visible</TableHead>
                                     <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -258,6 +269,13 @@ const TimelineAdminPage = () => {
                                         <TableCell className="font-medium">{event.year}</TableCell>
                                         <TableCell className="font-medium">{event.title}</TableCell>
                                         <TableCell className="hidden md:table-cell text-muted-foreground truncate max-w-sm">{event.description}</TableCell>
+                                        <TableCell>
+                                            <Switch
+                                                checked={event.isVisible}
+                                                onCheckedChange={(checked) => handleVisibilityChange(index, checked)}
+                                                disabled={isMutationLoading}
+                                            />
+                                        </TableCell>
                                         <TableCell className="text-right">
                                                 <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>

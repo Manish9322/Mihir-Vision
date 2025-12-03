@@ -16,6 +16,10 @@ const activitySchema = new mongoose.Schema({
   order: {
     type: Number,
     required: true,
+  },
+  isVisible: {
+    type: Boolean,
+    default: true,
   }
 }, { timestamps: true });
 
