@@ -30,7 +30,7 @@ export default function VideoShowcase() {
                     src={activeVideo.thumbnail.imageUrl}
                     alt={activeVideo.title}
                     fill
-                    className="object-cover"
+                    className="object-cover rounded-lg"
                     sizes="(max-width: 1024px) 100vw, 60vw"
                   />
                    <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
@@ -50,7 +50,7 @@ export default function VideoShowcase() {
                 {videoData.map((video) => (
                     <Card
                     key={video.id}
-                    className={`flex items-center gap-4 p-3 cursor-pointer transition-all ${
+                    className={`flex items-center gap-4 p-3 cursor-pointer transition-all shadow-sm ${
                         activeVideo.id === video.id ? 'bg-primary/10 border-primary' : 'bg-secondary/50'
                     }`}
                     onClick={() => setActiveVideo(video)}
