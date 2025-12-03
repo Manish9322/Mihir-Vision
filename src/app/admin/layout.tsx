@@ -152,31 +152,7 @@ export default function AdminLayout({
             </SheetContent>
           </Sheet>
           <div className="ml-auto flex items-center gap-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="overflow-hidden rounded-full"
-                >
-                    <Avatar>
-                        <AvatarImage src="https://picsum.photos/seed/admin/32/32" alt="@shadcn" />
-                        <AvatarFallback>AD</AvatarFallback>
-                    </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild><Link href="/admin/profile">Profile</Link></DropdownMenuItem>
-                <DropdownMenuItem asChild><Link href="/admin/settings">Settings</Link></DropdownMenuItem>
-                <DropdownMenuItem>Support</DropdownMenuItem>
-                <DropdownMenuSeparator />
-                 <LogoutConfirmationDialog>
-                    <DropdownMenuItem onSelect={(e) => e.preventDefault()}>Logout</DropdownMenuItem>
-                </LogoutConfirmationDialog>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            
           </div>
         </header>
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
