@@ -78,7 +78,7 @@ export default function GrowthChart() {
            </div>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8">
+        <div className="grid lg:grid-cols-2 gap-8">
             <Card>
                 <CardHeader>
                     <CardTitle>{growthChartData.chartTitle}</CardTitle>
