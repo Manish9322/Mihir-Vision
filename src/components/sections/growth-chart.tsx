@@ -53,7 +53,7 @@ export default function GrowthChart() {
             </p>
         </div>
 
-        <div className="flex justify-center items-center gap-4 mb-8">
+        <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-8">
             <div className="flex items-center gap-2">
                 <span className="text-sm font-medium text-muted-foreground">From</span>
                  <Select value={startYear} onValueChange={setStartYear}>
