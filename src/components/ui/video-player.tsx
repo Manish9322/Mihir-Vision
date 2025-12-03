@@ -180,7 +180,7 @@ export function VideoPlayer({ video, isLoading }: VideoPlayerProps) {
                 </Button>
               ) : (
                 <Button size="icon" className="h-28 w-28 rounded-full bg-primary/80 dark:bg-transparent text-primary-foreground dark:text-white/80 hover:bg-primary dark:hover:text-white pointer-events-auto" onClick={togglePlay}>
-                    <Play className="h-24 w-24 fill-current" />
+                    <Play className="h-20 w-20 fill-current" />
                 </Button>
               )}
             </div>
@@ -189,8 +189,7 @@ export function VideoPlayer({ video, isLoading }: VideoPlayerProps) {
           <div
             className={cn(
               "absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/60 to-transparent transition-opacity duration-300",
-              "opacity-0 group-hover/player:opacity-100",
-              isPlaying && "group-focus-within/player:opacity-100"
+              isPlaying ? "opacity-0 group-hover/player:opacity-100" : "opacity-0"
             )}
           >
             <div className="flex items-center gap-4 text-white">
