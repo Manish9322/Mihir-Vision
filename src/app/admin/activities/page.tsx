@@ -62,7 +62,6 @@ const ActivityForm = ({ activity, onSave }: { activity?: Activity | null, onSave
 
 const ViewActivityDialog = ({ activity, open, onOpenChange }: { activity: Activity | null; open: boolean; onOpenChange: (open: boolean) => void; }) => {
     if (!activity) return null;
-    const Icon = activity.icon;
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -187,7 +186,6 @@ const ActivitiesAdminPage = () => {
                                     </TableHeader>
                                     <TableBody>
                                         {paginatedItems.map((activity, index) => {
-                                            const Icon = activity.icon;
                                             return (
                                                 <TableRow key={index}>
                                                     <TableCell className="text-center align-middle">
@@ -201,9 +199,7 @@ const ActivitiesAdminPage = () => {
                                                             </Button>
                                                         </div>
                                                     </TableCell>
-                                                    <TableCell className="font-medium">
-                                                        {activity.title}
-                                                    </TableCell>
+                                                    <TableCell className="font-medium max-w-[150px] truncate">{activity.title}</TableCell>
                                                     <TableCell className="hidden sm:table-cell text-muted-foreground truncate max-w-xs">{activity.description}</TableCell>
                                                     <TableCell className="text-right">
                                                         <DropdownMenu>
