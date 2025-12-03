@@ -1,15 +1,64 @@
+'use server';
 import Image from 'next/image';
-import { aboutData } from '@/lib/data';
 import { Check } from 'lucide-react';
+import { MONGODB_URI } from '@/config/config';
 
-export default function About() {
+// Define the data type based on your Mongoose schema
+type AboutData = {
+  title: string;
+  paragraph1: string;
+  highlights: string[];
+  image: {
+    imageUrl: string;
+    description: string;
+  };
+};
+
+async function getAboutData(): Promise<AboutData | null> {
+  // If no MONGODB_URI is configured, we can't fetch data.
+  if (!MONGODB_URI) {
+    console.error('MongoDB URI is not configured, skipping fetch for About section.');
+    return null;
+  }
+
+  try {
+    // This fetch needs to be absolute when running on the server.
+    // We'll use the localhost address for development.
+    // In production, this should be your domain.
+    const baseUrl = process.env.NODE_ENV === 'production' 
+      ? `https://` + process.env.NEXT_PUBLIC_VERCEL_URL // Replace with your actual domain if not on Vercel
+      : 'http://localhost:9002';
+      
+    const res = await fetch(`${baseUrl}/api/about`, { cache: 'no-store' });
+
+    if (!res.ok) {
+      console.error(`Failed to fetch about data: ${res.status} ${res.statusText}`);
+      return null;
+    }
+
+    const data = await res.json();
+    return data;
+  } catch (error) {
+    console.error('An error occurred while fetching about data:', error);
+    return null;
+  }
+}
+
+export default async function About() {
+  const aboutData = await getAboutData();
+
+  // If data fetching fails or returns nothing, render nothing to avoid errors.
+  if (!aboutData) {
+    return null;
+  }
+
   return (
     <section id="about" className="py-16 md:py-24 bg-secondary">
       <div className="container max-w-7xl">
         <div className="grid md:grid-cols-2 gap-12 md:gap-16 items-center">
           <div className="space-y-6">
             <p className="text-sm font-semibold text-primary uppercase tracking-wider">
-              {aboutData.tagline}
+              Our Core Principles
             </p>
             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl font-headline">
               {aboutData.title}
@@ -18,14 +67,14 @@ export default function About() {
               {aboutData.paragraph1}
             </p>
             <div className="space-y-4">
-                {aboutData.highlights.map((highlight, index) => (
-                    <div key={index} className="flex items-start gap-3">
-                        <div className="bg-primary/10 text-primary p-1.5 rounded-full mt-1">
-                            <Check className="h-4 w-4" />
-                        </div>
-                        <p className="text-muted-foreground flex-1">{highlight}</p>
-                    </div>
-                ))}
+              {aboutData.highlights.map((highlight, index) => (
+                <div key={index} className="flex items-start gap-3">
+                  <div className="bg-primary/10 text-primary p-1.5 rounded-full mt-1">
+                    <Check className="h-4 w-4" />
+                  </div>
+                  <p className="text-muted-foreground flex-1">{highlight}</p>
+                </div>
+              ))}
             </div>
           </div>
           <div className="relative aspect-[4/3] w-full rounded-xl overflow-hidden border-2 border-border/10">
@@ -35,7 +84,6 @@ export default function About() {
               fill
               className="object-cover"
               sizes="(max-width: 768px) 100vw, 50vw"
-              data-ai-hint={aboutData.image.imageHint}
             />
           </div>
         </div>
