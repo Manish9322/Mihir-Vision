@@ -419,14 +419,16 @@ const TeamAdminPage = () => {
             </Card>
 
             <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-                <DialogContent className="sm:max-w-lg">
+                <DialogContent className="sm:max-w-2xl">
                     <DialogHeader>
                         <DialogTitle>{selectedMember ? 'Edit Team Member' : 'Add New Team Member'}</DialogTitle>
                         <DialogDescription>
                             Fill out the details for the team member.
                         </DialogDescription>
                     </DialogHeader>
-                    <TeamMemberForm member={selectedMember} onSave={handleSave} designations={designations} allMembers={teamMembers} />
+                    <div className="max-h-[70vh] overflow-y-auto px-1 pr-6 pl-6 scrollbar-hide">
+                        <TeamMemberForm member={selectedMember} onSave={handleSave} designations={designations} allMembers={teamMembers} />
+                    </div>
                 </DialogContent>
             </Dialog>
 

@@ -44,6 +44,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Provider } from 'react-redux';
 import { store } from '@/store/store';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 
 const navItems = [
@@ -102,19 +103,21 @@ export default function AdminLayout({
     <Provider store={store}>
       <div className="flex min-h-screen w-full flex-col bg-muted/40">
         <aside className="fixed inset-y-0 left-0 z-10 hidden w-64 flex-col border-r bg-background sm:flex">
-          <div className="flex flex-col justify-between flex-1">
-              <nav className="flex-1 space-y-2 p-4">
-                  {navItems.map(item => (
-                      <Link
-                          key={item.label}
-                          href={item.href}
-                          className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
-                      >
-                          <item.icon className="h-4 w-4" />
-                          {item.label}
-                      </Link>
-                  ))}
-              </nav>
+          <div className="flex h-full flex-col">
+              <ScrollArea className="flex-1 p-4 scrollbar-hide">
+                  <nav className="space-y-2">
+                      {navItems.map(item => (
+                          <Link
+                              key={item.label}
+                              href={item.href}
+                              className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
+                          >
+                              <item.icon className="h-4 w-4" />
+                              {item.label}
+                          </Link>
+                      ))}
+                  </nav>
+              </ScrollArea>
               <div className="mt-auto p-4 border-t">
                   <nav className="space-y-1">
                       <Link
