@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,174 +9,530 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Switch } from "@/components/ui/switch";
-import { Loader2, PlusCircle, Trash2 } from 'lucide-react';
+import { Loader2, PlusCircle, Trash2, ChevronLeft, ChevronRight, MoreHorizontal, FilePenLine, Eye, Search, ListFilter } from 'lucide-react';
 import { useGetSettingsDataQuery, useUpdateSettingsDataMutation, useGetCountriesQuery, useUpdateCountriesMutation, useGetStatesQuery, useUpdateStatesMutation, useGetCitiesQuery, useUpdateCitiesMutation } from '@/services/api';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuCheckboxItem } from '@/components/ui/dropdown-menu';
 
+const ITEMS_PER_PAGE = 5;
 
-const ProfileOptionsManager = () => {
-    const { toast } = useToast();
-    const { data: countries = [], isLoading: isCountriesLoading } = useGetCountriesQuery();
-    const { data: states = [], isLoading: isStatesLoading } = useGetStatesQuery();
-    const { data: cities = [], isLoading: isCitiesLoading } = useGetCitiesQuery();
-    
-    const [updateCountries, { isLoading: isUpdatingCountries }] = useUpdateCountriesMutation();
-    const [updateStates, { isLoading: isUpdatingStates }] = useUpdateStatesMutation();
-    const [updateCities, { isLoading: isUpdatingCities }] = useUpdateCitiesMutation();
+// #region Countries Manager
+const CountryForm = ({ country, onSave }) => {
+    const [name, setName] = useState(country?.name || '');
+    const [description, setDescription] = useState(country?.description || '');
 
-    const { control: countryControl, handleSubmit: handleCountrySubmit, reset: resetCountries } = useForm({ defaultValues: { countries } });
-    const { control: stateControl, handleSubmit: handleStateSubmit, reset: resetStates } = useForm({ defaultValues: { states } });
-    const { control: cityControl, handleSubmit: handleCitySubmit, reset: resetCities } = useForm({ defaultValues: { cities } });
-
-    const { fields: countryFields, append: appendCountry, remove: removeCountry } = useFieldArray({ control: countryControl, name: "countries" });
-    const { fields: stateFields, append: appendState, remove: removeState } = useFieldArray({ control: stateControl, name: "states" });
-    const { fields: cityFields, append: appendCity, remove: removeCity } = useFieldArray({ control: cityControl, name: "cities" });
-
-    useEffect(() => { resetCountries({ countries }) }, [countries, resetCountries]);
-    useEffect(() => { resetStates({ states }) }, [states, resetStates]);
-    useEffect(() => { resetCities({ cities }) }, [cities, resetCities]);
-
-    const onSaveCountries = async (data) => {
-        try {
-            await updateCountries(data.countries).unwrap();
-            toast({ title: "Countries Saved", description: "The list of countries has been updated." });
-        } catch {
-            toast({ variant: 'destructive', title: "Save Failed", description: "Could not save countries." });
-        }
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        onSave({ name, description });
     };
-    const onSaveStates = async (data) => {
-        try {
-            await updateStates(data.states).unwrap();
-            toast({ title: "States Saved", description: "The list of states has been updated." });
-        } catch {
-            toast({ variant: 'destructive', title: "Save Failed", description: "Could not save states." });
-        }
-    };
-    const onSaveCities = async (data) => {
-         try {
-            await updateCities(data.cities).unwrap();
-            toast({ title: "Cities Saved", description: "The list of cities has been updated." });
-        } catch {
-            toast({ variant: 'destructive', title: "Save Failed", description: "Could not save cities." });
-        }
-    };
-    
-    const isLoading = isCountriesLoading || isStatesLoading || isCitiesLoading;
-    const isSaving = isUpdatingCountries || isUpdatingStates || isUpdatingCities;
-
-    if (isLoading) {
-        return <div className="flex items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>
-    }
 
     return (
-        <div className="space-y-8">
-            <form onSubmit={handleCountrySubmit(onSaveCountries)}>
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Countries</CardTitle>
-                        <CardDescription>Manage the countries available for user profiles.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        {countryFields.map((field, index) => (
-                            <div key={field.id} className="flex gap-4 items-start border p-4 rounded-md">
-                                <div className="flex-grow space-y-2">
-                                    <Input {...countryControl.register(`countries.${index}.name`)} placeholder="Country Name"/>
-                                    <Textarea {...countryControl.register(`countries.${index}.description`)} placeholder="Description"/>
-                                </div>
-                                <Button variant="ghost" size="icon" onClick={() => removeCountry(index)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
-                            </div>
-                        ))}
-                        <Button type="button" variant="outline" onClick={() => appendCountry({ _id: `new_${Date.now()}`, name: '', description: '' })}><PlusCircle className="mr-2 h-4 w-4"/>Add Country</Button>
-                    </CardContent>
-                </Card>
-                 <Button type="submit" disabled={isSaving} className="mt-4">
-                    {isUpdatingCountries && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Save Countries
-                </Button>
-            </form>
-
-            <form onSubmit={handleStateSubmit(onSaveStates)}>
-                <Card>
-                    <CardHeader>
-                        <CardTitle>States / Provinces</CardTitle>
-                        <CardDescription>Manage states and assign them to a country.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        {stateFields.map((field, index) => (
-                            <div key={field.id} className="flex gap-4 items-start border p-4 rounded-md">
-                                <div className="flex-grow space-y-2">
-                                    <Input {...stateControl.register(`states.${index}.name`)} placeholder="State Name"/>
-                                    <Textarea {...stateControl.register(`states.${index}.description`)} placeholder="Description"/>
-                                    <Controller
-                                        control={stateControl}
-                                        name={`states.${index}.country`}
-                                        render={({ field: controllerField }) => (
-                                            <Select onValueChange={controllerField.onChange} defaultValue={field.country}>
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Select a country" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    {countries?.map(c => <SelectItem key={c._id || c.name} value={c.name}>{c.name}</SelectItem>)}
-                                                </SelectContent>
-                                            </Select>
-                                        )}
-                                    />
-                                </div>
-                                <Button variant="ghost" size="icon" onClick={() => removeState(index)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
-                            </div>
-                        ))}
-                        <Button type="button" variant="outline" onClick={() => appendState({ _id: `new_${Date.now()}`, name: '', description: '', country: '' })}><PlusCircle className="mr-2 h-4 w-4"/>Add State</Button>
-                    </CardContent>
-                </Card>
-                <Button type="submit" disabled={isSaving} className="mt-4">
-                    {isUpdatingStates && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Save States
-                </Button>
-            </form>
-
-            <form onSubmit={handleCitySubmit(onSaveCities)}>
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Cities</CardTitle>
-                        <CardDescription>Manage cities and assign them to a state.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        {cityFields.map((field, index) => (
-                            <div key={field.id} className="flex gap-4 items-start border p-4 rounded-md">
-                                <div className="flex-grow space-y-2">
-                                    <Input {...cityControl.register(`cities.${index}.name`)} placeholder="City Name"/>
-                                    <Textarea {...cityControl.register(`cities.${index}.description`)} placeholder="Description"/>
-                                    <Controller
-                                        control={cityControl}
-                                        name={`cities.${index}.state`}
-                                        render={({ field: controllerField }) => (
-                                            <Select onValueChange={controllerField.onChange} defaultValue={field.state}>
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Select a state" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    {states?.map(s => <SelectItem key={s._id || s.name} value={s.name}>{s.name} ({s.country})</SelectItem>)}
-                                                </SelectContent>
-                                            </Select>
-                                        )}
-                                    />
-                                </div>
-                                <Button variant="ghost" size="icon" onClick={() => removeCity(index)}><Trash2 className="h-4 w-4 text-destructive"/></Button>
-                            </div>
-                        ))}
-                        <Button type="button" variant="outline" onClick={() => appendCity({ _id: `new_${Date.now()}`, name: '', description: '', state: '' })}><PlusCircle className="mr-2 h-4 w-4"/>Add City</Button>
-                    </CardContent>
-                </Card>
-                <Button type="submit" disabled={isSaving} className="mt-4">
-                    {isUpdatingCities && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Save Cities
-                </Button>
-            </form>
-        </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+                <Label htmlFor="country-name">Country Name</Label>
+                <Input id="country-name" value={name} onChange={(e) => setName(e.target.value)} required />
+            </div>
+            <div className="space-y-2">
+                <Label htmlFor="country-description">Description</Label>
+                <Textarea id="country-description" value={description} onChange={(e) => setDescription(e.target.value)} />
+            </div>
+            <DialogFooter>
+                <DialogClose asChild><Button type="button" variant="outline">Cancel</Button></DialogClose>
+                <Button type="submit">Save Country</Button>
+            </DialogFooter>
+        </form>
     );
-}
+};
+
+const ViewCountryDialog = ({ country, open, onOpenChange }) => {
+    if (!country) return null;
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>{country.name}</DialogTitle>
+                    <DialogDescription>Viewing country details.</DialogDescription>
+                </DialogHeader>
+                <div className="py-4 space-y-2">
+                    <p className="text-sm text-muted-foreground">{country.description || "No description provided."}</p>
+                </div>
+                 <DialogFooter>
+                    <DialogClose asChild><Button type="button" variant="outline">Close</Button></DialogClose>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+};
+
+const CountriesManager = () => {
+    const { toast } = useToast();
+    const { data: countries = [], isLoading, isError } = useGetCountriesQuery();
+    const [updateCountries, { isLoading: isMutating }] = useUpdateCountriesMutation();
+    const [currentPage, setCurrentPage] = useState(1);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [isFormOpen, setIsFormOpen] = useState(false);
+    const [isViewOpen, setIsViewOpen] = useState(false);
+    const [selectedItem, setSelectedItem] = useState(null);
+    const [editingIndex, setEditingIndex] = useState(null);
+
+    const filteredItems = useMemo(() => {
+        return (countries || []).filter(item =>
+            item.name.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+    }, [countries, searchQuery]);
+
+    const totalPages = Math.ceil(filteredItems.length / ITEMS_PER_PAGE);
+    const paginatedItems = filteredItems.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
+    const handleSave = async (data) => {
+        let updatedItems;
+        if (editingIndex !== null) {
+            updatedItems = countries.map((item, index) => index === editingIndex ? { ...item, ...data } : item);
+        } else {
+            updatedItems = [{ ...data }, ...countries];
+        }
+
+        try {
+            await updateCountries(updatedItems).unwrap();
+            toast({ title: `Country ${editingIndex !== null ? 'Updated' : 'Added'}` });
+            setIsFormOpen(false);
+            setEditingIndex(null);
+        } catch (error) {
+            toast({ variant: 'destructive', title: 'Save Failed' });
+        }
+    };
+
+    const handleDelete = async (index) => {
+        const fullIndex = countries.findIndex(c => c.name === paginatedItems[index].name);
+        const updatedItems = countries.filter((_, i) => i !== fullIndex);
+        try {
+            await updateCountries(updatedItems).unwrap();
+            toast({ variant: 'destructive', title: 'Country Deleted' });
+        } catch (error) {
+            toast({ variant: 'destructive', title: 'Deletion Failed' });
+        }
+    };
+
+    if (isLoading) return <div className="flex items-center justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>;
+    if (isError) return <div>Error loading countries.</div>;
+
+    return (
+        <Card>
+            <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                    <CardTitle>Manage Countries</CardTitle>
+                    <CardDescription>Add, edit, or delete countries available for user profiles.</CardDescription>
+                </div>
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <div className="relative flex-1 sm:flex-initial">
+                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input type="search" placeholder="Search countries..." className="pl-8" value={searchQuery} onChange={e => { setSearchQuery(e.target.value); setCurrentPage(1); }} />
+                    </div>
+                    <Button onClick={() => { setSelectedItem(null); setEditingIndex(null); setIsFormOpen(true); }}><PlusCircle className="mr-2 h-4 w-4" /> Add Country</Button>
+                </div>
+            </CardHeader>
+            <CardContent>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Country Name</TableHead>
+                            <TableHead className="hidden md:table-cell">Description</TableHead>
+                            <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {paginatedItems.length > 0 ? paginatedItems.map((item, index) => (
+                            <TableRow key={item._id || index}>
+                                <TableCell className="font-medium">{item.name}</TableCell>
+                                <TableCell className="hidden md:table-cell max-w-sm truncate">{item.description}</TableCell>
+                                <TableCell className="text-right">
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild><Button size="icon" variant="ghost"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end">
+                                            <DropdownMenuItem onClick={() => { setSelectedItem(item); setIsViewOpen(true); }}><Eye className="mr-2 h-4 w-4" />View</DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => { setSelectedItem(item); setEditingIndex(countries.findIndex(c => c.name === item.name)); setIsFormOpen(true); }}><FilePenLine className="mr-2 h-4 w-4" />Edit</DropdownMenuItem>
+                                            <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(index)}><Trash2 className="mr-2 h-4 w-4" />Delete</DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                </TableCell>
+                            </TableRow>
+                        )) : (
+                            <TableRow><TableCell colSpan={3} className="h-24 text-center">No countries found.</TableCell></TableRow>
+                        )}
+                    </TableBody>
+                </Table>
+                <div className="flex items-center justify-between border-t p-4">
+                    <div className="text-xs text-muted-foreground">Showing <strong>{(currentPage - 1) * ITEMS_PER_PAGE + 1}-{Math.min(currentPage * ITEMS_PER_PAGE, filteredItems.length)}</strong> of <strong>{filteredItems.length}</strong> countries</div>
+                    <div className="flex items-center gap-2">
+                        <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} disabled={currentPage === 1}><ChevronLeft className="h-4 w-4" /></Button>
+                        <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages}><ChevronRight className="h-4 w-4" /></Button>
+                    </div>
+                </div>
+            </CardContent>
+            <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}><DialogContent><DialogHeader><DialogTitle>{editingIndex !== null ? 'Edit' : 'Add'} Country</DialogTitle></DialogHeader><CountryForm country={selectedItem} onSave={handleSave} /></DialogContent></Dialog>
+            <ViewCountryDialog country={selectedItem} open={isViewOpen} onOpenChange={setIsViewOpen} />
+        </Card>
+    );
+};
+// #endregion
+
+// #region States Manager
+const StateForm = ({ state, countries, onSave }) => {
+    const { register, handleSubmit, control, formState: { errors } } = useForm({ defaultValues: state || { name: '', description: '', country: '' } });
+
+    const onSubmit = (data) => onSave(data);
+
+    return (
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <div className="space-y-2">
+                <Label htmlFor="state-name">State Name</Label>
+                <Input id="state-name" {...register('name', { required: true })} />
+            </div>
+            <div className="space-y-2">
+                <Label htmlFor="state-description">Description</Label>
+                <Textarea id="state-description" {...register('description')} />
+            </div>
+            <div className="space-y-2">
+                <Label htmlFor="state-country">Country</Label>
+                <Controller
+                    name="country"
+                    control={control}
+                    rules={{ required: true }}
+                    render={({ field }) => (
+                        <Select onValueChange={field.onChange} value={field.value}>
+                            <SelectTrigger><SelectValue placeholder="Select a country" /></SelectTrigger>
+                            <SelectContent>
+                                {countries.map(c => <SelectItem key={c.name} value={c.name}>{c.name}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                    )}
+                />
+            </div>
+            <DialogFooter>
+                <DialogClose asChild><Button type="button" variant="outline">Cancel</Button></DialogClose>
+                <Button type="submit">Save State</Button>
+            </DialogFooter>
+        </form>
+    );
+};
+
+const ViewStateDialog = ({ state, open, onOpenChange }) => {
+    if (!state) return null;
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>{state.name}</DialogTitle>
+                    <DialogDescription>Viewing state/province details.</DialogDescription>
+                </DialogHeader>
+                <div className="py-4 space-y-4">
+                    <p><strong>Country:</strong> <span className="text-muted-foreground">{state.country}</span></p>
+                    <p className="text-sm text-muted-foreground">{state.description || "No description provided."}</p>
+                </div>
+                 <DialogFooter>
+                    <DialogClose asChild><Button type="button" variant="outline">Close</Button></DialogClose>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+};
+
+const StatesManager = () => {
+    const { toast } = useToast();
+    const { data: states = [], isLoading: isStatesLoading, isError: isStatesError } = useGetStatesQuery();
+    const { data: countries = [], isLoading: isCountriesLoading } = useGetCountriesQuery();
+    const [updateStates, { isLoading: isMutating }] = useUpdateStatesMutation();
+    const [currentPage, setCurrentPage] = useState(1);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [isFormOpen, setIsFormOpen] = useState(false);
+    const [isViewOpen, setIsViewOpen] = useState(false);
+    const [selectedItem, setSelectedItem] = useState(null);
+    const [editingIndex, setEditingIndex] = useState(null);
+
+    const filteredItems = useMemo(() => {
+        return (states || []).filter(item =>
+            item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            item.country.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+    }, [states, searchQuery]);
+
+    const totalPages = Math.ceil(filteredItems.length / ITEMS_PER_PAGE);
+    const paginatedItems = filteredItems.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
+    const handleSave = async (data) => {
+        let updatedItems;
+        if (editingIndex !== null) {
+            updatedItems = states.map((item, index) => index === editingIndex ? { ...item, ...data } : item);
+        } else {
+            updatedItems = [{ ...data }, ...states];
+        }
+
+        try {
+            await updateStates(updatedItems).unwrap();
+            toast({ title: `State ${editingIndex !== null ? 'Updated' : 'Added'}` });
+            setIsFormOpen(false);
+            setEditingIndex(null);
+        } catch (error) {
+            toast({ variant: 'destructive', title: 'Save Failed' });
+        }
+    };
+
+    const handleDelete = async (index) => {
+        const fullIndex = states.findIndex(s => s.name === paginatedItems[index].name && s.country === paginatedItems[index].country);
+        const updatedItems = states.filter((_, i) => i !== fullIndex);
+        try {
+            await updateStates(updatedItems).unwrap();
+            toast({ variant: 'destructive', title: 'State Deleted' });
+        } catch (error) {
+            toast({ variant: 'destructive', title: 'Deletion Failed' });
+        }
+    };
+
+    if (isStatesLoading || isCountriesLoading) return <div className="flex items-center justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>;
+    if (isStatesError) return <div>Error loading states.</div>;
+
+    return (
+        <Card>
+            <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                    <CardTitle>Manage States / Provinces</CardTitle>
+                    <CardDescription>Add, edit, or delete states and assign them to countries.</CardDescription>
+                </div>
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <div className="relative flex-1 sm:flex-initial">
+                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input type="search" placeholder="Search states..." className="pl-8" value={searchQuery} onChange={e => { setSearchQuery(e.target.value); setCurrentPage(1); }} />
+                    </div>
+                    <Button onClick={() => { setSelectedItem(null); setEditingIndex(null); setIsFormOpen(true); }}><PlusCircle className="mr-2 h-4 w-4" /> Add State</Button>
+                </div>
+            </CardHeader>
+            <CardContent>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>State Name</TableHead>
+                            <TableHead>Country</TableHead>
+                            <TableHead className="hidden md:table-cell">Description</TableHead>
+                            <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {paginatedItems.length > 0 ? paginatedItems.map((item, index) => (
+                            <TableRow key={item._id || index}>
+                                <TableCell className="font-medium">{item.name}</TableCell>
+                                <TableCell>{item.country}</TableCell>
+                                <TableCell className="hidden md:table-cell max-w-sm truncate">{item.description}</TableCell>
+                                <TableCell className="text-right">
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild><Button size="icon" variant="ghost"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end">
+                                            <DropdownMenuItem onClick={() => { setSelectedItem(item); setIsViewOpen(true); }}><Eye className="mr-2 h-4 w-4" />View</DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => { setSelectedItem(item); setEditingIndex(states.findIndex(s => s.name === item.name && s.country === item.country)); setIsFormOpen(true); }}><FilePenLine className="mr-2 h-4 w-4" />Edit</DropdownMenuItem>
+                                            <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(index)}><Trash2 className="mr-2 h-4 w-4" />Delete</DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                </TableCell>
+                            </TableRow>
+                        )) : (
+                            <TableRow><TableCell colSpan={4} className="h-24 text-center">No states found.</TableCell></TableRow>
+                        )}
+                    </TableBody>
+                </Table>
+                 <div className="flex items-center justify-between border-t p-4">
+                    <div className="text-xs text-muted-foreground">Showing <strong>{(currentPage - 1) * ITEMS_PER_PAGE + 1}-{Math.min(currentPage * ITEMS_PER_PAGE, filteredItems.length)}</strong> of <strong>{filteredItems.length}</strong> states</div>
+                    <div className="flex items-center gap-2">
+                        <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} disabled={currentPage === 1}><ChevronLeft className="h-4 w-4" /></Button>
+                        <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages}><ChevronRight className="h-4 w-4" /></Button>
+                    </div>
+                </div>
+            </CardContent>
+            <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}><DialogContent><DialogHeader><DialogTitle>{editingIndex !== null ? 'Edit' : 'Add'} State</DialogTitle></DialogHeader><StateForm state={selectedItem} countries={countries} onSave={handleSave} /></DialogContent></Dialog>
+            <ViewStateDialog state={selectedItem} open={isViewOpen} onOpenChange={setIsViewOpen} />
+        </Card>
+    );
+};
+// #endregion
+
+// #region Cities Manager
+const CityForm = ({ city, states, onSave }) => {
+    const { register, handleSubmit, control } = useForm({ defaultValues: city || { name: '', description: '', state: '' } });
+    const onSubmit = (data) => onSave(data);
+
+    return (
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <div className="space-y-2">
+                <Label htmlFor="city-name">City Name</Label>
+                <Input id="city-name" {...register('name', { required: true })} />
+            </div>
+            <div className="space-y-2">
+                <Label htmlFor="city-description">Description</Label>
+                <Textarea id="city-description" {...register('description')} />
+            </div>
+            <div className="space-y-2">
+                <Label htmlFor="city-state">State / Province</Label>
+                <Controller
+                    name="state"
+                    control={control}
+                    rules={{ required: true }}
+                    render={({ field }) => (
+                        <Select onValueChange={field.onChange} value={field.value}>
+                            <SelectTrigger><SelectValue placeholder="Select a state" /></SelectTrigger>
+                            <SelectContent>
+                                {states.map(s => <SelectItem key={s.name} value={s.name}>{s.name} ({s.country})</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                    )}
+                />
+            </div>
+            <DialogFooter>
+                <DialogClose asChild><Button type="button" variant="outline">Cancel</Button></DialogClose>
+                <Button type="submit">Save City</Button>
+            </DialogFooter>
+        </form>
+    );
+};
+
+const ViewCityDialog = ({ city, open, onOpenChange }) => {
+    if (!city) return null;
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>{city.name}</DialogTitle>
+                    <DialogDescription>Viewing city details.</DialogDescription>
+                </DialogHeader>
+                <div className="py-4 space-y-4">
+                     <p><strong>State / Province:</strong> <span className="text-muted-foreground">{city.state}</span></p>
+                    <p className="text-sm text-muted-foreground">{city.description || "No description provided."}</p>
+                </div>
+                 <DialogFooter>
+                    <DialogClose asChild><Button type="button" variant="outline">Close</Button></DialogClose>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+};
+
+const CitiesManager = () => {
+    const { toast } = useToast();
+    const { data: cities = [], isLoading: isCitiesLoading, isError: isCitiesError } = useGetCitiesQuery();
+    const { data: states = [], isLoading: isStatesLoading } = useGetStatesQuery();
+    const [updateCities, { isLoading: isMutating }] = useUpdateCitiesMutation();
+    const [currentPage, setCurrentPage] = useState(1);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [isFormOpen, setIsFormOpen] = useState(false);
+    const [isViewOpen, setIsViewOpen] = useState(false);
+    const [selectedItem, setSelectedItem] = useState(null);
+    const [editingIndex, setEditingIndex] = useState(null);
+
+    const filteredItems = useMemo(() => {
+        return (cities || []).filter(item =>
+            item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            item.state.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+    }, [cities, searchQuery]);
+
+    const totalPages = Math.ceil(filteredItems.length / ITEMS_PER_PAGE);
+    const paginatedItems = filteredItems.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
+    const handleSave = async (data) => {
+        let updatedItems;
+        if (editingIndex !== null) {
+            updatedItems = cities.map((item, index) => index === editingIndex ? { ...item, ...data } : item);
+        } else {
+            updatedItems = [{ ...data }, ...cities];
+        }
+
+        try {
+            await updateCities(updatedItems).unwrap();
+            toast({ title: `City ${editingIndex !== null ? 'Updated' : 'Added'}` });
+            setIsFormOpen(false);
+            setEditingIndex(null);
+        } catch (error) {
+            toast({ variant: 'destructive', title: 'Save Failed' });
+        }
+    };
+
+    const handleDelete = async (index) => {
+        const fullIndex = cities.findIndex(c => c.name === paginatedItems[index].name && c.state === paginatedItems[index].state);
+        const updatedItems = cities.filter((_, i) => i !== fullIndex);
+        try {
+            await updateCities(updatedItems).unwrap();
+            toast({ variant: 'destructive', title: 'City Deleted' });
+        } catch (error) {
+            toast({ variant: 'destructive', title: 'Deletion Failed' });
+        }
+    };
+    
+    if (isCitiesLoading || isStatesLoading) return <div className="flex items-center justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>;
+    if (isCitiesError) return <div>Error loading cities.</div>;
+
+    return (
+        <Card>
+            <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                    <CardTitle>Manage Cities</CardTitle>
+                    <CardDescription>Add, edit, or delete cities and assign them to states.</CardDescription>
+                </div>
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <div className="relative flex-1 sm:flex-initial">
+                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input type="search" placeholder="Search cities..." className="pl-8" value={searchQuery} onChange={e => { setSearchQuery(e.target.value); setCurrentPage(1); }} />
+                    </div>
+                    <Button onClick={() => { setSelectedItem(null); setEditingIndex(null); setIsFormOpen(true); }}><PlusCircle className="mr-2 h-4 w-4" /> Add City</Button>
+                </div>
+            </CardHeader>
+            <CardContent>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>City Name</TableHead>
+                            <TableHead>State / Province</TableHead>
+                            <TableHead className="hidden md:table-cell">Description</TableHead>
+                            <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {paginatedItems.length > 0 ? paginatedItems.map((item, index) => (
+                            <TableRow key={item._id || index}>
+                                <TableCell className="font-medium">{item.name}</TableCell>
+                                <TableCell>{item.state}</TableCell>
+                                <TableCell className="hidden md:table-cell max-w-sm truncate">{item.description}</TableCell>
+                                <TableCell className="text-right">
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild><Button size="icon" variant="ghost"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end">
+                                            <DropdownMenuItem onClick={() => { setSelectedItem(item); setIsViewOpen(true); }}><Eye className="mr-2 h-4 w-4" />View</DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => { setSelectedItem(item); setEditingIndex(cities.findIndex(c => c.name === item.name && c.state === item.state)); setIsFormOpen(true); }}><FilePenLine className="mr-2 h-4 w-4" />Edit</DropdownMenuItem>
+                                            <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(index)}><Trash2 className="mr-2 h-4 w-4" />Delete</DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                </TableCell>
+                            </TableRow>
+                        )) : (
+                            <TableRow><TableCell colSpan={4} className="h-24 text-center">No cities found.</TableCell></TableRow>
+                        )}
+                    </TableBody>
+                </Table>
+                <div className="flex items-center justify-between border-t p-4">
+                    <div className="text-xs text-muted-foreground">Showing <strong>{(currentPage - 1) * ITEMS_PER_PAGE + 1}-{Math.min(currentPage * ITEMS_PER_PAGE, filteredItems.length)}</strong> of <strong>{filteredItems.length}</strong> cities</div>
+                    <div className="flex items-center gap-2">
+                        <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} disabled={currentPage === 1}><ChevronLeft className="h-4 w-4" /></Button>
+                        <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages}><ChevronRight className="h-4 w-4" /></Button>
+                    </div>
+                </div>
+            </CardContent>
+            <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}><DialogContent><DialogHeader><DialogTitle>{editingIndex !== null ? 'Edit' : 'Add'} City</DialogTitle></DialogHeader><CityForm city={selectedItem} states={states} onSave={handleSave} /></DialogContent></Dialog>
+            <ViewCityDialog city={selectedItem} open={isViewOpen} onOpenChange={setIsViewOpen} />
+        </Card>
+    );
+};
+// #endregion
+
 
 export default function SettingsPage() {
     const { toast } = useToast();
@@ -259,7 +615,11 @@ export default function SettingsPage() {
                 </Card>
             </TabsContent>
             <TabsContent value="profile-options">
-                <ProfileOptionsManager />
+                <div className="space-y-8">
+                   <CountriesManager />
+                   <StatesManager />
+                   <CitiesManager />
+                </div>
             </TabsContent>
             <TabsContent value="notifications">
                 <Card>
