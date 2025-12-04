@@ -9,11 +9,11 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { useGetActionLogsQuery } from '@/services/api';
-import { format, formatDistanceToNow } from 'date-fns';
-import { Loader2, Search, CalendarIcon, FilePenLine, Trash2, PlusCircle, User, Settings, GalleryHorizontal } from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
+import { format } from 'date-fns';
+import { Loader2, Search, CalendarIcon, ListFilter, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
 
 type ActionLog = {
     _id: string;
@@ -24,29 +24,24 @@ type ActionLog = {
     timestamp: string;
 };
 
-const sectionIcons: { [key: string]: LucideIcon } = {
-    Projects: FilePenLine,
-    Team: User,
-    Settings: Settings,
-    Gallery: GalleryHorizontal,
-    default: FilePenLine,
-};
+const ITEMS_PER_PAGE = 10;
 
-const typeColors: { [key: string]: string } = {
-    CREATE: 'bg-green-500',
-    UPDATE: 'bg-blue-500',
-    DELETE: 'bg-red-500',
-    LOGIN: 'bg-yellow-500',
-    LOGOUT: 'bg-gray-500',
+const typeColors: { [key: string]: 'default' | 'secondary' | 'destructive' | 'outline' } = {
+    CREATE: 'default',
+    UPDATE: 'secondary',
+    DELETE: 'destructive',
+    LOGIN: 'default',
+    LOGOUT: 'outline',
 };
 
 
 const HistoryPage = () => {
     const { data: logs = [], isLoading, isError } = useGetActionLogsQuery();
     const [searchQuery, setSearchQuery] = useState('');
-    const [dateRange, setDateRange] = useState({ from: undefined, to: undefined });
+    const [dateRange, setDateRange] = useState<{from?: Date; to?: Date}>({ from: undefined, to: undefined });
     const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
     const [selectedSections, setSelectedSections] = useState<string[]>([]);
+    const [currentPage, setCurrentPage] = useState(1);
 
     const availableTypes = useMemo(() => Array.from(new Set(logs.map(log => log.type))), [logs]);
     const availableSections = useMemo(() => Array.from(new Set(logs.map(log => log.section))), [logs]);
@@ -55,8 +50,8 @@ const HistoryPage = () => {
         return logs
             .filter(log => {
                 const logDate = new Date(log.timestamp);
-                const fromDate = dateRange.from ? new Date(dateRange.from) : null;
-                const toDate = dateRange.to ? new Date(dateRange.to) : null;
+                const fromDate = dateRange.from;
+                const toDate = dateRange.to;
 
                 if (fromDate && logDate < fromDate) return false;
                 if (toDate && logDate > toDate) return false;
@@ -71,12 +66,20 @@ const HistoryPage = () => {
             .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
     }, [logs, searchQuery, dateRange, selectedTypes, selectedSections]);
     
+    const totalPages = Math.ceil(filteredLogs.length / ITEMS_PER_PAGE);
+    const paginatedLogs = filteredLogs.slice(
+        (currentPage - 1) * ITEMS_PER_PAGE,
+        currentPage * ITEMS_PER_PAGE
+    );
+    
     const handleTypeToggle = (type: string) => {
         setSelectedTypes(prev => prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]);
+        setCurrentPage(1);
     };
     
     const handleSectionToggle = (section: string) => {
         setSelectedSections(prev => prev.includes(section) ? prev.filter(s => s !== section) : [...prev, section]);
+        setCurrentPage(1);
     };
 
     if (isLoading) {
@@ -89,17 +92,16 @@ const HistoryPage = () => {
 
     return (
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
-            {/* Filters Column */}
             <div className="lg:col-span-1 sticky top-16">
                 <Card>
                     <CardHeader>
-                        <CardTitle>Filter History</CardTitle>
-                        <CardDescription>Refine the action logs.</CardDescription>
+                        <CardTitle className="flex items-center gap-2"><ListFilter className="h-5 w-5" /> Filter History</CardTitle>
+                        <CardDescription>Refine the action logs shown in the table.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">
                         <div className="relative">
                             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                            <Input placeholder="Search actions..." className="pl-8" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+                            <Input placeholder="Search actions..." className="pl-8" value={searchQuery} onChange={(e) => {setSearchQuery(e.target.value); setCurrentPage(1);}} />
                         </div>
 
                         <div className="space-y-2">
@@ -119,7 +121,7 @@ const HistoryPage = () => {
                                     <Calendar
                                         mode="range"
                                         selected={dateRange}
-                                        onSelect={setDateRange}
+                                        onSelect={(range) => { setDateRange(range || {}); setCurrentPage(1); }}
                                         initialFocus
                                     />
                                 </PopoverContent>
@@ -139,7 +141,7 @@ const HistoryPage = () => {
                         </div>
 
                         <div className="space-y-2">
-                             <Label>Section</Label>
+                             <Label>Page / Section</Label>
                              <div className="space-y-1">
                                  {availableSections.map(section => (
                                     <div key={section} className="flex items-center gap-2">
@@ -154,7 +156,6 @@ const HistoryPage = () => {
                 </Card>
             </div>
 
-            {/* Timeline Column */}
             <div className="lg:col-span-3">
                  <Card>
                     <CardHeader>
@@ -162,36 +163,52 @@ const HistoryPage = () => {
                         <CardDescription>A log of all administrative actions taken.</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <ScrollArea className="h-[70vh] pr-4">
-                           <div className="relative pl-6">
-                                <div className="absolute left-0 top-0 h-full w-0.5 bg-border" />
-                                {filteredLogs.length > 0 ? filteredLogs.map(log => {
-                                    const Icon = sectionIcons[log.section] || sectionIcons.default;
-                                    return (
-                                        <div key={log._id} className="relative mb-8">
-                                            <div className="absolute -left-3 top-1.5 h-6 w-6 rounded-full bg-background ring-4 ring-background flex items-center justify-center">
-                                                <div className={`h-3 w-3 rounded-full ${typeColors[log.type] || 'bg-gray-400'}`} />
-                                            </div>
-                                            <div className="pl-6">
-                                                <div className="flex items-center justify-between">
-                                                    <p className="text-sm font-medium"><span className="font-bold">{log.user}</span> {log.action}</p>
-                                                    <span className="text-xs text-muted-foreground">{formatDistanceToNow(new Date(log.timestamp), { addSuffix: true })}</span>
-                                                </div>
-                                                <div className="text-xs text-muted-foreground mt-1 flex items-center gap-2">
-                                                   <Icon className="h-3 w-3" />
-                                                   <span>{log.section} / {log.type}</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    )
-                                }) : (
-                                    <div className="text-center text-muted-foreground py-16">
-                                        <p>No actions match your filters.</p>
-                                    </div>
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>User</TableHead>
+                                    <TableHead>Action</TableHead>
+                                    <TableHead>Page</TableHead>
+                                    <TableHead>Type</TableHead>
+                                    <TableHead className="text-right">Timestamp</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {paginatedLogs.length > 0 ? paginatedLogs.map(log => (
+                                    <TableRow key={log._id}>
+                                        <TableCell className="font-medium">{log.user}</TableCell>
+                                        <TableCell className="max-w-sm truncate">{log.action}</TableCell>
+                                        <TableCell>
+                                             <Badge variant="outline">{log.section}</Badge>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Badge variant={typeColors[log.type] || 'secondary'}>{log.type}</Badge>
+                                        </TableCell>
+                                        <TableCell className="text-right text-muted-foreground text-xs">{format(new Date(log.timestamp), 'PPpp')}</TableCell>
+                                    </TableRow>
+                                )) : (
+                                    <TableRow>
+                                        <TableCell colSpan={5} className="h-24 text-center">No actions match your filters.</TableCell>
+                                    </TableRow>
                                 )}
-                           </div>
-                        </ScrollArea>
+                            </TableBody>
+                        </Table>
                     </CardContent>
+                    <div className="flex items-center justify-between border-t p-4">
+                        <div className="text-xs text-muted-foreground">
+                            Showing <strong>{paginatedLogs.length > 0 ? (currentPage - 1) * ITEMS_PER_PAGE + 1 : 0}-{(currentPage - 1) * ITEMS_PER_PAGE + paginatedLogs.length}</strong> of <strong>{filteredLogs.length}</strong> logs
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Button variant="outline" size="sm" onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1}>
+                                <ChevronLeft className="h-4 w-4" />
+                                <span className="sr-only">Previous</span>
+                            </Button>
+                            <Button variant="outline" size="sm" onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages}>
+                                <span className="sr-only">Next</span>
+                                <ChevronRight className="h-4 w-4" />
+                            </Button>
+                        </div>
+                    </div>
                 </Card>
             </div>
         </div>
