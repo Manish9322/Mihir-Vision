@@ -1,3 +1,4 @@
+
 'use server';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -71,7 +72,7 @@ export default async function FeaturedProjects() {
         </div>
         <div className="grid md:grid-cols-3 gap-8">
           {visibleProjects.map((mission) => (
-            <Card key={mission.title} className="group overflow-hidden flex flex-col transition-all duration-300 ease-in-out hover:scale-[1.02] hover:-translate-y-2 hover:shadow-xl hover:shadow-primary/10">
+            <Card key={mission.title} className="group overflow-hidden flex flex-col transition-all duration-300 ease-in-out hover:scale-[1.02] hover:-translate-y-2 hover:shadow-xl hover:shadow-primary/10 rounded-md">
               <div className="relative h-48 w-full overflow-hidden">
                 <Image
                   src={mission.image.imageUrl}

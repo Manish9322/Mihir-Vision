@@ -1,3 +1,4 @@
+
 'use server';
 
 import { MONGODB_URI } from '@/config/config';
@@ -84,7 +85,7 @@ export default async function Timeline() {
                   }`}
                 >
                   <div className="pl-12 lg:pl-0 lg:text-inherit">
-                    <div className="p-6 rounded-lg bg-card shadow-md">
+                    <div className="p-6 rounded-md bg-card shadow-md">
                       <p className="text-sm font-semibold text-primary">{event.year}</p>
                       <h3 className="mt-1 text-xl font-bold font-headline">{event.title}</h3>
                       <p className="mt-2 text-muted-foreground">{event.description}</p>

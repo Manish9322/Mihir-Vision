@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -14,7 +15,7 @@ export default function GalleryClient({ galleryData }: { galleryData: ImagePlace
         {galleryData.map((image, index) => (
             <div
             key={index}
-            className="group relative aspect-video w-full rounded-xl overflow-hidden cursor-pointer"
+            className="group relative aspect-video w-full rounded-md overflow-hidden cursor-pointer"
             onClick={() => setSelectedImage(image)}
             >
             <Image

@@ -1,3 +1,4 @@
+
 'use server';
 import Image from 'next/image';
 import { Check } from 'lucide-react';
@@ -77,7 +78,7 @@ export default async function About() {
               ))}
             </div>
           </div>
-          <div className="relative aspect-[4/3] w-full rounded-xl overflow-hidden border-2 border-border/10">
+          <div className="relative aspect-[4/3] w-full rounded-md overflow-hidden border-2 border-border/10">
             <Image
               src={aboutData.image.imageUrl}
               alt={aboutData.image.description}

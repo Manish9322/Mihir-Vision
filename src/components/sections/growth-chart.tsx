@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -79,7 +80,7 @@ export default function GrowthChart() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <Card>
+            <Card className="rounded-md">
                 <CardHeader>
                     <CardTitle>{growthChartData.chartTitle}</CardTitle>
                     <CardDescription>{growthChartData.chartSubheadline}</CardDescription>
@@ -107,7 +108,7 @@ export default function GrowthChart() {
                     </ChartContainer>
                 </CardContent>
             </Card>
-            <Card>
+            <Card className="rounded-md">
                 <CardHeader>
                     <CardTitle>R&amp;D Investment Growth</CardTitle>
                     <CardDescription>Millions of USD invested per year.</CardDescription>

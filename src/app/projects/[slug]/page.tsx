@@ -1,3 +1,4 @@
+
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import Header from '@/components/layout/header';
@@ -67,7 +68,7 @@ export default async function ProjectDetailPage({ params }: { params: { slug: st
                     Back to Projects
                 </Link>
             </Button>
-          <div className="relative aspect-video w-full rounded-xl overflow-hidden mb-8 border">
+          <div className="relative aspect-video w-full rounded-md overflow-hidden mb-8 border">
             <Image
               src={mission.image.imageUrl}
               alt={mission.image.description}

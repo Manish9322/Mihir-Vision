@@ -1,3 +1,4 @@
+
 'use server';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { MONGODB_URI } from '@/config/config';
@@ -75,7 +76,7 @@ export default async function Activities() {
             return (
               <Card
                 key={activity.title}
-                className="relative group overflow-hidden rounded-xl p-6 text-center bg-card transition-all duration-300 ease-in-out hover:-translate-y-2"
+                className="relative group overflow-hidden rounded-md p-6 text-center bg-card transition-all duration-300 ease-in-out hover:-translate-y-2"
               >
                 <div
                   className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"

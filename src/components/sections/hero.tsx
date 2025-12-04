@@ -1,3 +1,4 @@
+
 'use server';
 
 import { heroData } from '@/lib/data';
@@ -116,7 +117,7 @@ export default async function Hero() {
         <div className="container max-w-7xl mt-12 md:mt-16 pb-16 md:pb-24">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
             {dynamicStats.map((stat) => (
-                <Card key={stat.label} className="flex flex-col items-center justify-center p-6 bg-background/30 border-0 backdrop-blur-sm">
+                <Card key={stat.label} className="flex flex-col items-center justify-center p-6 bg-background/30 border-0 backdrop-blur-sm rounded-md">
                     <stat.icon className="h-10 w-10 text-primary mb-3" />
                     <p className="text-3xl md:text-4xl font-bold text-foreground">{stat.value}</p>
                     <p className="text-sm text-muted-foreground mt-1">{stat.label}</p>
