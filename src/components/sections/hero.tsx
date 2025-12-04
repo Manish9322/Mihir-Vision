@@ -1,8 +1,8 @@
 'use server';
 
-import { heroData, statsData } from '@/lib/data';
+import { heroData } from '@/lib/data';
 import { Button } from '@/components/ui/button';
-import { Phone, Mail } from 'lucide-react';
+import { Phone, Mail, Package, Gamepad2, UsersRound, Globe } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { MONGODB_URI } from '@/config/config';
@@ -11,6 +11,8 @@ type ProfileData = {
   phone?: string;
   email?: string;
 };
+
+type Countable = { _id?: string }[];
 
 async function getProfileData(): Promise<ProfileData | null> {
   if (!MONGODB_URI) {
@@ -29,10 +31,43 @@ async function getProfileData(): Promise<ProfileData | null> {
   }
 }
 
+async function getDataCount(apiPath: string): Promise<number> {
+  if (!MONGODB_URI) {
+    return 0;
+  }
+  try {
+    const baseUrl = process.env.NODE_ENV === 'production' 
+      ? `https://` + process.env.NEXT_PUBLIC_VERCEL_URL
+      : 'http://localhost:9002';
+    const res = await fetch(`${baseUrl}/api/${apiPath}`, { cache: 'no-store' });
+    if (!res.ok) return 0;
+    const data: Countable = await res.json();
+    return data.length;
+  } catch (error) {
+    console.error(`Failed to fetch count for ${apiPath}:`, error);
+    return 0;
+  }
+}
+
 export default async function Hero() {
   const profile = await getProfileData();
   const phone = profile?.phone || '+1 (555) 123-4567';
   const email = profile?.email || 'contact@pinnaclepathways.com';
+  
+  const [projectsCount, gamesCount, teamCount, clientsCount] = await Promise.all([
+    getDataCount('projects'),
+    getDataCount('games'),
+    getDataCount('team'),
+    getDataCount('clients'),
+  ]);
+
+  const dynamicStats = [
+    { label: 'Projects Completed', value: projectsCount, icon: Package },
+    { label: 'Total Games', value: gamesCount, icon: Gamepad2 },
+    { label: 'Team Members', value: teamCount, icon: UsersRound },
+    { label: 'Global Partners', value: clientsCount, icon: Globe },
+  ];
+
 
   return (
     <section
@@ -80,7 +115,7 @@ export default async function Hero() {
 
         <div className="container max-w-7xl mt-12 md:mt-16 pb-16 md:pb-24">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
-            {statsData.stats.map((stat) => (
+            {dynamicStats.map((stat) => (
                 <Card key={stat.label} className="flex flex-col items-center justify-center p-6 bg-background/30 border-0 backdrop-blur-sm">
                     <stat.icon className="h-10 w-10 text-primary mb-3" />
                     <p className="text-3xl md:text-4xl font-bold text-foreground">{stat.value}</p>
