@@ -1,4 +1,3 @@
-'use client';
 
 import Header from '@/components/layout/header';
 import Hero from '@/components/sections/hero';
@@ -15,12 +14,12 @@ import Contact from '@/components/sections/contact';
 import Footer from '@/components/layout/footer';
 import { Suspense } from 'react';
 import AboutSkeleton from '@/components/skeletons/about-skeleton';
-import { useTracking } from '@/hooks/useTracking';
+import PageViewTracker from '@/components/analytics/page-view-tracker';
 
 export default function Home() {
-  useTracking('Home');
   return (
     <div className="flex flex-col min-h-screen">
+      <PageViewTracker pageName="Home" />
       <Header />
       <main className="flex-1">
         <Hero />
