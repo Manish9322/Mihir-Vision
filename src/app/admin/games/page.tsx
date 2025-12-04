@@ -346,7 +346,7 @@ const GamesAdminPage = () => {
                             {selectedGame ? 'Make changes to this game.' : 'Add a new game to your portfolio.'}
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="max-h-[70vh] overflow-y-auto pr-6">
+                    <div className="max-h-[70vh] overflow-y-auto px-1 pr-6 pl-6 scrollbar-hide">
                         <GameForm game={selectedGame} onSave={handleSave} />
                     </div>
                 </DialogContent>
