@@ -11,6 +11,8 @@ import Timeline from '@/components/sections/timeline';
 import Faq from '@/components/sections/faq';
 import Contact from '@/components/sections/contact';
 import Footer from '@/components/layout/footer';
+import { Suspense } from 'react';
+import AboutSkeleton from '@/components/skeletons/about-skeleton';
 
 export default function Home() {
   return (
@@ -18,7 +20,9 @@ export default function Home() {
       <Header />
       <main className="flex-1">
         <Hero />
-        <About />
+        <Suspense fallback={<AboutSkeleton />}>
+          <About />
+        </Suspense>
         <ClientsMarquee />
         <Activities />
         <GrowthChart />
