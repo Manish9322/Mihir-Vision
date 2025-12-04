@@ -1,3 +1,4 @@
+
 'use client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,10 +8,49 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { aboutData as initialAboutData } from '@/lib/data';
 import { useGetAboutDataQuery, useUpdateAboutDataMutation, useAddActionLogMutation } from '@/services/api';
-import { PlusCircle, Trash2, Loader2 } from 'lucide-react';
+import { PlusCircle, Trash2, Loader2, AlertTriangle } from 'lucide-react';
 import Image from 'next/image';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { useEffect } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
+
+const AboutAdminSkeleton = () => (
+    <Card>
+        <CardHeader>
+            <Skeleton className="h-8 w-1/4" />
+            <Skeleton className="h-4 w-1/2" />
+        </CardHeader>
+        <CardContent>
+            <div className="space-y-6">
+                <div className="space-y-2">
+                    <Skeleton className="h-4 w-16" />
+                    <Skeleton className="h-10 w-full" />
+                </div>
+                <div className="space-y-2">
+                    <Skeleton className="h-4 w-20" />
+                    <Skeleton className="h-24 w-full" />
+                </div>
+
+                <div className="space-y-4">
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-14 w-full" />
+                    <Skeleton className="h-14 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                </div>
+
+                <div className="space-y-2">
+                    <Skeleton className="h-4 w-16" />
+                    <Card className='p-2'>
+                        <Skeleton className="aspect-[4/3] w-full max-w-sm" />
+                        <Skeleton className="h-10 w-full mt-2" />
+                    </Card>
+                </div>
+                <Skeleton className="h-10 w-32" />
+            </div>
+        </CardContent>
+    </Card>
+);
+
 
 const AboutAdminPage = () => {
     const { toast } = useToast();
@@ -58,15 +98,19 @@ const AboutAdminPage = () => {
     };
     
     if (isQueryLoading) {
-        return (
-            <div className="flex items-center justify-center h-full">
-                <Loader2 className="h-8 w-8 animate-spin" />
-            </div>
-        );
+        return <AboutAdminSkeleton />;
     }
     
     if (isError) {
-        return <div>Error loading data.</div>;
+        return (
+            <Card className="flex flex-col items-center justify-center p-8 text-center">
+                <AlertTriangle className="h-12 w-12 text-destructive mb-4" />
+                <CardTitle className="text-xl text-destructive">Error Loading Data</CardTitle>
+                <CardDescription className="mt-2">
+                    There was a problem fetching the content for the About page. Please try refreshing the page.
+                </CardDescription>
+            </Card>
+        );
     }
 
     return (
@@ -130,3 +174,4 @@ const AboutAdminPage = () => {
 };
 
 export default AboutAdminPage;
+
