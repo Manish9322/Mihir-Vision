@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import type { ImagePlaceholder } from '@/lib/placeholder-images';
-import { PlusCircle, Trash2, MoreHorizontal, FilePenLine, Eye, ChevronLeft, ChevronRight, GripVertical, ArrowUp, ArrowDown, Loader2, Package, EyeOff } from 'lucide-react';
+import { PlusCircle, Trash2, MoreHorizontal, FilePenLine, Eye, ChevronLeft, ChevronRight, GripVertical, ArrowUp, ArrowDown, Loader2, Package, EyeOff, AlertTriangle } from 'lucide-react';
 import Image from 'next/image';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -16,6 +16,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Badge } from '@/components/ui/badge';
 import { useGetProjectsDataQuery, useUpdateProjectsDataMutation, useAddActionLogMutation } from '@/services/api';
 import { Switch } from '@/components/ui/switch';
+import { Skeleton } from '@/components/ui/skeleton';
 
 type Project = {
     _id?: string;
@@ -29,6 +30,61 @@ type Project = {
 };
 
 const ITEMS_PER_PAGE = 3;
+
+const MissionAdminSkeleton = () => (
+    <div className="space-y-6">
+        <div className="grid gap-4 md:grid-cols-3">
+            <Card><CardHeader><Skeleton className="h-5 w-24" /></CardHeader><CardContent><Skeleton className="h-8 w-16" /></CardContent></Card>
+            <Card><CardHeader><Skeleton className="h-5 w-24" /></CardHeader><CardContent><Skeleton className="h-8 w-16" /></CardContent></Card>
+            <Card><CardHeader><Skeleton className="h-5 w-24" /></CardHeader><CardContent><Skeleton className="h-8 w-16" /></CardContent></Card>
+        </div>
+        <Card>
+            <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                    <Skeleton className="h-8 w-40" />
+                    <Skeleton className="h-4 w-64 mt-2" />
+                </div>
+                <Skeleton className="h-10 w-36" />
+            </CardHeader>
+            <CardContent>
+                <Card>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead className="w-[50px]"></TableHead>
+                                <TableHead className="w-[120px] hidden md:table-cell">Image</TableHead>
+                                <TableHead>Title</TableHead>
+                                <TableHead className="hidden sm:table-cell">Description</TableHead>
+                                <TableHead className="w-[100px]">Visible</TableHead>
+                                <TableHead className="text-right">Actions</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {[...Array(3)].map((_, i) => (
+                                <TableRow key={i}>
+                                    <TableCell><Skeleton className="h-12 w-6 mx-auto" /></TableCell>
+                                    <TableCell className="hidden md:table-cell"><Skeleton className="h-14 w-24" /></TableCell>
+                                    <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+                                    <TableCell className="hidden sm:table-cell"><Skeleton className="h-5 w-48" /></TableCell>
+                                    <TableCell><Skeleton className="h-6 w-11" /></TableCell>
+                                    <TableCell className="text-right"><Skeleton className="h-8 w-8 ml-auto" /></TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                    <div className="flex items-center justify-between border-t p-4">
+                        <Skeleton className="h-5 w-40" />
+                        <div className="flex items-center gap-2">
+                            <Skeleton className="h-8 w-8" />
+                            <Skeleton className="h-8 w-8" />
+                        </div>
+                    </div>
+                </Card>
+            </CardContent>
+        </Card>
+    </div>
+);
+
 
 const MissionForm = ({ project, onSave }: { project?: Project | null, onSave: (project: Omit<Project, '_id'>) => void }) => {
     const [title, setTitle] = useState(project?.title || '');
@@ -250,15 +306,19 @@ const MissionsAdminPage = () => {
     }
 
     if (isQueryLoading) {
-        return (
-            <div className="flex items-center justify-center h-full">
-                <Loader2 className="h-8 w-8 animate-spin" />
-            </div>
-        );
+        return <MissionAdminSkeleton />;
     }
     
     if (isError) {
-        return <div>Error loading data. Please try again.</div>;
+        return (
+            <Card className="flex flex-col items-center justify-center p-8 text-center">
+                <AlertTriangle className="h-12 w-12 text-destructive mb-4" />
+                <CardTitle className="text-xl text-destructive">Error Loading Data</CardTitle>
+                <CardDescription className="mt-2">
+                    There was a problem fetching the content for the Projects page. Please try refreshing the page.
+                </CardDescription>
+            </Card>
+        );
     }
 
 
@@ -415,3 +475,5 @@ const MissionsAdminPage = () => {
 }
 
 export default MissionsAdminPage;
+
+    
