@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
-import { PlusCircle, Trash2, MoreHorizontal, FilePenLine, Eye, Loader2, Search, Link as LinkIcon, Linkedin, Twitter, ChevronLeft, ChevronRight, UsersRound, EyeOff } from 'lucide-react';
+import { PlusCircle, Trash2, MoreHorizontal, FilePenLine, Eye, Loader2, Search, Link as LinkIcon, Linkedin, Twitter, ChevronLeft, ChevronRight, UsersRound, EyeOff, AlertTriangle } from 'lucide-react';
 import Image from 'next/image';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -15,6 +15,7 @@ import { useGetTeamDataQuery, useUpdateTeamDataMutation, useGetDesignationsQuery
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
 
 type SocialLink = {
     platform: 'LinkedIn' | 'Twitter' | 'Other';
@@ -38,6 +39,62 @@ type Designation = {
 };
 
 const ITEMS_PER_PAGE = 5;
+
+const TeamAdminSkeleton = () => (
+    <div className="space-y-6">
+        <div className="grid gap-4 md:grid-cols-3">
+            <Card><CardHeader><Skeleton className="h-5 w-24" /></CardHeader><CardContent><Skeleton className="h-8 w-16" /></CardContent></Card>
+            <Card><CardHeader><Skeleton className="h-5 w-24" /></CardHeader><CardContent><Skeleton className="h-8 w-16" /></CardContent></Card>
+            <Card><CardHeader><Skeleton className="h-5 w-24" /></CardHeader><CardContent><Skeleton className="h-8 w-16" /></CardContent></Card>
+        </div>
+        <Card>
+            <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                    <Skeleton className="h-8 w-48" />
+                    <Skeleton className="h-4 w-72 mt-2" />
+                </div>
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <Skeleton className="h-10 w-full sm:w-[300px]" />
+                    <Skeleton className="h-10 w-36" />
+                </div>
+            </CardHeader>
+            <CardContent>
+                <Card>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead className="w-[80px] hidden md:table-cell">Avatar</TableHead>
+                                <TableHead>Name</TableHead>
+                                <TableHead>Designation</TableHead>
+                                <TableHead className="w-[100px]">Visible</TableHead>
+                                <TableHead className="text-right">Actions</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {[...Array(3)].map((_, i) => (
+                                <TableRow key={i}>
+                                    <TableCell className="hidden md:table-cell"><Skeleton className="h-10 w-10 rounded-full" /></TableCell>
+                                    <TableCell><Skeleton className="h-5 w-32" /></TableCell>
+                                    <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+                                    <TableCell><Skeleton className="h-6 w-11" /></TableCell>
+                                    <TableCell className="text-right"><Skeleton className="h-8 w-8 ml-auto" /></TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                    <div className="flex items-center justify-between border-t p-4">
+                        <Skeleton className="h-5 w-40" />
+                        <div className="flex items-center gap-2">
+                            <Skeleton className="h-8 w-8" />
+                            <Skeleton className="h-8 w-8" />
+                        </div>
+                    </div>
+                </Card>
+            </CardContent>
+        </Card>
+    </div>
+);
+
 
 const TeamMemberForm = ({ member, onSave, designations, allMembers }: { member?: TeamMember | null, onSave: (member: Omit<TeamMember, '_id'>) => void, designations: Designation[], allMembers: TeamMember[] }) => {
     const [name, setName] = useState(member?.name || '');
@@ -252,12 +309,14 @@ const TeamAdminPage = () => {
     const handleDelete = (memberId: string) => {
         const deletedMember = teamMembers.find(m => m._id === memberId);
         const newMembers = teamMembers.filter(m => m._id !== memberId);
-        triggerUpdate(newMembers, { action: `deleted team member "${deletedMember.name}"`, type: 'DELETE' });
-        toast({
-            variant: "destructive",
-            title: "Team Member Deleted",
-            description: "The team member has been removed from the list.",
-        });
+        if (deletedMember) {
+            triggerUpdate(newMembers, { action: `deleted team member "${deletedMember.name}"`, type: 'DELETE' });
+            toast({
+                variant: "destructive",
+                title: "Team Member Deleted",
+                description: "The team member has been removed from the list.",
+            });
+        }
     };
     
     const handleSave = (memberData: Omit<TeamMember, '_id'>) => {
@@ -278,24 +337,31 @@ const TeamAdminPage = () => {
         setIsFormOpen(false);
     };
     
-    const handleVisibilityChange = (memberId: string, isVisible: boolean) => {
+    const handleVisibilityChange = (memberId: string | undefined, isVisible: boolean) => {
+        if (!memberId) return;
         const newItems = teamMembers.map((item) =>
             item._id === memberId ? { ...item, isVisible } : item
         );
         const member = teamMembers.find(m => m._id === memberId);
-        triggerUpdate(newItems, { action: `set visibility of team member "${member.name}" to ${isVisible}`, type: 'UPDATE' });
+        if (member) {
+            triggerUpdate(newItems, { action: `set visibility of team member "${member.name}" to ${isVisible}`, type: 'UPDATE' });
+        }
     }
 
     if (isQueryLoading || isDesignationsLoading) {
-        return (
-            <div className="flex items-center justify-center h-full">
-                <Loader2 className="h-8 w-8 animate-spin" />
-            </div>
-        );
+        return <TeamAdminSkeleton />;
     }
     
     if (isError) {
-        return <div>Error loading data. Please try again.</div>;
+        return (
+            <Card className="flex flex-col items-center justify-center p-8 text-center">
+                <AlertTriangle className="h-12 w-12 text-destructive mb-4" />
+                <CardTitle className="text-xl text-destructive">Error Loading Data</CardTitle>
+                <CardDescription className="mt-2">
+                    There was a problem fetching the content for the Team page. Please try refreshing the page.
+                </CardDescription>
+            </Card>
+        );
     }
 
     return (
@@ -397,7 +463,7 @@ const TeamAdminPage = () => {
                                                         <FilePenLine className="mr-2 h-4 w-4" />
                                                         Edit
                                                     </DropdownMenuItem>
-                                                    <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(member._id)}>
+                                                    <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(member._id!)}>
                                                         <Trash2 className="mr-2 h-4 w-4" />
                                                         Delete
                                                     </DropdownMenuItem>
@@ -441,7 +507,7 @@ const TeamAdminPage = () => {
                         </DialogDescription>
                     </DialogHeader>
                     <div className="max-h-[70vh] overflow-y-auto px-1 pr-6 pl-6 scrollbar-hide">
-                        <TeamMemberForm member={selectedMember} onSave={handleSave} designations={designations} allMembers={teamMembers} />
+                        <TeamMemberForm member={selectedMember} onSave={handleSave} designations={designations || []} allMembers={teamMembers} />
                     </div>
                 </DialogContent>
             </Dialog>
