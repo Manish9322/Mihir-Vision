@@ -4,7 +4,7 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 export const contentApi = createApi({
   reducerPath: 'contentApi',
   baseQuery: fetchBaseQuery({ baseUrl: '/api/' }),
-  tagTypes: ['About', 'Activities', 'Videos', 'Gallery', 'Projects', 'Timeline', 'Faq', 'Contacts', 'Profile', 'Settings', 'Countries', 'States', 'Cities', 'Clients', 'Games', 'Team', 'Designations'],
+  tagTypes: ['About', 'Activities', 'Videos', 'Gallery', 'Projects', 'Timeline', 'Faq', 'Contacts', 'Profile', 'Settings', 'Countries', 'States', 'Cities', 'Clients', 'Games', 'Team', 'Designations', 'ActionLogs'],
   endpoints: (builder) => ({
     getAboutData: builder.query({
       query: () => 'about',
@@ -225,6 +225,10 @@ export const contentApi = createApi({
       }),
       invalidatesTags: ['Designations'],
     }),
+    getActionLogs: builder.query({
+      query: () => 'action-logs',
+      providesTags: ['ActionLogs'],
+    }),
   }),
 });
 
@@ -265,4 +269,5 @@ export const {
   useUpdateTeamDataMutation,
   useGetDesignationsQuery,
   useUpdateDesignationsMutation,
+  useGetActionLogsQuery,
 } = contentApi;

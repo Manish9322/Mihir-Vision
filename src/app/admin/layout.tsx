@@ -17,6 +17,7 @@ import {
   Handshake,
   Gamepad2,
   UsersRound,
+  History
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -60,6 +61,7 @@ const navItems = [
     { href: "/admin/gallery", icon: GalleryHorizontal, label: "Gallery"},
     { href: "/admin/faq", icon: HelpCircle, label: "FAQs" },
     { href: "/admin/contacts", icon: Users, label: "Contacts" },
+    { href: "/admin/history", icon: History, label: "History" },
     { href: "/admin/profile", icon: User, label: "Profile" },
     { href: "#", icon: LineChart, label: "Stats" },
 ]
