@@ -4,7 +4,7 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 export const contentApi = createApi({
   reducerPath: 'contentApi',
   baseQuery: fetchBaseQuery({ baseUrl: '/api/' }),
-  tagTypes: ['About', 'Activities', 'Videos', 'Gallery', 'Projects', 'Timeline', 'Faq', 'Contacts', 'Profile', 'Settings', 'Countries', 'States', 'Cities', 'Clients'],
+  tagTypes: ['About', 'Activities', 'Videos', 'Gallery', 'Projects', 'Timeline', 'Faq', 'Contacts', 'Profile', 'Settings', 'Countries', 'States', 'Cities', 'Clients', 'Games', 'Team', 'Designations'],
   endpoints: (builder) => ({
     getAboutData: builder.query({
       query: () => 'about',
@@ -189,6 +189,42 @@ export const contentApi = createApi({
       }),
       invalidatesTags: ['Clients'],
     }),
+    getGamesData: builder.query({
+      query: () => 'games',
+      providesTags: ['Games'],
+    }),
+    updateGamesData: builder.mutation({
+      query: (updatedData) => ({
+        url: 'games',
+        method: 'POST',
+        body: updatedData,
+      }),
+      invalidatesTags: ['Games'],
+    }),
+    getTeamData: builder.query({
+      query: () => 'team',
+      providesTags: ['Team'],
+    }),
+    updateTeamData: builder.mutation({
+      query: (updatedData) => ({
+        url: 'team',
+        method: 'POST',
+        body: updatedData,
+      }),
+      invalidatesTags: ['Team'],
+    }),
+    getDesignations: builder.query({
+      query: () => 'designations',
+      providesTags: ['Designations'],
+    }),
+    updateDesignations: builder.mutation({
+      query: (updatedData) => ({
+        url: 'designations',
+        method: 'POST',
+        body: updatedData,
+      }),
+      invalidatesTags: ['Designations'],
+    }),
   }),
 });
 
@@ -223,4 +259,10 @@ export const {
   useUpdateCitiesMutation,
   useGetClientsDataQuery,
   useUpdateClientsDataMutation,
+  useGetGamesDataQuery,
+  useUpdateGamesDataMutation,
+  useGetTeamDataQuery,
+  useUpdateTeamDataMutation,
+  useGetDesignationsQuery,
+  useUpdateDesignationsMutation,
 } = contentApi;

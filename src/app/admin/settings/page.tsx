@@ -1,24 +1,142 @@
 
+
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
-import { useForm, useFieldArray, Controller } from 'react-hook-form';
+import { useState, useMemo } from 'react';
+import { useForm } from 'react-hook-form';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Switch } from "@/components/ui/switch";
-import { Loader2, PlusCircle, Trash2, ChevronLeft, ChevronRight, MoreHorizontal, FilePenLine, Eye, Search, ListFilter } from 'lucide-react';
-import { useGetSettingsDataQuery, useUpdateSettingsDataMutation, useGetCountriesQuery, useUpdateCountriesMutation, useGetStatesQuery, useUpdateStatesMutation, useGetCitiesQuery, useUpdateCitiesMutation } from '@/services/api';
+import { Loader2, PlusCircle, Trash2, ChevronLeft, ChevronRight, MoreHorizontal, FilePenLine, Eye, Search } from 'lucide-react';
+import { useGetSettingsDataQuery, useUpdateSettingsDataMutation, useGetCountriesQuery, useUpdateCountriesMutation, useGetStatesQuery, useUpdateStatesMutation, useGetCitiesQuery, useUpdateCitiesMutation, useGetDesignationsQuery, useUpdateDesignationsMutation } from '@/services/api';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuCheckboxItem } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 
 const ITEMS_PER_PAGE = 5;
+
+// #region Designations Manager
+const DesignationForm = ({ designation, onSave }) => {
+    const [name, setName] = useState(designation?.name || '');
+    const [description, setDescription] = useState(designation?.description || '');
+    const [isUnique, setIsUnique] = useState(designation?.isUnique || false);
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        onSave({ name, description, isUnique });
+    };
+
+    return (
+        <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+                <Label htmlFor="designation-name">Designation Name</Label>
+                <Input id="designation-name" value={name} onChange={(e) => setName(e.target.value)} required />
+            </div>
+            <div className="space-y-2">
+                <Label htmlFor="designation-description">Description</Label>
+                <Textarea id="designation-description" value={description} onChange={(e) => setDescription(e.target.value)} />
+            </div>
+            <div className="flex items-center space-x-2">
+                <Switch id="is-unique" checked={isUnique} onCheckedChange={setIsUnique} />
+                <Label htmlFor="is-unique">Enforce as unique (only one person can have this role)</Label>
+            </div>
+            <DialogFooter>
+                <DialogClose asChild><Button type="button" variant="outline">Cancel</Button></DialogClose>
+                <Button type="submit">Save Designation</Button>
+            </DialogFooter>
+        </form>
+    );
+};
+
+const DesignationsManager = () => {
+    const { toast } = useToast();
+    const { data: designations = [], isLoading, isError } = useGetDesignationsQuery();
+    const [updateDesignations, { isLoading: isMutating }] = useUpdateDesignationsMutation();
+    
+    const [isFormOpen, setIsFormOpen] = useState(false);
+    const [selectedItem, setSelectedItem] = useState(null);
+    const [editingIndex, setEditingIndex] = useState(null);
+
+    const handleSave = async (data) => {
+        let updatedItems;
+        if (editingIndex !== null) {
+            updatedItems = designations.map((item, index) => index === editingIndex ? { ...item, ...data } : item);
+        } else {
+            updatedItems = [{ ...data, _id: `new_${Date.now()}` }, ...designations];
+        }
+
+        try {
+            await updateDesignations(updatedItems).unwrap();
+            toast({ title: `Designation ${editingIndex !== null ? 'Updated' : 'Added'}` });
+            setIsFormOpen(false);
+        } catch (error) {
+            toast({ variant: 'destructive', title: 'Save Failed' });
+        }
+    };
+
+    const handleDelete = async (index) => {
+        const updatedItems = designations.filter((_, i) => i !== index);
+        try {
+            await updateDesignations(updatedItems).unwrap();
+            toast({ variant: 'destructive', title: 'Designation Deleted' });
+        } catch (error) {
+            toast({ variant: 'destructive', title: 'Deletion Failed' });
+        }
+    };
+    
+    if (isLoading) return <div className="flex items-center justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>;
+    if (isError) return <div>Error loading designations.</div>;
+
+    return (
+        <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                    <CardTitle>Manage Designations</CardTitle>
+                    <CardDescription>Define roles for your team members.</CardDescription>
+                </div>
+                <Button onClick={() => { setSelectedItem(null); setEditingIndex(null); setIsFormOpen(true); }}><PlusCircle className="mr-2 h-4 w-4" /> Add Designation</Button>
+            </CardHeader>
+            <CardContent>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Name</TableHead>
+                            <TableHead>Description</TableHead>
+                            <TableHead>Is Unique</TableHead>
+                            <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {designations.map((item, index) => (
+                            <TableRow key={item._id || index}>
+                                <TableCell className="font-medium">{item.name}</TableCell>
+                                <TableCell>{item.description}</TableCell>
+                                <TableCell>{item.isUnique ? 'Yes' : 'No'}</TableCell>
+                                <TableCell className="text-right">
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild><Button size="icon" variant="ghost"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end">
+                                            <DropdownMenuItem onClick={() => { setSelectedItem(item); setEditingIndex(index); setIsFormOpen(true); }}><FilePenLine className="mr-2 h-4 w-4" />Edit</DropdownMenuItem>
+                                            <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(index)}><Trash2 className="mr-2 h-4 w-4" />Delete</DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </CardContent>
+             <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}><DialogContent><DialogHeader><DialogTitle>{editingIndex !== null ? 'Edit' : 'Add'} Designation</DialogTitle></DialogHeader><DesignationForm designation={selectedItem} onSave={handleSave} /></DialogContent></Dialog>
+        </Card>
+    );
+};
+// #endregion
 
 // #region Countries Manager
 const CountryForm = ({ country, onSave }) => {
@@ -93,14 +211,13 @@ const CountriesManager = () => {
         if (editingIndex !== null) {
             updatedItems = countries.map((item, index) => index === editingIndex ? { ...item, ...data } : item);
         } else {
-            updatedItems = [{ ...data }, ...countries];
+            updatedItems = [{ ...data, _id: `new_${Date.now()}` }, ...countries];
         }
 
         try {
             await updateCountries(updatedItems).unwrap();
             toast({ title: `Country ${editingIndex !== null ? 'Updated' : 'Added'}` });
             setIsFormOpen(false);
-            setEditingIndex(null);
         } catch (error) {
             toast({ variant: 'destructive', title: 'Save Failed' });
         }
@@ -166,7 +283,7 @@ const CountriesManager = () => {
                     </TableBody>
                 </Table>
                 <div className="flex items-center justify-between border-t p-4">
-                    <div className="text-xs text-muted-foreground">Showing <strong>{(currentPage - 1) * ITEMS_PER_PAGE + 1}-{Math.min(currentPage * ITEMS_PER_PAGE, filteredItems.length)}</strong> of <strong>{filteredItems.length}</strong> countries</div>
+                    <div className="text-xs text-muted-foreground">Showing <strong>{paginatedItems.length > 0 ? (currentPage - 1) * ITEMS_PER_PAGE + 1 : 0}-{(currentPage - 1) * ITEMS_PER_PAGE + paginatedItems.length}</strong> of <strong>{filteredItems.length}</strong> countries</div>
                     <div className="flex items-center gap-2">
                         <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} disabled={currentPage === 1}><ChevronLeft className="h-4 w-4" /></Button>
                         <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages}><ChevronRight className="h-4 w-4" /></Button>
@@ -182,8 +299,7 @@ const CountriesManager = () => {
 
 // #region States Manager
 const StateForm = ({ state, countries, onSave }) => {
-    const { register, handleSubmit, control, formState: { errors } } = useForm({ defaultValues: state || { name: '', description: '', country: '' } });
-
+    const { register, handleSubmit, control } = useForm({ defaultValues: state || { name: '', description: '', country: '' } });
     const onSubmit = (data) => onSave(data);
 
     return (
@@ -198,19 +314,12 @@ const StateForm = ({ state, countries, onSave }) => {
             </div>
             <div className="space-y-2">
                 <Label htmlFor="state-country">Country</Label>
-                <Controller
-                    name="country"
-                    control={control}
-                    rules={{ required: true }}
-                    render={({ field }) => (
-                        <Select onValueChange={field.onChange} value={field.value}>
-                            <SelectTrigger><SelectValue placeholder="Select a country" /></SelectTrigger>
-                            <SelectContent>
-                                {countries.map(c => <SelectItem key={c.name} value={c.name}>{c.name}</SelectItem>)}
-                            </SelectContent>
-                        </Select>
-                    )}
-                />
+                <Select onValueChange={(value) => control.setValue('country', value)} defaultValue={control._defaultValues.country}>
+                    <SelectTrigger><SelectValue placeholder="Select a country" /></SelectTrigger>
+                    <SelectContent>
+                        {countries.map(c => <SelectItem key={c.name} value={c.name}>{c.name}</SelectItem>)}
+                    </SelectContent>
+                </Select>
             </div>
             <DialogFooter>
                 <DialogClose asChild><Button type="button" variant="outline">Cancel</Button></DialogClose>
@@ -268,14 +377,13 @@ const StatesManager = () => {
         if (editingIndex !== null) {
             updatedItems = states.map((item, index) => index === editingIndex ? { ...item, ...data } : item);
         } else {
-            updatedItems = [{ ...data }, ...states];
+            updatedItems = [{ ...data, _id: `new_${Date.now()}` }, ...states];
         }
 
         try {
             await updateStates(updatedItems).unwrap();
             toast({ title: `State ${editingIndex !== null ? 'Updated' : 'Added'}` });
             setIsFormOpen(false);
-            setEditingIndex(null);
         } catch (error) {
             toast({ variant: 'destructive', title: 'Save Failed' });
         }
@@ -343,7 +451,7 @@ const StatesManager = () => {
                     </TableBody>
                 </Table>
                  <div className="flex items-center justify-between border-t p-4">
-                    <div className="text-xs text-muted-foreground">Showing <strong>{(currentPage - 1) * ITEMS_PER_PAGE + 1}-{Math.min(currentPage * ITEMS_PER_PAGE, filteredItems.length)}</strong> of <strong>{filteredItems.length}</strong> states</div>
+                    <div className="text-xs text-muted-foreground">Showing <strong>{paginatedItems.length > 0 ? (currentPage - 1) * ITEMS_PER_PAGE + 1 : 0}-{(currentPage - 1) * ITEMS_PER_PAGE + paginatedItems.length}</strong> of <strong>{filteredItems.length}</strong> states</div>
                     <div className="flex items-center gap-2">
                         <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} disabled={currentPage === 1}><ChevronLeft className="h-4 w-4" /></Button>
                         <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages}><ChevronRight className="h-4 w-4" /></Button>
@@ -374,19 +482,12 @@ const CityForm = ({ city, states, onSave }) => {
             </div>
             <div className="space-y-2">
                 <Label htmlFor="city-state">State / Province</Label>
-                <Controller
-                    name="state"
-                    control={control}
-                    rules={{ required: true }}
-                    render={({ field }) => (
-                        <Select onValueChange={field.onChange} value={field.value}>
-                            <SelectTrigger><SelectValue placeholder="Select a state" /></SelectTrigger>
-                            <SelectContent>
-                                {states.map(s => <SelectItem key={s.name} value={s.name}>{s.name} ({s.country})</SelectItem>)}
-                            </SelectContent>
-                        </Select>
-                    )}
-                />
+                <Select onValueChange={(value) => control.setValue('state', value)} defaultValue={control._defaultValues.state}>
+                    <SelectTrigger><SelectValue placeholder="Select a state" /></SelectTrigger>
+                    <SelectContent>
+                        {states.map(s => <SelectItem key={s.name} value={s.name}>{s.name} ({s.country})</SelectItem>)}
+                    </SelectContent>
+                </Select>
             </div>
             <DialogFooter>
                 <DialogClose asChild><Button type="button" variant="outline">Cancel</Button></DialogClose>
@@ -444,14 +545,13 @@ const CitiesManager = () => {
         if (editingIndex !== null) {
             updatedItems = cities.map((item, index) => index === editingIndex ? { ...item, ...data } : item);
         } else {
-            updatedItems = [{ ...data }, ...cities];
+            updatedItems = [{ ...data, _id: `new_${Date.now()}` }, ...cities];
         }
 
         try {
             await updateCities(updatedItems).unwrap();
             toast({ title: `City ${editingIndex !== null ? 'Updated' : 'Added'}` });
             setIsFormOpen(false);
-            setEditingIndex(null);
         } catch (error) {
             toast({ variant: 'destructive', title: 'Save Failed' });
         }
@@ -519,7 +619,7 @@ const CitiesManager = () => {
                     </TableBody>
                 </Table>
                 <div className="flex items-center justify-between border-t p-4">
-                    <div className="text-xs text-muted-foreground">Showing <strong>{(currentPage - 1) * ITEMS_PER_PAGE + 1}-{Math.min(currentPage * ITEMS_PER_PAGE, filteredItems.length)}</strong> of <strong>{filteredItems.length}</strong> cities</div>
+                    <div className="text-xs text-muted-foreground">Showing <strong>{paginatedItems.length > 0 ? (currentPage - 1) * ITEMS_PER_PAGE + 1 : 0}-{(currentPage - 1) * ITEMS_PER_PAGE + paginatedItems.length}</strong> of <strong>{filteredItems.length}</strong> cities</div>
                     <div className="flex items-center gap-2">
                         <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} disabled={currentPage === 1}><ChevronLeft className="h-4 w-4" /></Button>
                         <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages}><ChevronRight className="h-4 w-4" /></Button>
@@ -541,11 +641,11 @@ export default function SettingsPage() {
     
     const { register, handleSubmit, reset } = useForm({ defaultValues: settingsData });
 
-    useEffect(() => {
+    useState(() => {
         if (settingsData) {
             reset(settingsData);
         }
-    }, [settingsData, reset]);
+    });
 
     const onSubmit = async (data) => {
         try {
@@ -585,9 +685,10 @@ export default function SettingsPage() {
 
     return (
         <Tabs defaultValue="general" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="general">General</TabsTrigger>
                 <TabsTrigger value="profile-options">Profile Options</TabsTrigger>
+                <TabsTrigger value="team">Team</TabsTrigger>
                 <TabsTrigger value="notifications">Notifications</TabsTrigger>
             </TabsList>
             <TabsContent value="general">
@@ -620,6 +721,9 @@ export default function SettingsPage() {
                    <StatesManager />
                    <CitiesManager />
                 </div>
+            </TabsContent>
+            <TabsContent value="team">
+                <DesignationsManager />
             </TabsContent>
             <TabsContent value="notifications">
                 <Card>
