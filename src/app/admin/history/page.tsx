@@ -10,7 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Label } from '@/components/ui/label';
 import { useGetActionLogsQuery } from '@/services/api';
 import { format } from 'date-fns';
-import { Loader2, Search, CalendarIcon, ListFilter, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
+import { Loader2, Search, CalendarIcon, ListFilter, ChevronLeft, ChevronRight, ChevronDown, History as HistoryIcon, Users } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuCheckboxItem } from '@/components/ui/dropdown-menu';
@@ -73,6 +73,15 @@ const HistoryPage = () => {
         currentPage * ITEMS_PER_PAGE
     );
     
+    const stats = useMemo(() => {
+        const today = new Date().toDateString();
+        return {
+            total: logs.length,
+            today: logs.filter(log => new Date(log.timestamp).toDateString() === today).length,
+            users: new Set(logs.map(log => log.user)).size,
+        };
+    }, [logs]);
+
     const handleTypeToggle = (type: string) => {
         setSelectedTypes(prev => prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]);
         setCurrentPage(1);
@@ -92,143 +101,177 @@ const HistoryPage = () => {
     }
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
-            <div className="lg:col-span-1 sticky top-16">
+        <div className="space-y-8">
+            <div className="grid gap-4 md:grid-cols-3">
                 <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2"><ListFilter className="h-5 w-5" /> Filter History</CardTitle>
-                        <CardDescription>Refine the action logs shown in the table.</CardDescription>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Total Logs</CardTitle>
+                        <HistoryIcon className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div className="relative">
-                            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                            <Input placeholder="Search actions..." className="pl-8" value={searchQuery} onChange={(e) => {setSearchQuery(e.target.value); setCurrentPage(1);}} />
-                        </div>
-
-                        <div className="space-y-2">
-                            <Label>Date Range</Label>
-                             <Popover>
-                                <PopoverTrigger asChild>
-                                    <Button variant="outline" className="w-full justify-start text-left font-normal">
-                                        <CalendarIcon className="mr-2 h-4 w-4" />
-                                        {dateRange.from ? (
-                                            dateRange.to ? `${format(dateRange.from, "LLL dd, y")} - ${format(dateRange.to, "LLL dd, y")}` : format(dateRange.from, "LLL dd, y")
-                                        ) : (
-                                            <span>Pick a date range</span>
-                                        )}
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0" align="start">
-                                    <Calendar
-                                        mode="range"
-                                        selected={dateRange}
-                                        onSelect={(range) => { setDateRange(range || {}); setCurrentPage(1); }}
-                                        initialFocus
-                                    />
-                                </PopoverContent>
-                            </Popover>
-                        </div>
-                        
-                        <div className="space-y-2">
-                             <Label>Filters</Label>
-                             <div className="grid grid-cols-2 gap-2">
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button variant="outline" className="w-full justify-between">
-                                            Type {selectedTypes.length > 0 && `(${selectedTypes.length})`} <ChevronDown className="h-4 w-4" />
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent className="w-56">
-                                        <DropdownMenuLabel>Action Type</DropdownMenuLabel>
-                                        <DropdownMenuSeparator />
-                                        {availableTypes.map(type => (
-                                            <DropdownMenuCheckboxItem key={type} checked={selectedTypes.includes(type)} onCheckedChange={() => handleTypeToggle(type)}>
-                                                {type}
-                                            </DropdownMenuCheckboxItem>
-                                        ))}
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
-                                
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button variant="outline" className="w-full justify-between">
-                                            Page {selectedSections.length > 0 && `(${selectedSections.length})`} <ChevronDown className="h-4 w-4" />
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent className="w-56">
-                                        <DropdownMenuLabel>Page / Section</DropdownMenuLabel>
-                                        <DropdownMenuSeparator />
-                                        {availableSections.map(section => (
-                                            <DropdownMenuCheckboxItem key={section} checked={selectedSections.includes(section)} onCheckedChange={() => handleSectionToggle(section)}>
-                                                {section}
-                                            </DropdownMenuCheckboxItem>
-                                        ))}
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
-                             </div>
-                        </div>
-
+                    <CardContent>
+                        <div className="text-2xl font-bold">{stats.total}</div>
+                        <p className="text-xs text-muted-foreground">Total actions recorded</p>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Logs Today</CardTitle>
+                        <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">{stats.today}</div>
+                         <p className="text-xs text-muted-foreground">Actions recorded today</p>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Unique Users</CardTitle>
+                        <Users className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">{stats.users}</div>
+                        <p className="text-xs text-muted-foreground">Distinct users who performed actions</p>
                     </CardContent>
                 </Card>
             </div>
-
-            <div className="lg:col-span-3">
-                 <Card>
-                    <CardHeader>
-                        <CardTitle>Action History</CardTitle>
-                        <CardDescription>A log of all administrative actions taken.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>User</TableHead>
-                                    <TableHead>Action</TableHead>
-                                    <TableHead>Page</TableHead>
-                                    <TableHead>Type</TableHead>
-                                    <TableHead className="text-right">Timestamp</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {paginatedLogs.length > 0 ? paginatedLogs.map(log => (
-                                    <TableRow key={log._id}>
-                                        <TableCell className="font-medium">{log.user}</TableCell>
-                                        <TableCell className="max-w-sm truncate">{log.action}</TableCell>
-                                        <TableCell>
-                                             <Badge variant="outline">{log.section}</Badge>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Badge variant={typeColors[log.type] || 'secondary'}>{log.type}</Badge>
-                                        </TableCell>
-                                        <TableCell className="text-right text-muted-foreground text-xs">{format(new Date(log.timestamp), 'PPpp')}</TableCell>
-                                    </TableRow>
-                                )) : (
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
+                <div className="lg:col-span-3">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Action History</CardTitle>
+                            <CardDescription>A log of all administrative actions taken.</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <Table>
+                                <TableHeader>
                                     <TableRow>
-                                        <TableCell colSpan={5} className="h-24 text-center">No actions match your filters.</TableCell>
+                                        <TableHead>User</TableHead>
+                                        <TableHead>Action</TableHead>
+                                        <TableHead>Page</TableHead>
+                                        <TableHead>Type</TableHead>
+                                        <TableHead className="text-right">Timestamp</TableHead>
                                     </TableRow>
-                                )}
-                            </TableBody>
-                        </Table>
-                    </CardContent>
-                    <div className="flex items-center justify-between border-t p-4">
-                        <div className="text-xs text-muted-foreground">
-                            Showing <strong>{paginatedLogs.length > 0 ? (currentPage - 1) * ITEMS_PER_PAGE + 1 : 0}-{(currentPage - 1) * ITEMS_PER_PAGE + paginatedLogs.length}</strong> of <strong>{filteredLogs.length}</strong> logs
+                                </TableHeader>
+                                <TableBody>
+                                    {paginatedLogs.length > 0 ? paginatedLogs.map(log => (
+                                        <TableRow key={log._id}>
+                                            <TableCell className="font-medium">{log.user}</TableCell>
+                                            <TableCell className="max-w-sm truncate">{log.action}</TableCell>
+                                            <TableCell>
+                                                <Badge variant="outline">{log.section}</Badge>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Badge variant={typeColors[log.type] || 'secondary'}>{log.type}</Badge>
+                                            </TableCell>
+                                            <TableCell className="text-right text-muted-foreground text-xs">{format(new Date(log.timestamp), 'PPpp')}</TableCell>
+                                        </TableRow>
+                                    )) : (
+                                        <TableRow>
+                                            <TableCell colSpan={5} className="h-24 text-center">No actions match your filters.</TableCell>
+                                        </TableRow>
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </CardContent>
+                        <div className="flex items-center justify-between border-t p-4">
+                            <div className="text-xs text-muted-foreground">
+                                Showing <strong>{paginatedLogs.length > 0 ? (currentPage - 1) * ITEMS_PER_PAGE + 1 : 0}-{(currentPage - 1) * ITEMS_PER_PAGE + paginatedLogs.length}</strong> of <strong>{filteredLogs.length}</strong> logs
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Button variant="outline" size="sm" onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1}>
+                                    <ChevronLeft className="h-4 w-4" />
+                                    <span className="sr-only">Previous</span>
+                                </Button>
+                                <Button variant="outline" size="sm" onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages}>
+                                    <span className="sr-only">Next</span>
+                                    <ChevronRight className="h-4 w-4" />
+                                </Button>
+                            </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <Button variant="outline" size="sm" onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1}>
-                                <ChevronLeft className="h-4 w-4" />
-                                <span className="sr-only">Previous</span>
-                            </Button>
-                            <Button variant="outline" size="sm" onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages}>
-                                <span className="sr-only">Next</span>
-                                <ChevronRight className="h-4 w-4" />
-                            </Button>
-                        </div>
-                    </div>
-                </Card>
+                    </Card>
+                </div>
+                <div className="lg:col-span-1 sticky top-16">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2"><ListFilter className="h-5 w-5" /> Filter History</CardTitle>
+                            <CardDescription>Refine the action logs shown in the table.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="relative">
+                                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                                <Input placeholder="Search actions..." className="pl-8" value={searchQuery} onChange={(e) => {setSearchQuery(e.target.value); setCurrentPage(1);}} />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label>Date Range</Label>
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                        <Button variant="outline" className="w-full justify-start text-left font-normal">
+                                            <CalendarIcon className="mr-2 h-4 w-4" />
+                                            {dateRange.from ? (
+                                                dateRange.to ? `${format(dateRange.from, "LLL dd, y")} - ${format(dateRange.to, "LLL dd, y")}` : format(dateRange.from, "LLL dd, y")
+                                            ) : (
+                                                <span>Pick a date range</span>
+                                            )}
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0" align="start">
+                                        <Calendar
+                                            mode="range"
+                                            selected={dateRange}
+                                            onSelect={(range) => { setDateRange(range || {}); setCurrentPage(1); }}
+                                            initialFocus
+                                        />
+                                    </PopoverContent>
+                                </Popover>
+                            </div>
+                            
+                            <div className="space-y-2">
+                                <Label>Filters</Label>
+                                <div className="grid grid-cols-2 gap-2">
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button variant="outline" className="w-full justify-between">
+                                                Type {selectedTypes.length > 0 && `(${selectedTypes.length})`} <ChevronDown className="h-4 w-4" />
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent className="w-56">
+                                            <DropdownMenuLabel>Action Type</DropdownMenuLabel>
+                                            <DropdownMenuSeparator />
+                                            {availableTypes.map(type => (
+                                                <DropdownMenuCheckboxItem key={type} checked={selectedTypes.includes(type)} onCheckedChange={() => handleTypeToggle(type)}>
+                                                    {type}
+                                                </DropdownMenuCheckboxItem>
+                                            ))}
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                    
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button variant="outline" className="w-full justify-between">
+                                                Page {selectedSections.length > 0 && `(${selectedSections.length})`} <ChevronDown className="h-4 w-4" />
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent className="w-56">
+                                            <DropdownMenuLabel>Page / Section</DropdownMenuLabel>
+                                            <DropdownMenuSeparator />
+                                            {availableSections.map(section => (
+                                                <DropdownMenuCheckboxItem key={section} checked={selectedSections.includes(section)} onCheckedChange={() => handleSectionToggle(section)}>
+                                                    {section}
+                                                </DropdownMenuCheckboxItem>
+                                            ))}
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
             </div>
         </div>
     );
 };
 
 export default HistoryPage;
+
+    
