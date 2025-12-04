@@ -14,6 +14,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useGetGamesDataQuery, useUpdateGamesDataMutation } from '@/services/api';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 type Game = {
     _id?: string;
@@ -70,13 +71,15 @@ const GameForm = ({ game, onSave }: { game?: Game | null, onSave: (game: Omit<Ga
                 <Label htmlFor="description">Description</Label>
                 <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} required />
             </div>
-            <div className="space-y-2">
-                <Label htmlFor="platforms">Platforms (comma-separated)</Label>
-                <Input id="platforms" value={platforms} onChange={(e) => setPlatforms(e.target.value)} placeholder="PC, PlayStation, Xbox..." />
-            </div>
-            <div className="space-y-2">
-                <Label htmlFor="websiteUrl">Website URL</Label>
-                <Input id="websiteUrl" value={websiteUrl} onChange={(e) => setWebsiteUrl(e.target.value)} placeholder="https://example.com" />
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                    <Label htmlFor="platforms">Platforms (comma-separated)</Label>
+                    <Input id="platforms" value={platforms} onChange={(e) => setPlatforms(e.target.value)} placeholder="PC, PlayStation, Xbox..." />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="websiteUrl">Website URL</Label>
+                    <Input id="websiteUrl" value={websiteUrl} onChange={(e) => setWebsiteUrl(e.target.value)} placeholder="https://example.com" />
+                </div>
             </div>
              <div className="space-y-2">
                 <Label>Cover Image</Label>
@@ -85,7 +88,7 @@ const GameForm = ({ game, onSave }: { game?: Game | null, onSave: (game: Omit<Ga
                     <Input type="file" className="max-w-xs" />
                 </div>
             </div>
-            <DialogFooter>
+            <DialogFooter className="pt-4">
                 <DialogClose asChild>
                     <Button type="button" variant="outline">Cancel</Button>
                 </DialogClose>
@@ -336,14 +339,16 @@ const GamesAdminPage = () => {
             </Card>
 
             <Dialog open={isFormOpen} onOpenChange={(isOpen) => { setIsFormOpen(isOpen); if (!isOpen) { setSelectedGame(null); setEditingIndex(null); }}}>
-                <DialogContent className="sm:max-w-lg">
+                <DialogContent className="sm:max-w-2xl">
                     <DialogHeader>
                         <DialogTitle>{selectedGame ? 'Edit Game' : 'Add New Game'}</DialogTitle>
                         <DialogDescription>
                             {selectedGame ? 'Make changes to this game.' : 'Add a new game to your portfolio.'}
                         </DialogDescription>
                     </DialogHeader>
-                    <GameForm game={selectedGame} onSave={handleSave} />
+                    <div className="max-h-[70vh] overflow-y-auto pr-6">
+                        <GameForm game={selectedGame} onSave={handleSave} />
+                    </div>
                 </DialogContent>
             </Dialog>
 
