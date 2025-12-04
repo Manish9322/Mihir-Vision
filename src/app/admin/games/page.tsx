@@ -8,14 +8,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
-import { PlusCircle, Trash2, ArrowUp, ArrowDown, GripVertical, ChevronLeft, ChevronRight, MoreHorizontal, FilePenLine, Eye, Loader2, Search, Gamepad2, EyeOff } from 'lucide-react';
+import { PlusCircle, Trash2, MoreHorizontal, FilePenLine, Eye, Loader2, Search, Gamepad2, EyeOff, AlertTriangle } from 'lucide-react';
 import Image from 'next/image';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useGetGamesDataQuery, useUpdateGamesDataMutation, useAddActionLogMutation } from '@/services/api';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+
 
 type Game = {
     _id?: string;
@@ -29,6 +31,64 @@ type Game = {
 };
 
 const ITEMS_PER_PAGE = 5;
+
+const GameAdminSkeleton = () => (
+    <div className="space-y-6">
+        <div className="grid gap-4 md:grid-cols-3">
+            <Card><CardHeader><Skeleton className="h-5 w-24" /></CardHeader><CardContent><Skeleton className="h-8 w-16" /></CardContent></Card>
+            <Card><CardHeader><Skeleton className="h-5 w-24" /></CardHeader><CardContent><Skeleton className="h-8 w-16" /></CardContent></Card>
+            <Card><CardHeader><Skeleton className="h-5 w-24" /></CardHeader><CardContent><Skeleton className="h-8 w-16" /></CardContent></Card>
+        </div>
+        <Card>
+            <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                    <Skeleton className="h-8 w-48" />
+                    <Skeleton className="h-4 w-72 mt-2" />
+                </div>
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <Skeleton className="h-10 w-full sm:w-[300px]" />
+                    <Skeleton className="h-10 w-32" />
+                </div>
+            </CardHeader>
+            <CardContent>
+                <Card>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead className="w-[100px] hidden md:table-cell">Cover</TableHead>
+                                <TableHead>Title</TableHead>
+                                <TableHead>Release Date</TableHead>
+                                <TableHead className="hidden sm:table-cell">Platforms</TableHead>
+                                <TableHead className="w-[100px]">Visible</TableHead>
+                                <TableHead className="text-right">Actions</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {[...Array(3)].map((_, i) => (
+                                <TableRow key={i}>
+                                    <TableCell className="hidden md:table-cell"><Skeleton className="h-20 w-16" /></TableCell>
+                                    <TableCell><Skeleton className="h-5 w-32" /></TableCell>
+                                    <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+                                    <TableCell className="hidden sm:table-cell"><Skeleton className="h-5 w-48" /></TableCell>
+                                    <TableCell><Skeleton className="h-6 w-11" /></TableCell>
+                                    <TableCell className="text-right"><Skeleton className="h-8 w-8 ml-auto" /></TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                    <div className="flex items-center justify-between border-t p-4">
+                        <Skeleton className="h-5 w-40" />
+                        <div className="flex items-center gap-2">
+                            <Skeleton className="h-8 w-8" />
+                            <Skeleton className="h-8 w-8" />
+                        </div>
+                    </div>
+                </Card>
+            </CardContent>
+        </Card>
+    </div>
+);
+
 
 const GameForm = ({ game, onSave }: { game?: Game | null, onSave: (game: Omit<Game, '_id'>) => void }) => {
     const [title, setTitle] = useState(game?.title || '');
@@ -202,8 +262,9 @@ const GamesAdminPage = () => {
 
     const handleDelete = (gameId: string) => {
         const deletedGame = games.find(g => g._id === gameId);
+        if (!deletedGame) return;
         const newGames = games.filter(g => g._id !== gameId);
-        triggerUpdate(newGames, { action: `deleted game "${deletedGame?.title}"`, type: 'DELETE' });
+        triggerUpdate(newGames, { action: `deleted game "${deletedGame.title}"`, type: 'DELETE' });
         toast({
             variant: "destructive",
             title: "Game Deleted",
@@ -236,19 +297,24 @@ const GamesAdminPage = () => {
             item._id === gameId ? { ...item, isVisible } : item
         );
         const game = games.find(g => g._id === gameId);
-        triggerUpdate(newItems, { action: `set visibility of game "${game?.title}" to ${isVisible}`, type: 'UPDATE' });
+        if (!game) return;
+        triggerUpdate(newItems, { action: `set visibility of game "${game.title}" to ${isVisible}`, type: 'UPDATE' });
     }
 
     if (isQueryLoading) {
-        return (
-            <div className="flex items-center justify-center h-full">
-                <Loader2 className="h-8 w-8 animate-spin" />
-            </div>
-        );
+        return <GameAdminSkeleton />;
     }
     
     if (isError) {
-        return <div>Error loading data. Please try again.</div>;
+        return (
+            <Card className="flex flex-col items-center justify-center p-8 text-center">
+                <AlertTriangle className="h-12 w-12 text-destructive mb-4" />
+                <CardTitle className="text-xl text-destructive">Error Loading Data</CardTitle>
+                <CardDescription className="mt-2">
+                    There was a problem fetching the content for the Games page. Please try refreshing the page.
+                </CardDescription>
+            </Card>
+        );
     }
 
 
@@ -408,3 +474,5 @@ const GamesAdminPage = () => {
 }
 
 export default GamesAdminPage;
+
+    
