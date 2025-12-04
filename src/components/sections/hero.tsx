@@ -1,11 +1,39 @@
+'use server';
+
 import { heroData, statsData } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { Phone, Mail } from 'lucide-react';
-import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
+import { MONGODB_URI } from '@/config/config';
 
-export default function Hero() {
+type ProfileData = {
+  phone?: string;
+  email?: string;
+};
+
+async function getProfileData(): Promise<ProfileData | null> {
+  if (!MONGODB_URI) {
+    return null;
+  }
+  try {
+    const baseUrl = process.env.NODE_ENV === 'production' 
+      ? `https://` + process.env.NEXT_PUBLIC_VERCEL_URL
+      : 'http://localhost:9002';
+    const res = await fetch(`${baseUrl}/api/profile`, { cache: 'no-store' });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (error) {
+    console.error('Failed to fetch profile data for hero:', error);
+    return null;
+  }
+}
+
+export default async function Hero() {
+  const profile = await getProfileData();
+  const phone = profile?.phone || '+1 (555) 123-4567';
+  const email = profile?.email || 'contact@pinnaclepathways.com';
+
   return (
     <section
       id="hero"
@@ -36,13 +64,13 @@ export default function Hero() {
 
           <div className="animate-fade-in-up animation-delay-600 mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
             <Button asChild size="lg" className="group rounded-full shadow-lg shadow-primary/20 transition-all duration-300 hover:shadow-primary/40 hover:scale-102 w-full sm:w-auto">
-              <a href="tel:+15551234567">
+              <a href={`tel:${phone}`}>
                 <Phone className="mr-2 h-5 w-5" />
-                +1 (555) 123-4567
+                {phone}
               </a>
             </Button>
              <Button asChild size="lg" variant="ghost" className="group rounded-full transition-all duration-300 hover:bg-accent/80 w-full sm:w-auto">
-              <a href="mailto:contact@pinnaclepathways.com">
+              <a href={`mailto:${email}`}>
                 <Mail className="mr-2 h-5 w-5" />
                 Email Us
               </a>

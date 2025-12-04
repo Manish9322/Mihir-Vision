@@ -5,7 +5,10 @@ import Settings from '@/models/settings.model.js';
 
 const seedSettingsData = {
     siteName: 'Pinnacle Pathways',
-    siteTagline: 'Forging new paths to the peak of innovation.'
+    siteTagline: 'Forging new paths to the peak of innovation.',
+    countries: ['USA', 'Canada', 'United Kingdom'],
+    states: ['California', 'New York', 'Ontario', 'Quebec', 'London'],
+    cities: ['San Francisco', 'New York City', 'Toronto', 'Montreal', 'London']
 };
 
 export async function GET() {

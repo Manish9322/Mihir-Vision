@@ -10,6 +10,18 @@ const settingsSchema = new mongoose.Schema({
   siteTagline: {
     type: String,
     default: 'Forging new paths to the peak of innovation.'
+  },
+  countries: {
+    type: [String],
+    default: ['USA', 'Canada', 'UK']
+  },
+  states: {
+    type: [String],
+    default: ['California', 'New York', 'Texas']
+  },
+  cities: {
+    type: [String],
+    default: ['San Francisco', 'New York City', 'London']
   }
 }, { timestamps: true });
 

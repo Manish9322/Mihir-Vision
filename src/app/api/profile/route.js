@@ -6,7 +6,6 @@ import User from '@/models/user.model.js';
 const seedUserData = {
     fullName: 'Admin User',
     email: 'admin@pinnaclepathways.com',
-    role: 'Administrator',
     avatarUrl: 'https://picsum.photos/seed/admin/128/128',
     phone: '123-456-7890',
     address: {
@@ -35,6 +34,9 @@ export async function POST(request) {
     try {
         await _db();
         const body = await request.json();
+        
+        // Use the email from seed data as a unique key to find and update the admin user.
+        // Do not allow the email from the request body to change this key.
         const { email, ...updateData } = body;
 
         const updatedUser = await User.findOneAndUpdate({ email: seedUserData.email }, updateData, {

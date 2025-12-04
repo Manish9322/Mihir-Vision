@@ -18,10 +18,6 @@ const userSchema = new mongoose.Schema({
     required: true,
     unique: true,
   },
-  role: {
-    type: String,
-    default: 'Administrator',
-  },
   avatarUrl: {
     type: String,
   },

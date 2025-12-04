@@ -8,20 +8,21 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useGetProfileDataQuery, useUpdateProfileDataMutation } from '@/services/api';
+import { useGetProfileDataQuery, useUpdateProfileDataMutation, useGetSettingsDataQuery } from '@/services/api';
 import { Loader2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function ProfilePage() {
     const { toast } = useToast();
-    const { data: profileData, isLoading: isQueryLoading, isError } = useGetProfileDataQuery();
+    const { data: profileData, isLoading: isProfileLoading, isError: isProfileError } = useGetProfileDataQuery();
+    const { data: settingsData, isLoading: isSettingsLoading, isError: isSettingsError } = useGetSettingsDataQuery();
     const [updateProfile, { isLoading: isMutationLoading }] = useUpdateProfileDataMutation();
 
     const { register, control, handleSubmit, reset, watch } = useForm({
         defaultValues: profileData || {
             fullName: '',
             email: '',
-            role: '',
             avatarUrl: '',
             phone: '',
             address: { street: '', city: '', state: '', zip: '', country: '' },
@@ -52,7 +53,7 @@ export default function ProfilePage() {
         }
     };
 
-    if (isQueryLoading) {
+    if (isProfileLoading || isSettingsLoading) {
         return (
             <div className="flex items-center justify-center h-full">
                 <Loader2 className="h-8 w-8 animate-spin" />
@@ -60,8 +61,8 @@ export default function ProfilePage() {
         );
     }
     
-    if (isError) {
-        return <div>Error loading profile data.</div>;
+    if (isProfileError || isSettingsError) {
+        return <div>Error loading data.</div>;
     }
 
     return (
@@ -92,13 +93,9 @@ export default function ProfilePage() {
                                 <Label htmlFor="phone">Phone Number</Label>
                                 <Input id="phone" type="tel" {...register("phone")} />
                             </div>
-                            <div className="space-y-2">
+                            <div className="space-y-2 md:col-span-2">
                                 <Label htmlFor="email">Email</Label>
-                                <Input id="email" type="email" {...register("email")} disabled />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="role">Role</Label>
-                                <Input id="role" {...register("role")} disabled />
+                                <Input id="email" type="email" {...register("email")} />
                             </div>
                         </div>
                     </div>
@@ -116,21 +113,60 @@ export default function ProfilePage() {
                         </div>
                          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             <div className="space-y-2">
-                                <Label htmlFor="address.city">City</Label>
-                                <Input id="address.city" {...register("address.city")} />
+                                <Label>Country</Label>
+                                <Controller
+                                    name="address.country"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select a country" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {settingsData?.countries?.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                                            </SelectContent>
+                                        </Select>
+                                    )}
+                                />
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="address.state">State / Province</Label>
-                                <Input id="address.state" {...register("address.state")} />
+                                <Label>State / Province</Label>
+                                <Controller
+                                    name="address.state"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select a state" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {settingsData?.states?.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                                            </SelectContent>
+                                        </Select>
+                                    )}
+                                />
                             </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="address.zip">ZIP / Postal Code</Label>
-                                <Input id="address.zip" {...register("address.zip")} />
+                             <div className="space-y-2">
+                                <Label>City</Label>
+                                 <Controller
+                                    name="address.city"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select a city" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {settingsData?.cities?.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                                            </SelectContent>
+                                        </Select>
+                                    )}
+                                />
                             </div>
                         </div>
                          <div className="space-y-2">
-                            <Label htmlFor="address.country">Country</Label>
-                            <Input id="address.country" {...register("address.country")} />
+                            <Label htmlFor="address.zip">ZIP / Postal Code</Label>
+                            <Input id="address.zip" {...register("address.zip")} />
                         </div>
                     </div>
 
