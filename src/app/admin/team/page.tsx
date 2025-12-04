@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
-import { PlusCircle, Trash2, MoreHorizontal, FilePenLine, Eye, Loader2, Search, Link as LinkIcon, Linkedin, Twitter } from 'lucide-react';
+import { PlusCircle, Trash2, MoreHorizontal, FilePenLine, Eye, Loader2, Search, Link as LinkIcon, Linkedin, Twitter, ChevronLeft, ChevronRight, UsersRound, EyeOff } from 'lucide-react';
 import Image from 'next/image';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -202,6 +202,12 @@ const TeamAdminPage = () => {
         (currentPage - 1) * ITEMS_PER_PAGE,
         currentPage * ITEMS_PER_PAGE
     );
+    
+    const stats = useMemo(() => ({
+        total: teamMembers.length,
+        visible: teamMembers.filter(m => m.isVisible).length,
+        hidden: teamMembers.filter(m => !m.isVisible).length,
+    }), [teamMembers]);
 
     const triggerUpdate = async (updatedItems: TeamMember[]) => {
         try {
@@ -279,7 +285,36 @@ const TeamAdminPage = () => {
     }
 
     return (
-        <>
+        <div className="space-y-6">
+            <div className="grid gap-4 md:grid-cols-3">
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Total Members</CardTitle>
+                        <UsersRound className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">{stats.total}</div>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Visible Members</CardTitle>
+                        <Eye className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">{stats.visible}</div>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Hidden Members</CardTitle>
+                        <EyeOff className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">{stats.hidden}</div>
+                    </CardContent>
+                </Card>
+            </div>
             <Card>
                 <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div>
@@ -396,7 +431,7 @@ const TeamAdminPage = () => {
             </Dialog>
 
             <ViewTeamMemberDialog member={selectedMember} open={isViewOpen} onOpenChange={setIsViewOpen} />
-        </>
+        </div>
     );
 }
 

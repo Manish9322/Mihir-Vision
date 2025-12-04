@@ -1,5 +1,6 @@
+
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -7,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
-import { PlusCircle, Trash2, ArrowUp, ArrowDown, GripVertical, ChevronLeft, ChevronRight, MoreHorizontal, Eye, FilePenLine, Loader2, Lightbulb, Target, Users, Bot } from 'lucide-react';
+import { PlusCircle, Trash2, ArrowUp, ArrowDown, GripVertical, ChevronLeft, ChevronRight, MoreHorizontal, Eye, FilePenLine, Loader2, Lightbulb, Target, Users, Bot, Milestone, EyeOff } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -121,6 +122,12 @@ const TimelineAdminPage = () => {
         currentPage * ITEMS_PER_PAGE
     );
     
+    const stats = useMemo(() => ({
+        total: events.length,
+        visible: events.filter(e => e.isVisible).length,
+        hidden: events.filter(e => !e.isVisible).length,
+    }), [events]);
+
     const triggerUpdate = async (updatedItems: TimelineEvent[]) => {
         try {
             await updateTimeline(updatedItems).unwrap();
@@ -219,7 +226,36 @@ const TimelineAdminPage = () => {
 
 
     return (
-        <>
+        <div className="space-y-6">
+             <div className="grid gap-4 md:grid-cols-3">
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Total Events</CardTitle>
+                        <Milestone className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">{stats.total}</div>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Visible Events</CardTitle>
+                        <Eye className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">{stats.visible}</div>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Hidden Events</CardTitle>
+                        <EyeOff className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                        <div className="text-2xl font-bold">{stats.hidden}</div>
+                    </CardContent>
+                </Card>
+            </div>
             <Card>
                  <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div>
@@ -333,7 +369,7 @@ const TimelineAdminPage = () => {
             </Dialog>
 
             <ViewEventDialog event={selectedEvent} open={isViewOpen} onOpenChange={setIsViewOpen} />
-        </>
+        </div>
     );
 }
 
