@@ -20,7 +20,7 @@ const seedUserData = {
 export async function GET() {
   try {
     await _db();
-    let user = await User.findOne({ email: seedUserData.email });
+    let user = await User.findOne();
     if (!user) {
       user = await User.create(seedUserData);
     }
@@ -35,17 +35,24 @@ export async function POST(request) {
         await _db();
         const body = await request.json();
         
-        // Use the seed email as the unique key to find and update the admin user document.
-        // The email in the body is allowed to be updated.
-        const updatedUser = await User.findOneAndUpdate(
-            { email: seedUserData.email }, // Find document by the original seed email
-            body, // Apply the full update from the request body, including the new email
+        // Find the single user document, we assume there is only one for the admin.
+        let user = await User.findOne();
+        if (!user) {
+            // If no user exists for some reason, create one.
+            const newUser = await User.create(body);
+            return NextResponse.json(newUser, { status: 200 });
+        }
+
+        // Update the found user document by its _id
+        const updatedUser = await User.findByIdAndUpdate(
+            user._id,
+            body,
             {
                 new: true,
-                upsert: true, 
                 runValidators: true,
             }
         );
+
         return NextResponse.json(updatedUser, { status: 200 });
     } catch (error) {
         return NextResponse.json({ message: 'Error updating user profile.', error: error.message }, { status: 500 });
