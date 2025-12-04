@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,6 +31,19 @@ export default function ProfilePage() {
     });
 
     const watchedAvatar = watch("avatarUrl", profileData?.avatarUrl);
+    const watchedCountry = watch("address.country");
+    const watchedState = watch("address.state");
+    
+    const availableStates = useMemo(() => {
+        if (!settingsData || !watchedCountry) return [];
+        return settingsData.states.filter(s => s.country === watchedCountry);
+    }, [settingsData, watchedCountry]);
+
+    const availableCities = useMemo(() => {
+        if (!settingsData || !watchedState) return [];
+        return settingsData.cities.filter(c => c.state === watchedState);
+    }, [settingsData, watchedState]);
+
 
     useEffect(() => {
         if (profileData) {
@@ -118,12 +132,17 @@ export default function ProfilePage() {
                                     name="address.country"
                                     control={control}
                                     render={({ field }) => (
-                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                        <Select onValueChange={(value) => {
+                                            field.onChange(value);
+                                            // Reset state and city when country changes
+                                            control.setValue('address.state', '');
+                                            control.setValue('address.city', '');
+                                        }} value={field.value}>
                                             <SelectTrigger>
                                                 <SelectValue placeholder="Select a country" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                {settingsData?.countries?.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                                                {settingsData?.countries?.map(c => <SelectItem key={c.name} value={c.name}>{c.name}</SelectItem>)}
                                             </SelectContent>
                                         </Select>
                                     )}
@@ -135,12 +154,16 @@ export default function ProfilePage() {
                                     name="address.state"
                                     control={control}
                                     render={({ field }) => (
-                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                        <Select onValueChange={(value) => {
+                                            field.onChange(value);
+                                            // Reset city when state changes
+                                            control.setValue('address.city', '');
+                                        }} value={field.value} disabled={!watchedCountry || availableStates.length === 0}>
                                             <SelectTrigger>
                                                 <SelectValue placeholder="Select a state" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                {settingsData?.states?.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                                                {availableStates.map(s => <SelectItem key={s.name} value={s.name}>{s.name}</SelectItem>)}
                                             </SelectContent>
                                         </Select>
                                     )}
@@ -152,12 +175,12 @@ export default function ProfilePage() {
                                     name="address.city"
                                     control={control}
                                     render={({ field }) => (
-                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                        <Select onValueChange={field.onChange} value={field.value} disabled={!watchedState || availableCities.length === 0}>
                                             <SelectTrigger>
                                                 <SelectValue placeholder="Select a city" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                {settingsData?.cities?.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                                                {availableCities.map(c => <SelectItem key={c.name} value={c.name}>{c.name}</SelectItem>)}
                                             </SelectContent>
                                         </Select>
                                     )}

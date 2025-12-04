@@ -6,9 +6,9 @@ import Settings from '@/models/settings.model.js';
 const seedSettingsData = {
     siteName: 'Pinnacle Pathways',
     siteTagline: 'Forging new paths to the peak of innovation.',
-    countries: ['USA', 'Canada', 'United Kingdom'],
-    states: ['California', 'New York', 'Ontario', 'Quebec', 'London'],
-    cities: ['San Francisco', 'New York City', 'Toronto', 'Montreal', 'London']
+    countries: [{ name: 'USA', description: 'United States of America' }],
+    states: [{ name: 'California', description: 'The Golden State', country: 'USA' }],
+    cities: [{ name: 'San Francisco', description: 'City by the Bay', state: 'California' }]
 };
 
 export async function GET() {
