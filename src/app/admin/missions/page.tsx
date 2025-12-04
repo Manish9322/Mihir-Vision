@@ -14,7 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { useGetProjectsDataQuery, useUpdateProjectsDataMutation } from '@/services/api';
+import { useGetProjectsDataQuery, useUpdateProjectsDataMutation, useAddActionLogMutation } from '@/services/api';
 import { Switch } from '@/components/ui/switch';
 
 type Project = {
@@ -132,6 +132,7 @@ const MissionsAdminPage = () => {
     const { toast } = useToast();
     const { data: projects = [], isLoading: isQueryLoading, isError } = useGetProjectsDataQuery();
     const [updateProjects, { isLoading: isMutationLoading }] = useUpdateProjectsDataMutation();
+    const [addActionLog] = useAddActionLogMutation();
 
     const [currentPage, setCurrentPage] = useState(1);
     const [isFormOpen, setIsFormOpen] = useState(false);
@@ -151,9 +152,14 @@ const MissionsAdminPage = () => {
         hidden: projects.filter(p => !p.isVisible).length,
     }), [projects]);
 
-    const triggerUpdate = async (updatedItems: Project[]) => {
+    const triggerUpdate = async (updatedItems: Project[], actionLog: Omit<Parameters<typeof addActionLog>[0], 'user' | 'section'>) => {
         try {
             await updateProjects(updatedItems).unwrap();
+            await addActionLog({
+                user: 'Admin User',
+                section: 'Projects',
+                ...actionLog,
+            }).unwrap();
             toast({
                 title: 'Content Saved',
                 description: 'Projects section has been updated successfully.',
@@ -179,7 +185,7 @@ const MissionsAdminPage = () => {
             newItems.splice(fullIndex, 1);
             newItems.splice(fullIndex + 1, 0, item);
         }
-        triggerUpdate(newItems);
+        triggerUpdate(newItems, { action: 'reordered projects', type: 'UPDATE' });
     };
 
     const handleAddClick = () => {
@@ -202,8 +208,9 @@ const MissionsAdminPage = () => {
 
     const handleDelete = (index: number) => {
         const fullIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;
+        const deletedProject = projects[fullIndex];
         const newItems = projects.filter((_, i) => i !== fullIndex);
-        triggerUpdate(newItems);
+        triggerUpdate(newItems, { action: `deleted project "${deletedProject.title}"`, type: 'DELETE' });
         toast({
             variant: "destructive",
             title: "Project Deleted",
@@ -213,14 +220,20 @@ const MissionsAdminPage = () => {
     
     const handleSave = (project: Omit<Project, '_id'>) => {
         let newItems: Project[];
+        let action: string, type: 'CREATE' | 'UPDATE';
+
         if (editingIndex !== null) {
             newItems = [...projects];
             newItems[editingIndex] = { ...newItems[editingIndex], ...project };
+            action = `updated project "${project.title}"`;
+            type = 'UPDATE';
         } else {
             const newProject = { ...project, _id: `new_${Date.now()}` } as Project;
             newItems = [newProject, ...projects];
+            action = `created project "${project.title}"`;
+            type = 'CREATE';
         }
-        triggerUpdate(newItems);
+        triggerUpdate(newItems, { action, type });
         setIsFormOpen(false);
     };
 
@@ -232,7 +245,8 @@ const MissionsAdminPage = () => {
             }
             return item;
         });
-        triggerUpdate(newItems);
+        const project = projects[fullIndex];
+        triggerUpdate(newItems, { action: `set visibility of project "${project.title}" to ${isVisible}`, type: 'UPDATE' });
     }
 
     if (isQueryLoading) {

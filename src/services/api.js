@@ -229,6 +229,14 @@ export const contentApi = createApi({
       query: () => 'action-logs',
       providesTags: ['ActionLogs'],
     }),
+    addActionLog: builder.mutation({
+      query: (newLog) => ({
+        url: 'action-logs',
+        method: 'POST',
+        body: newLog,
+      }),
+      invalidatesTags: ['ActionLogs'],
+    }),
   }),
 });
 
@@ -270,4 +278,5 @@ export const {
   useGetDesignationsQuery,
   useUpdateDesignationsMutation,
   useGetActionLogsQuery,
+  useAddActionLogMutation,
 } = contentApi;

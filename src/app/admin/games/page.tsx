@@ -12,7 +12,7 @@ import { PlusCircle, Trash2, ArrowUp, ArrowDown, GripVertical, ChevronLeft, Chev
 import Image from 'next/image';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { useGetGamesDataQuery, useUpdateGamesDataMutation } from '@/services/api';
+import { useGetGamesDataQuery, useUpdateGamesDataMutation, useAddActionLogMutation } from '@/services/api';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -133,6 +133,7 @@ const GamesAdminPage = () => {
     const { toast } = useToast();
     const { data: games = [], isLoading: isQueryLoading, isError } = useGetGamesDataQuery();
     const [updateGames, { isLoading: isMutationLoading }] = useUpdateGamesDataMutation();
+    const [addActionLog] = useAddActionLogMutation();
 
     const [currentPage, setCurrentPage] = useState(1);
     const [searchQuery, setSearchQuery] = useState('');
@@ -160,9 +161,14 @@ const GamesAdminPage = () => {
         hidden: games.filter(g => !g.isVisible).length,
     }), [games]);
 
-    const triggerUpdate = async (updatedItems: Game[]) => {
+    const triggerUpdate = async (updatedItems: Game[], actionLog: Omit<Parameters<typeof addActionLog>[0], 'user' | 'section'>) => {
         try {
             await updateGames(updatedItems).unwrap();
+            await addActionLog({
+                user: 'Admin User',
+                section: 'Games',
+                ...actionLog,
+            }).unwrap();
             toast({
                 title: 'Content Saved',
                 description: 'Games list has been updated successfully.',
@@ -195,8 +201,9 @@ const GamesAdminPage = () => {
     };
 
     const handleDelete = (gameId: string) => {
+        const deletedGame = games.find(g => g._id === gameId);
         const newGames = games.filter(g => g._id !== gameId);
-        triggerUpdate(newGames);
+        triggerUpdate(newGames, { action: `deleted game "${deletedGame?.title}"`, type: 'DELETE' });
         toast({
             variant: "destructive",
             title: "Game Deleted",
@@ -206,13 +213,19 @@ const GamesAdminPage = () => {
     
     const handleSave = (gameData: Omit<Game, '_id'>) => {
         let newItems: Game[];
+        let action: string, type: 'CREATE' | 'UPDATE';
+
         if (editingIndex !== null) {
             newItems = games.map((game, index) => index === editingIndex ? { ...games[editingIndex], ...gameData } : game);
+            action = `updated game "${gameData.title}"`;
+            type = 'UPDATE';
         } else {
             const newGame = { ...gameData, _id: `new_${Date.now()}` } as Game;
             newItems = [newGame, ...games];
+            action = `created game "${gameData.title}"`;
+            type = 'CREATE';
         }
-        triggerUpdate(newItems);
+        triggerUpdate(newItems, { action, type });
         setIsFormOpen(false);
         setEditingIndex(null);
         setSelectedGame(null);
@@ -222,7 +235,8 @@ const GamesAdminPage = () => {
         const newItems = games.map((item) =>
             item._id === gameId ? { ...item, isVisible } : item
         );
-        triggerUpdate(newItems);
+        const game = games.find(g => g._id === gameId);
+        triggerUpdate(newItems, { action: `set visibility of game "${game?.title}" to ${isVisible}`, type: 'UPDATE' });
     }
 
     if (isQueryLoading) {

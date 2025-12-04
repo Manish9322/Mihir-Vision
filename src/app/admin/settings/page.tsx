@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Switch } from "@/components/ui/switch";
 import { Loader2, PlusCircle, Trash2, ChevronLeft, ChevronRight, MoreHorizontal, FilePenLine, Eye, Search } from 'lucide-react';
-import { useGetSettingsDataQuery, useUpdateSettingsDataMutation, useGetCountriesQuery, useUpdateCountriesMutation, useGetStatesQuery, useUpdateStatesMutation, useGetCitiesQuery, useUpdateCitiesMutation, useGetDesignationsQuery, useUpdateDesignationsMutation } from '@/services/api';
+import { useGetSettingsDataQuery, useUpdateSettingsDataMutation, useGetCountriesQuery, useUpdateCountriesMutation, useGetStatesQuery, useUpdateStatesMutation, useGetCitiesQuery, useUpdateCitiesMutation, useGetDesignationsQuery, useUpdateDesignationsMutation, useAddActionLogMutation } from '@/services/api';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -58,6 +58,7 @@ const DesignationsManager = () => {
     const { toast } = useToast();
     const { data: designations = [], isLoading, isError } = useGetDesignationsQuery();
     const [updateDesignations, { isLoading: isMutating }] = useUpdateDesignationsMutation();
+    const [addActionLog] = useAddActionLogMutation();
     
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [selectedItem, setSelectedItem] = useState(null);
@@ -65,14 +66,26 @@ const DesignationsManager = () => {
 
     const handleSave = async (data) => {
         let updatedItems;
+        let action: string, type: 'CREATE' | 'UPDATE';
+
         if (editingIndex !== null) {
             updatedItems = designations.map((item, index) => index === editingIndex ? { ...item, ...data } : item);
+            action = `updated designation "${data.name}"`;
+            type = 'UPDATE';
         } else {
             updatedItems = [{ ...data, _id: `new_${Date.now()}` }, ...designations];
+            action = `created designation "${data.name}"`;
+            type = 'CREATE';
         }
 
         try {
             await updateDesignations(updatedItems).unwrap();
+            await addActionLog({
+                user: 'Admin User',
+                section: 'Settings',
+                action,
+                type,
+            }).unwrap();
             toast({ title: `Designation ${editingIndex !== null ? 'Updated' : 'Added'}` });
             setIsFormOpen(false);
         } catch (error) {
@@ -81,11 +94,18 @@ const DesignationsManager = () => {
     };
 
     const handleDelete = async (index) => {
+        const deletedItem = designations[index];
         const updatedItems = designations.filter((_, i) => i !== index);
         try {
             await updateDesignations(updatedItems).unwrap();
+            await addActionLog({
+                user: 'Admin User',
+                section: 'Settings',
+                action: `deleted designation "${deletedItem.name}"`,
+                type: 'DELETE',
+            }).unwrap();
             toast({ variant: 'destructive', title: 'Designation Deleted' });
-        } catch (error) {
+        } catch (error) => {
             toast({ variant: 'destructive', title: 'Deletion Failed' });
         }
     };
@@ -190,6 +210,7 @@ const CountriesManager = () => {
     const { toast } = useToast();
     const { data: countries = [], isLoading, isError } = useGetCountriesQuery();
     const [updateCountries, { isLoading: isMutating }] = useUpdateCountriesMutation();
+    const [addActionLog] = useAddActionLogMutation();
     const [currentPage, setCurrentPage] = useState(1);
     const [searchQuery, setSearchQuery] = useState('');
     const [isFormOpen, setIsFormOpen] = useState(false);
@@ -208,14 +229,21 @@ const CountriesManager = () => {
 
     const handleSave = async (data) => {
         let updatedItems;
+        let action: string, type: 'CREATE' | 'UPDATE';
+
         if (editingIndex !== null) {
             updatedItems = countries.map((item, index) => index === editingIndex ? { ...item, ...data } : item);
+            action = `updated country "${data.name}"`;
+            type = 'UPDATE';
         } else {
             updatedItems = [{ ...data, _id: `new_${Date.now()}` }, ...countries];
+            action = `created country "${data.name}"`;
+            type = 'CREATE';
         }
 
         try {
             await updateCountries(updatedItems).unwrap();
+            await addActionLog({ user: 'Admin User', section: 'Settings', action, type }).unwrap();
             toast({ title: `Country ${editingIndex !== null ? 'Updated' : 'Added'}` });
             setIsFormOpen(false);
         } catch (error) {
@@ -225,11 +253,13 @@ const CountriesManager = () => {
 
     const handleDelete = async (index) => {
         const fullIndex = countries.findIndex(c => c.name === paginatedItems[index].name);
+        const deletedItem = countries[fullIndex];
         const updatedItems = countries.filter((_, i) => i !== fullIndex);
         try {
             await updateCountries(updatedItems).unwrap();
+            await addActionLog({ user: 'Admin User', section: 'Settings', action: `deleted country "${deletedItem.name}"`, type: 'DELETE' }).unwrap();
             toast({ variant: 'destructive', title: 'Country Deleted' });
-        } catch (error) {
+        } catch (error) => {
             toast({ variant: 'destructive', title: 'Deletion Failed' });
         }
     };
@@ -355,6 +385,7 @@ const StatesManager = () => {
     const { data: states = [], isLoading: isStatesLoading, isError: isStatesError } = useGetStatesQuery();
     const { data: countries = [], isLoading: isCountriesLoading } = useGetCountriesQuery();
     const [updateStates, { isLoading: isMutating }] = useUpdateStatesMutation();
+    const [addActionLog] = useAddActionLogMutation();
     const [currentPage, setCurrentPage] = useState(1);
     const [searchQuery, setSearchQuery] = useState('');
     const [isFormOpen, setIsFormOpen] = useState(false);
@@ -374,14 +405,20 @@ const StatesManager = () => {
 
     const handleSave = async (data) => {
         let updatedItems;
+        let action: string, type: 'CREATE' | 'UPDATE';
         if (editingIndex !== null) {
             updatedItems = states.map((item, index) => index === editingIndex ? { ...item, ...data } : item);
+            action = `updated state "${data.name}"`;
+            type = 'UPDATE';
         } else {
             updatedItems = [{ ...data, _id: `new_${Date.now()}` }, ...states];
+            action = `created state "${data.name}"`;
+            type = 'CREATE';
         }
 
         try {
             await updateStates(updatedItems).unwrap();
+            await addActionLog({ user: 'Admin User', section: 'Settings', action, type }).unwrap();
             toast({ title: `State ${editingIndex !== null ? 'Updated' : 'Added'}` });
             setIsFormOpen(false);
         } catch (error) {
@@ -391,11 +428,13 @@ const StatesManager = () => {
 
     const handleDelete = async (index) => {
         const fullIndex = states.findIndex(s => s.name === paginatedItems[index].name && s.country === paginatedItems[index].country);
+        const deletedItem = states[fullIndex];
         const updatedItems = states.filter((_, i) => i !== fullIndex);
         try {
             await updateStates(updatedItems).unwrap();
+            await addActionLog({ user: 'Admin User', section: 'Settings', action: `deleted state "${deletedItem.name}"`, type: 'DELETE' }).unwrap();
             toast({ variant: 'destructive', title: 'State Deleted' });
-        } catch (error) {
+        } catch (error) => {
             toast({ variant: 'destructive', title: 'Deletion Failed' });
         }
     };
@@ -523,6 +562,7 @@ const CitiesManager = () => {
     const { data: cities = [], isLoading: isCitiesLoading, isError: isCitiesError } = useGetCitiesQuery();
     const { data: states = [], isLoading: isStatesLoading } = useGetStatesQuery();
     const [updateCities, { isLoading: isMutating }] = useUpdateCitiesMutation();
+    const [addActionLog] = useAddActionLogMutation();
     const [currentPage, setCurrentPage] = useState(1);
     const [searchQuery, setSearchQuery] = useState('');
     const [isFormOpen, setIsFormOpen] = useState(false);
@@ -542,28 +582,36 @@ const CitiesManager = () => {
 
     const handleSave = async (data) => {
         let updatedItems;
+        let action: string, type: 'CREATE' | 'UPDATE';
         if (editingIndex !== null) {
             updatedItems = cities.map((item, index) => index === editingIndex ? { ...item, ...data } : item);
+            action = `updated city "${data.name}"`;
+            type = 'UPDATE';
         } else {
             updatedItems = [{ ...data, _id: `new_${Date.now()}` }, ...cities];
+            action = `created city "${data.name}"`;
+            type = 'CREATE';
         }
 
         try {
             await updateCities(updatedItems).unwrap();
+            await addActionLog({ user: 'Admin User', section: 'Settings', action, type }).unwrap();
             toast({ title: `City ${editingIndex !== null ? 'Updated' : 'Added'}` });
             setIsFormOpen(false);
-        } catch (error) {
+        } catch (error) => {
             toast({ variant: 'destructive', title: 'Save Failed' });
         }
     };
 
     const handleDelete = async (index) => {
         const fullIndex = cities.findIndex(c => c.name === paginatedItems[index].name && c.state === paginatedItems[index].state);
+        const deletedItem = cities[fullIndex];
         const updatedItems = cities.filter((_, i) => i !== fullIndex);
         try {
             await updateCities(updatedItems).unwrap();
+            await addActionLog({ user: 'Admin User', section: 'Settings', action: `deleted city "${deletedItem.name}"`, type: 'DELETE' }).unwrap();
             toast({ variant: 'destructive', title: 'City Deleted' });
-        } catch (error) {
+        } catch (error) => {
             toast({ variant: 'destructive', title: 'Deletion Failed' });
         }
     };
@@ -638,6 +686,7 @@ export default function SettingsPage() {
     const { toast } = useToast();
     const { data: settingsData, isLoading: isQueryLoading, isError } = useGetSettingsDataQuery();
     const [updateSettings, { isLoading: isMutationLoading }] = useUpdateSettingsDataMutation();
+    const [addActionLog] = useAddActionLogMutation();
     
     const { register, handleSubmit, reset } = useForm({ defaultValues: settingsData });
 
@@ -650,6 +699,12 @@ export default function SettingsPage() {
     const onSubmit = async (data) => {
         try {
             await updateSettings(data).unwrap();
+            await addActionLog({
+                user: 'Admin User',
+                action: 'updated general settings',
+                section: 'Settings',
+                type: 'UPDATE',
+            }).unwrap();
             toast({
                 title: "Settings Saved",
                 description: "Your general settings have been updated.",
@@ -665,6 +720,12 @@ export default function SettingsPage() {
     
     const handleNotificationsSubmit = (e) => {
         e.preventDefault();
+        addActionLog({
+            user: 'Admin User',
+            action: 'updated notification settings',
+            section: 'Settings',
+            type: 'UPDATE',
+        }).unwrap();
         toast({
             title: "Settings Saved",
             description: `Notification settings have been updated.`,

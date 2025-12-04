@@ -12,7 +12,7 @@ import { PlusCircle, Trash2, ArrowUp, ArrowDown, GripVertical, ChevronLeft, Chev
 import type { LucideIcon } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { useGetTimelineDataQuery, useUpdateTimelineDataMutation } from '@/services/api';
+import { useGetTimelineDataQuery, useUpdateTimelineDataMutation, useAddActionLogMutation } from '@/services/api';
 import { Switch } from '@/components/ui/switch';
 
 type TimelineEvent = {
@@ -109,6 +109,7 @@ const TimelineAdminPage = () => {
     const { toast } = useToast();
     const { data: events = [], isLoading: isQueryLoading, isError } = useGetTimelineDataQuery();
     const [updateTimeline, { isLoading: isMutationLoading }] = useUpdateTimelineDataMutation();
+    const [addActionLog] = useAddActionLogMutation();
     
     const [currentPage, setCurrentPage] = useState(1);
     const [isFormOpen, setIsFormOpen] = useState(false);
@@ -128,9 +129,14 @@ const TimelineAdminPage = () => {
         hidden: events.filter(e => !e.isVisible).length,
     }), [events]);
 
-    const triggerUpdate = async (updatedItems: TimelineEvent[]) => {
+    const triggerUpdate = async (updatedItems: TimelineEvent[], actionLog: Omit<Parameters<typeof addActionLog>[0], 'user' | 'section'>) => {
         try {
             await updateTimeline(updatedItems).unwrap();
+            await addActionLog({
+                user: 'Admin User',
+                section: 'Timeline',
+                ...actionLog,
+            }).unwrap();
             toast({
                 title: 'Content Saved',
                 description: 'Timeline section has been updated successfully.',
@@ -156,7 +162,7 @@ const TimelineAdminPage = () => {
             newEvents.splice(fullIndex, 1);
             newEvents.splice(fullIndex + 1, 0, item);
         }
-        triggerUpdate(newEvents);
+        triggerUpdate(newEvents, { action: `reordered timeline events`, type: 'UPDATE' });
     };
 
     const handleAddClick = () => {
@@ -179,8 +185,9 @@ const TimelineAdminPage = () => {
 
     const handleDelete = (index: number) => {
         const fullIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;
+        const deletedEvent = events[fullIndex];
         const newEvents = events.filter((_, i) => i !== fullIndex);
-        triggerUpdate(newEvents);
+        triggerUpdate(newEvents, { action: `deleted event "${deletedEvent.title}"`, type: 'DELETE' });
         toast({
             variant: "destructive",
             title: "Event Deleted",
@@ -190,14 +197,20 @@ const TimelineAdminPage = () => {
     
     const handleSave = (event: Omit<TimelineEvent, '_id'>) => {
         let newItems: TimelineEvent[];
+        let action: string, type: 'CREATE' | 'UPDATE';
+
         if (editingIndex !== null) {
             newItems = [...events];
             newItems[editingIndex] = { ...newItems[editingIndex], ...event };
+            action = `updated event "${event.title}"`;
+            type = 'UPDATE';
         } else {
             const newEvent = { ...event, _id: `new_${Date.now()}` } as TimelineEvent;
             newItems = [newEvent, ...events];
+            action = `created event "${event.title}"`;
+            type = 'CREATE';
         }
-        triggerUpdate(newItems);
+        triggerUpdate(newItems, { action, type });
         setIsFormOpen(false);
     };
 
@@ -209,7 +222,8 @@ const TimelineAdminPage = () => {
             }
             return item;
         });
-        triggerUpdate(newItems);
+        const event = events[fullIndex];
+        triggerUpdate(newItems, { action: `set visibility of event "${event.title}" to ${isVisible}`, type: 'UPDATE' });
     }
 
     if (isQueryLoading) {

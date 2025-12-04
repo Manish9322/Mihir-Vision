@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { aboutData as initialAboutData } from '@/lib/data';
-import { useGetAboutDataQuery, useUpdateAboutDataMutation } from '@/services/api';
+import { useGetAboutDataQuery, useUpdateAboutDataMutation, useAddActionLogMutation } from '@/services/api';
 import { PlusCircle, Trash2, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
@@ -16,6 +16,7 @@ const AboutAdminPage = () => {
     const { toast } = useToast();
     const { data: aboutData, isLoading: isQueryLoading, isError } = useGetAboutDataQuery();
     const [updateAboutData, { isLoading: isMutationLoading }] = useUpdateAboutDataMutation();
+    const [addActionLog] = useAddActionLogMutation();
     
     const { register, control, handleSubmit, reset, watch } = useForm({
         defaultValues: aboutData || initialAboutData
@@ -37,6 +38,12 @@ const AboutAdminPage = () => {
     const onSubmit = async (data) => {
         try {
             await updateAboutData(data).unwrap();
+            await addActionLog({
+                user: 'Admin User',
+                action: 'updated the About section',
+                section: 'About',
+                type: 'UPDATE',
+            }).unwrap();
             toast({
                 title: `Content Saved`,
                 description: `About section has been updated successfully.`,

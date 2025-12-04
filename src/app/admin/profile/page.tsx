@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useGetProfileDataQuery, useUpdateProfileDataMutation, useGetCountriesQuery, useGetStatesQuery, useGetCitiesQuery } from '@/services/api';
+import { useGetProfileDataQuery, useUpdateProfileDataMutation, useGetCountriesQuery, useGetStatesQuery, useGetCitiesQuery, useAddActionLogMutation } from '@/services/api';
 import { Loader2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -22,6 +22,7 @@ export default function ProfilePage() {
     const { data: cities = [], isLoading: isCitiesLoading } = useGetCitiesQuery();
     
     const [updateProfile, { isLoading: isMutationLoading }] = useUpdateProfileDataMutation();
+    const [addActionLog] = useAddActionLogMutation();
 
     const { register, control, handleSubmit, reset, watch, setValue } = useForm({
         defaultValues: profileData || {
@@ -57,6 +58,12 @@ export default function ProfilePage() {
     const onSubmit = async (data) => {
         try {
             await updateProfile(data).unwrap();
+            await addActionLog({
+                user: 'Admin User',
+                action: 'updated their profile',
+                section: 'Profile',
+                type: 'UPDATE',
+            }).unwrap();
             toast({
                 title: "Profile Updated",
                 description: "Your profile information has been saved.",

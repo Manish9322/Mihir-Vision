@@ -12,7 +12,7 @@ import { PlusCircle, Trash2, ArrowUp, ArrowDown, GripVertical, ChevronLeft, Chev
 import Image from 'next/image';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { useGetVideosDataQuery, useUpdateVideosDataMutation } from '@/services/api';
+import { useGetVideosDataQuery, useUpdateVideosDataMutation, useAddActionLogMutation } from '@/services/api';
 import { Switch } from '@/components/ui/switch';
 
 const ITEMS_PER_PAGE = 3;
@@ -110,6 +110,7 @@ const VideosAdminPage = () => {
     const { toast } = useToast();
     const { data: videos = [], isLoading: isQueryLoading, isError } = useGetVideosDataQuery();
     const [updateVideos, { isLoading: isMutationLoading }] = useUpdateVideosDataMutation();
+    const [addActionLog] = useAddActionLogMutation();
     
     const [currentPage, setCurrentPage] = useState(1);
     const [isFormOpen, setIsFormOpen] = useState(false);
@@ -129,9 +130,14 @@ const VideosAdminPage = () => {
         hidden: videos.filter(v => !v.isVisible).length,
     }), [videos]);
 
-    const triggerUpdate = async (updatedItems: VideoInfo[]) => {
+    const triggerUpdate = async (updatedItems: VideoInfo[], actionLog: Omit<Parameters<typeof addActionLog>[0], 'user' | 'section'>) => {
         try {
             await updateVideos(updatedItems).unwrap();
+            await addActionLog({
+                user: 'Admin User',
+                section: 'Videos',
+                ...actionLog,
+            }).unwrap();
             toast({
                 title: 'Content Saved',
                 description: 'Videos section has been updated successfully.',
@@ -158,7 +164,7 @@ const VideosAdminPage = () => {
             newVideos.splice(fullIndex, 1);
             newVideos.splice(fullIndex + 1, 0, item);
         }
-        triggerUpdate(newVideos);
+        triggerUpdate(newVideos, { action: `reordered videos`, type: 'UPDATE' });
     };
 
     const handleAddClick = () => {
@@ -181,8 +187,9 @@ const VideosAdminPage = () => {
 
     const handleDelete = (index: number) => {
         const fullIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;
+        const deletedVideo = videos[fullIndex];
         const newVideos = videos.filter((_, i) => i !== fullIndex);
-        triggerUpdate(newVideos);
+        triggerUpdate(newVideos, { action: `deleted video "${deletedVideo.title}"`, type: 'DELETE' });
         toast({
             variant: "destructive",
             title: "Video Deleted",
@@ -192,13 +199,19 @@ const VideosAdminPage = () => {
     
     const handleSave = (video: VideoInfo) => {
         let newItems: VideoInfo[];
+        let action: string, type: 'CREATE' | 'UPDATE';
+
         if (editingIndex !== null) {
             newItems = [...videos];
             newItems[editingIndex] = video;
+            action = `updated video "${video.title}"`;
+            type = 'UPDATE';
         } else {
             newItems = [video, ...videos];
+            action = `created video "${video.title}"`;
+            type = 'CREATE';
         }
-        triggerUpdate(newItems);
+        triggerUpdate(newItems, { action, type });
         setIsFormOpen(false);
     };
     
@@ -210,7 +223,8 @@ const VideosAdminPage = () => {
             }
             return item;
         });
-        triggerUpdate(newItems);
+        const video = videos[fullIndex];
+        triggerUpdate(newItems, { action: `set visibility of video "${video.title}" to ${isVisible}`, type: 'UPDATE' });
     }
 
     if (isQueryLoading) {

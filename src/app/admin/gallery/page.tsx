@@ -12,7 +12,7 @@ import { PlusCircle, Trash2, ArrowUp, ArrowDown, GripVertical, ChevronLeft, Chev
 import Image from 'next/image';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { useGetGalleryDataQuery, useUpdateGalleryDataMutation } from '@/services/api';
+import { useGetGalleryDataQuery, useUpdateGalleryDataMutation, useAddActionLogMutation } from '@/services/api';
 import { Switch } from '@/components/ui/switch';
 
 interface GalleryImage extends ImagePlaceholder {
@@ -93,6 +93,7 @@ const GalleryAdminPage = () => {
     const { toast } = useToast();
     const { data: images = [], isLoading: isQueryLoading, isError } = useGetGalleryDataQuery();
     const [updateGallery, { isLoading: isMutationLoading }] = useUpdateGalleryDataMutation();
+    const [addActionLog] = useAddActionLogMutation();
 
     const [currentPage, setCurrentPage] = useState(1);
     const [isFormOpen, setIsFormOpen] = useState(false);
@@ -112,9 +113,14 @@ const GalleryAdminPage = () => {
         hidden: images.filter(img => !img.isVisible).length,
     }), [images]);
 
-    const triggerUpdate = async (updatedItems: GalleryImage[]) => {
+    const triggerUpdate = async (updatedItems: GalleryImage[], actionLog: Omit<Parameters<typeof addActionLog>[0], 'user' | 'section'>) => {
         try {
             await updateGallery(updatedItems).unwrap();
+            await addActionLog({
+                user: 'Admin User',
+                section: 'Gallery',
+                ...actionLog,
+            }).unwrap();
             toast({
                 title: 'Content Saved',
                 description: 'Gallery section has been updated successfully.',
@@ -141,7 +147,7 @@ const GalleryAdminPage = () => {
             newImages.splice(fullIndex, 1);
             newImages.splice(fullIndex + 1, 0, item);
         }
-        triggerUpdate(newImages);
+        triggerUpdate(newImages, { action: `reordered images`, type: 'UPDATE' });
     };
 
     const handleAddClick = () => {
@@ -164,8 +170,9 @@ const GalleryAdminPage = () => {
 
     const handleDelete = (index: number) => {
         const fullIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;
+        const deletedImage = images[fullIndex];
         const newImages = images.filter((_, i) => i !== fullIndex);
-        triggerUpdate(newImages);
+        triggerUpdate(newImages, { action: `deleted image "${deletedImage.description}"`, type: 'DELETE' });
         toast({
             variant: "destructive",
             title: "Image Deleted",
@@ -175,13 +182,19 @@ const GalleryAdminPage = () => {
     
     const handleSave = (image: Omit<GalleryImage, '_id'>) => {
         let newItems: GalleryImage[];
+        let action: string, type: 'CREATE' | 'UPDATE';
+
         if (editingIndex !== null) {
             newItems = [...images];
             newItems[editingIndex] = { ...images[editingIndex], ...image } as GalleryImage;
+            action = `updated image "${image.description}"`;
+            type = 'UPDATE';
         } else {
             newItems = [image as GalleryImage, ...images];
+            action = `created image "${image.description}"`;
+            type = 'CREATE';
         }
-        triggerUpdate(newItems);
+        triggerUpdate(newItems, { action, type });
         setIsFormOpen(false);
     };
 
@@ -193,7 +206,8 @@ const GalleryAdminPage = () => {
             }
             return item;
         });
-        triggerUpdate(newItems);
+        const image = images[fullIndex];
+        triggerUpdate(newItems, { action: `set visibility of image "${image.description}" to ${isVisible}`, type: 'UPDATE' });
     }
 
     if (isQueryLoading) {

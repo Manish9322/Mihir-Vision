@@ -11,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { PlusCircle, Trash2, ArrowUp, ArrowDown, GripVertical, ChevronLeft, ChevronRight, MoreHorizontal, FilePenLine, Eye, Loader2, HelpCircle, EyeOff } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { useGetFaqDataQuery, useUpdateFaqDataMutation } from '@/services/api';
+import { useGetFaqDataQuery, useUpdateFaqDataMutation, useAddActionLogMutation } from '@/services/api';
 import { Switch } from '@/components/ui/switch';
 
 
@@ -87,6 +87,7 @@ const FaqAdminPage = () => {
     const { toast } = useToast();
     const { data: faqs = [], isLoading: isQueryLoading, isError } = useGetFaqDataQuery();
     const [updateFaqs, { isLoading: isMutationLoading }] = useUpdateFaqDataMutation();
+    const [addActionLog] = useAddActionLogMutation();
     const [items, setItems] = useState<FAQ[]>(faqs);
 
     const [currentPage, setCurrentPage] = useState(1);
@@ -113,9 +114,14 @@ const FaqAdminPage = () => {
         hidden: items.filter(faq => !faq.isVisible).length,
     }), [items]);
 
-    const triggerUpdate = async (updatedItems: FAQ[]) => {
+    const triggerUpdate = async (updatedItems: FAQ[], actionLog: Omit<Parameters<typeof addActionLog>[0], 'user' | 'section'>) => {
         try {
             await updateFaqs(updatedItems).unwrap();
+            await addActionLog({
+                user: 'Admin User',
+                section: 'FAQ',
+                ...actionLog,
+            }).unwrap();
             toast({
                 title: 'Content Saved',
                 description: 'FAQ section has been updated successfully.',
@@ -142,7 +148,7 @@ const FaqAdminPage = () => {
             newItems.splice(fullIndex + 1, 0, item);
         }
         setItems(newItems);
-        triggerUpdate(newItems);
+        triggerUpdate(newItems, { action: `reordered FAQs`, type: 'UPDATE' });
     };
 
     const handleAddClick = () => {
@@ -165,9 +171,10 @@ const FaqAdminPage = () => {
 
     const handleDelete = (index: number) => {
         const fullIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;
+        const deletedFaq = items[fullIndex];
         const newItems = items.filter((_, i) => i !== fullIndex);
         setItems(newItems);
-        triggerUpdate(newItems);
+        triggerUpdate(newItems, { action: `deleted FAQ "${deletedFaq.question}"`, type: 'DELETE' });
         toast({
             variant: "destructive",
             title: "FAQ Deleted",
@@ -177,15 +184,21 @@ const FaqAdminPage = () => {
     
     const handleSave = (faqData: Omit<FAQ, '_id'>) => {
         let newItems: FAQ[];
+        let action: string, type: 'CREATE' | 'UPDATE';
+
         if (editingIndex !== null) {
             newItems = [...items];
             newItems[editingIndex] = { ...newItems[editingIndex], ...faqData };
+            action = `updated FAQ "${faqData.question}"`;
+            type = 'UPDATE';
         } else {
             const newFaq = { ...faqData, _id: `new_${Date.now()}`}; 
             newItems = [newFaq, ...items];
+            action = `created FAQ "${faqData.question}"`;
+            type = 'CREATE';
         }
         setItems(newItems);
-        triggerUpdate(newItems);
+        triggerUpdate(newItems, { action, type });
         setIsFormOpen(false);
     };
 
@@ -194,7 +207,8 @@ const FaqAdminPage = () => {
         const newItems = [...items];
         newItems[fullIndex].isVisible = isVisible;
         setItems(newItems);
-        triggerUpdate(newItems);
+        const faq = items[fullIndex];
+        triggerUpdate(newItems, { action: `set visibility of FAQ "${faq.question}" to ${isVisible}`, type: 'UPDATE' });
     }
     
     if (isQueryLoading) {

@@ -12,7 +12,7 @@ import { PlusCircle, Trash2, ArrowUp, ArrowDown, GripVertical, ChevronLeft, Chev
 import type { LucideIcon } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { useGetActivitiesDataQuery, useUpdateActivitiesDataMutation } from '@/services/api';
+import { useGetActivitiesDataQuery, useUpdateActivitiesDataMutation, useAddActionLogMutation } from '@/services/api';
 import { Switch } from '@/components/ui/switch';
 
 type Activity = {
@@ -103,6 +103,7 @@ const ActivitiesAdminPage = () => {
     const { toast } = useToast();
     const { data: activities = [], isLoading: isQueryLoading, isError } = useGetActivitiesDataQuery();
     const [updateActivities, { isLoading: isMutationLoading }] = useUpdateActivitiesDataMutation();
+    const [addActionLog] = useAddActionLogMutation();
     
     const [currentPage, setCurrentPage] = useState(1);
     const [isFormOpen, setIsFormOpen] = useState(false);
@@ -122,9 +123,14 @@ const ActivitiesAdminPage = () => {
         hidden: activities.filter(a => !a.isVisible).length,
     }), [activities]);
 
-    const triggerUpdate = async (updatedItems: Activity[]) => {
+    const triggerUpdate = async (updatedItems: Activity[], actionLog: Omit<Parameters<typeof addActionLog>[0], 'user' | 'section'>) => {
         try {
             await updateActivities(updatedItems).unwrap();
+            await addActionLog({
+                user: 'Admin User',
+                section: 'Activities',
+                ...actionLog,
+            }).unwrap();
             toast({
                 title: `Content Saved`,
                 description: `Activities section has been updated successfully.`,
@@ -151,7 +157,7 @@ const ActivitiesAdminPage = () => {
             newItems.splice(fullIndex, 1);
             newItems.splice(fullIndex + 1, 0, item);
         }
-        triggerUpdate(newItems);
+        triggerUpdate(newItems, { action: `reordered activities`, type: 'UPDATE' });
     };
 
     const handleAddClick = () => {
@@ -174,8 +180,9 @@ const ActivitiesAdminPage = () => {
 
     const handleDelete = (index: number) => {
         const fullIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;
+        const deletedActivity = activities[fullIndex];
         const newItems = activities.filter((_, i) => i !== fullIndex);
-        triggerUpdate(newItems);
+        triggerUpdate(newItems, { action: `deleted activity "${deletedActivity.title}"`, type: 'DELETE' });
         toast({
             variant: "destructive",
             title: "Activity Deleted",
@@ -185,14 +192,20 @@ const ActivitiesAdminPage = () => {
     
     const handleSave = (activityData: Omit<Activity, '_id'>) => {
         let newItems: Activity[];
+        let action: string, type: 'CREATE' | 'UPDATE';
+
         if (editingIndex !== null) {
             newItems = [...activities];
             newItems[editingIndex] = { ...newItems[editingIndex], ...activityData };
+            action = `updated activity "${activityData.title}"`;
+            type = 'UPDATE';
         } else {
             const newActivity = { ...activityData, isVisible: true } as Activity; 
             newItems = [newActivity, ...activities];
+            action = `created activity "${activityData.title}"`;
+            type = 'CREATE';
         }
-        triggerUpdate(newItems);
+        triggerUpdate(newItems, { action, type });
         setIsFormOpen(false);
     };
 
@@ -204,7 +217,8 @@ const ActivitiesAdminPage = () => {
             }
             return item;
         });
-        triggerUpdate(newItems);
+        const activity = activities[fullIndex];
+        triggerUpdate(newItems, { action: `set visibility of "${activity.title}" to ${isVisible}`, type: 'UPDATE' });
     }
 
      if (isQueryLoading) {

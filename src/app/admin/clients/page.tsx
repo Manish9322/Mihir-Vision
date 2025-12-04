@@ -11,7 +11,7 @@ import { PlusCircle, Trash2, ArrowUp, ArrowDown, GripVertical, ChevronLeft, Chev
 import Image from 'next/image';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { useGetClientsDataQuery, useUpdateClientsDataMutation } from '@/services/api';
+import { useGetClientsDataQuery, useUpdateClientsDataMutation, useAddActionLogMutation } from '@/services/api';
 import { Switch } from '@/components/ui/switch';
 
 type Client = {
@@ -99,6 +99,7 @@ const ClientsAdminPage = () => {
     const { toast } = useToast();
     const { data: clients = [], isLoading: isQueryLoading, isError } = useGetClientsDataQuery();
     const [updateClients, { isLoading: isMutationLoading }] = useUpdateClientsDataMutation();
+    const [addActionLog] = useAddActionLogMutation();
 
     const [currentPage, setCurrentPage] = useState(1);
     const [searchQuery, setSearchQuery] = useState('');
@@ -121,9 +122,14 @@ const ClientsAdminPage = () => {
         hidden: clients.filter(c => !c.isVisible).length,
     }), [clients]);
 
-    const triggerUpdate = async (updatedItems: Client[]) => {
+    const triggerUpdate = async (updatedItems: Client[], actionLog: Omit<Parameters<typeof addActionLog>[0], 'user' | 'section'>) => {
         try {
             await updateClients(updatedItems).unwrap();
+            await addActionLog({
+                user: 'Admin User',
+                section: 'Clients',
+                ...actionLog,
+            }).unwrap();
             toast({
                 title: 'Content Saved',
                 description: 'Clients list has been updated successfully.',
@@ -150,7 +156,7 @@ const ClientsAdminPage = () => {
             newClients.splice(fullIndex, 1);
             newClients.splice(fullIndex + 1, 0, item);
         }
-        triggerUpdate(newClients);
+        triggerUpdate(newClients, { action: `reordered clients`, type: 'UPDATE' });
     };
 
     const handleAddClick = () => {
@@ -173,8 +179,9 @@ const ClientsAdminPage = () => {
 
     const handleDelete = (index: number) => {
         const fullIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;
+        const deletedClient = clients[fullIndex];
         const newClients = clients.filter((_, i) => i !== fullIndex);
-        triggerUpdate(newClients);
+        triggerUpdate(newClients, { action: `deleted client "${deletedClient.name}"`, type: 'DELETE' });
         toast({
             variant: "destructive",
             title: "Client Deleted",
@@ -184,14 +191,20 @@ const ClientsAdminPage = () => {
     
     const handleSave = (clientData: Omit<Client, '_id'>) => {
         let newItems: Client[];
+        let action: string, type: 'CREATE' | 'UPDATE';
+
         if (editingIndex !== null) {
             newItems = [...clients];
             newItems[editingIndex] = { ...clients[editingIndex], ...clientData };
+            action = `updated client "${clientData.name}"`;
+            type = 'UPDATE';
         } else {
             const newClient = { ...clientData, _id: `new_${Date.now()}` } as Client;
             newItems = [newClient, ...clients];
+            action = `created client "${clientData.name}"`;
+            type = 'CREATE';
         }
-        triggerUpdate(newItems);
+        triggerUpdate(newItems, { action, type });
         setIsFormOpen(false);
     };
     
@@ -200,7 +213,8 @@ const ClientsAdminPage = () => {
         const newItems = clients.map((item, i) =>
             i === fullIndex ? { ...item, isVisible } : item
         );
-        triggerUpdate(newItems);
+        const client = clients[fullIndex];
+        triggerUpdate(newItems, { action: `set visibility of client "${client.name}" to ${isVisible}`, type: 'UPDATE' });
     }
 
     if (isQueryLoading) {
