@@ -66,7 +66,7 @@ const DesignationsManager = () => {
 
     const handleSave = async (data) => {
         let updatedItems;
-        let action: string, type: 'CREATE' | 'UPDATE';
+        let action, type;
 
         if (editingIndex !== null) {
             updatedItems = designations.map((item, index) => index === editingIndex ? { ...item, ...data } : item);
@@ -105,7 +105,7 @@ const DesignationsManager = () => {
                 type: 'DELETE',
             }).unwrap();
             toast({ variant: 'destructive', title: 'Designation Deleted' });
-        } catch (error) => {
+        } catch (error) {
             toast({ variant: 'destructive', title: 'Deletion Failed' });
         }
     };
@@ -229,7 +229,7 @@ const CountriesManager = () => {
 
     const handleSave = async (data) => {
         let updatedItems;
-        let action: string, type: 'CREATE' | 'UPDATE';
+        let action, type;
 
         if (editingIndex !== null) {
             updatedItems = countries.map((item, index) => index === editingIndex ? { ...item, ...data } : item);
@@ -259,7 +259,7 @@ const CountriesManager = () => {
             await updateCountries(updatedItems).unwrap();
             await addActionLog({ user: 'Admin User', section: 'Settings', action: `deleted country "${deletedItem.name}"`, type: 'DELETE' }).unwrap();
             toast({ variant: 'destructive', title: 'Country Deleted' });
-        } catch (error) => {
+        } catch (error) {
             toast({ variant: 'destructive', title: 'Deletion Failed' });
         }
     };
@@ -405,7 +405,7 @@ const StatesManager = () => {
 
     const handleSave = async (data) => {
         let updatedItems;
-        let action: string, type: 'CREATE' | 'UPDATE';
+        let action, type;
         if (editingIndex !== null) {
             updatedItems = states.map((item, index) => index === editingIndex ? { ...item, ...data } : item);
             action = `updated state "${data.name}"`;
@@ -434,7 +434,7 @@ const StatesManager = () => {
             await updateStates(updatedItems).unwrap();
             await addActionLog({ user: 'Admin User', section: 'Settings', action: `deleted state "${deletedItem.name}"`, type: 'DELETE' }).unwrap();
             toast({ variant: 'destructive', title: 'State Deleted' });
-        } catch (error) => {
+        } catch (error) {
             toast({ variant: 'destructive', title: 'Deletion Failed' });
         }
     };
@@ -582,7 +582,7 @@ const CitiesManager = () => {
 
     const handleSave = async (data) => {
         let updatedItems;
-        let action: string, type: 'CREATE' | 'UPDATE';
+        let action, type;
         if (editingIndex !== null) {
             updatedItems = cities.map((item, index) => index === editingIndex ? { ...item, ...data } : item);
             action = `updated city "${data.name}"`;
@@ -598,7 +598,7 @@ const CitiesManager = () => {
             await addActionLog({ user: 'Admin User', section: 'Settings', action, type }).unwrap();
             toast({ title: `City ${editingIndex !== null ? 'Updated' : 'Added'}` });
             setIsFormOpen(false);
-        } catch (error) => {
+        } catch (error) {
             toast({ variant: 'destructive', title: 'Save Failed' });
         }
     };
@@ -611,7 +611,7 @@ const CitiesManager = () => {
             await updateCities(updatedItems).unwrap();
             await addActionLog({ user: 'Admin User', section: 'Settings', action: `deleted city "${deletedItem.name}"`, type: 'DELETE' }).unwrap();
             toast({ variant: 'destructive', title: 'City Deleted' });
-        } catch (error) => {
+        } catch (error) {
             toast({ variant: 'destructive', title: 'Deletion Failed' });
         }
     };
@@ -718,18 +718,26 @@ export default function SettingsPage() {
         }
     };
     
-    const handleNotificationsSubmit = (e) => {
+    const handleNotificationsSubmit = async (e) => {
         e.preventDefault();
-        addActionLog({
-            user: 'Admin User',
-            action: 'updated notification settings',
-            section: 'Settings',
-            type: 'UPDATE',
-        }).unwrap();
-        toast({
-            title: "Settings Saved",
-            description: `Notification settings have been updated.`,
-        });
+        try {
+            await addActionLog({
+                user: 'Admin User',
+                action: 'updated notification settings',
+                section: 'Settings',
+                type: 'UPDATE',
+            }).unwrap();
+            toast({
+                title: "Settings Saved",
+                description: `Notification settings have been updated.`,
+            });
+        } catch (error) {
+            toast({
+                variant: 'destructive',
+                title: "Save Failed",
+                description: "There was an error saving notification settings.",
+            });
+        }
     };
 
     if (isQueryLoading) {
@@ -816,3 +824,5 @@ export default function SettingsPage() {
         </Tabs>
     );
 }
+
+    
