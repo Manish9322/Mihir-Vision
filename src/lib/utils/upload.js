@@ -23,7 +23,7 @@ export async function uploadFile(buffer, fileName, mimeType) {
         })
         .catch(error => {
             console.error("Cloudinary upload error:", error);
-            reject(null);
+            reject(error);
         });
     });
 }

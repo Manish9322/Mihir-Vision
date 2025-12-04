@@ -28,6 +28,9 @@ export async function POST(request) {
 
   } catch (error) {
     console.error("Upload API error:", error);
-    return NextResponse.json({ message: 'File upload failed.', error: error.message }, { status: 500 });
+    return NextResponse.json({ 
+      message: 'File upload failed.', 
+      error: error?.message || 'Unknown error occurred' 
+    }, { status: 500 });
   }
 }
