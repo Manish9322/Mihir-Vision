@@ -7,13 +7,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { useGetActionLogsQuery } from '@/services/api';
 import { format } from 'date-fns';
-import { Loader2, Search, CalendarIcon, ListFilter, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Loader2, Search, CalendarIcon, ListFilter, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuCheckboxItem } from '@/components/ui/dropdown-menu';
+
 
 type ActionLog = {
     _id: string;
@@ -98,7 +99,7 @@ const HistoryPage = () => {
                         <CardTitle className="flex items-center gap-2"><ListFilter className="h-5 w-5" /> Filter History</CardTitle>
                         <CardDescription>Refine the action logs shown in the table.</CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-6">
+                    <CardContent className="space-y-4">
                         <div className="relative">
                             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                             <Input placeholder="Search actions..." className="pl-8" value={searchQuery} onChange={(e) => {setSearchQuery(e.target.value); setCurrentPage(1);}} />
@@ -129,26 +130,41 @@ const HistoryPage = () => {
                         </div>
                         
                         <div className="space-y-2">
-                             <Label>Action Type</Label>
-                             <div className="space-y-1">
-                                {availableTypes.map(type => (
-                                    <div key={type} className="flex items-center gap-2">
-                                        <Checkbox id={`type-${type}`} checked={selectedTypes.includes(type)} onCheckedChange={() => handleTypeToggle(type)} />
-                                        <Label htmlFor={`type-${type}`} className="font-normal">{type}</Label>
-                                    </div>
-                                ))}
-                             </div>
-                        </div>
-
-                        <div className="space-y-2">
-                             <Label>Page / Section</Label>
-                             <div className="space-y-1">
-                                 {availableSections.map(section => (
-                                    <div key={section} className="flex items-center gap-2">
-                                        <Checkbox id={`section-${section}`} checked={selectedSections.includes(section)} onCheckedChange={() => handleSectionToggle(section)} />
-                                        <Label htmlFor={`section-${section}`} className="font-normal">{section}</Label>
-                                    </div>
-                                ))}
+                             <Label>Filters</Label>
+                             <div className="grid grid-cols-2 gap-2">
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button variant="outline" className="w-full justify-between">
+                                            Type {selectedTypes.length > 0 && `(${selectedTypes.length})`} <ChevronDown className="h-4 w-4" />
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent className="w-56">
+                                        <DropdownMenuLabel>Action Type</DropdownMenuLabel>
+                                        <DropdownMenuSeparator />
+                                        {availableTypes.map(type => (
+                                            <DropdownMenuCheckboxItem key={type} checked={selectedTypes.includes(type)} onCheckedChange={() => handleTypeToggle(type)}>
+                                                {type}
+                                            </DropdownMenuCheckboxItem>
+                                        ))}
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                                
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button variant="outline" className="w-full justify-between">
+                                            Page {selectedSections.length > 0 && `(${selectedSections.length})`} <ChevronDown className="h-4 w-4" />
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent className="w-56">
+                                        <DropdownMenuLabel>Page / Section</DropdownMenuLabel>
+                                        <DropdownMenuSeparator />
+                                        {availableSections.map(section => (
+                                            <DropdownMenuCheckboxItem key={section} checked={selectedSections.includes(section)} onCheckedChange={() => handleSectionToggle(section)}>
+                                                {section}
+                                            </DropdownMenuCheckboxItem>
+                                        ))}
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
                              </div>
                         </div>
 
