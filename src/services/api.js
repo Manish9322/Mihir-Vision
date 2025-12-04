@@ -6,6 +6,17 @@ export const contentApi = createApi({
   baseQuery: fetchBaseQuery({ baseUrl: '/api/' }),
   tagTypes: ['About', 'Activities', 'Videos', 'Gallery', 'Projects', 'Timeline', 'Faq', 'Contacts', 'Profile', 'Settings', 'Countries', 'States', 'Cities', 'Clients', 'Games', 'Team', 'Designations', 'ActionLogs', 'Analytics'],
   endpoints: (builder) => ({
+    uploadImage: builder.mutation({
+      query: (file) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        return {
+          url: 'upload',
+          method: 'POST',
+          body: formData,
+        };
+      },
+    }),
     getAnalyticsData: builder.query({
       query: () => 'analytics',
       providesTags: ['Analytics'],
@@ -245,6 +256,7 @@ export const contentApi = createApi({
 });
 
 export const { 
+  useUploadImageMutation,
   useGetAnalyticsDataQuery,
   useGetAboutDataQuery, 
   useUpdateAboutDataMutation,

@@ -6,12 +6,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { aboutData as initialAboutData } from '@/lib/data';
-import { useGetAboutDataQuery, useUpdateAboutDataMutation, useAddActionLogMutation } from '@/services/api';
+import { useGetAboutDataQuery, useUpdateAboutDataMutation, useAddActionLogMutation, useUploadImageMutation } from '@/services/api';
 import { PlusCircle, Trash2, Loader2, AlertTriangle } from 'lucide-react';
 import Image from 'next/image';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const AboutAdminSkeleton = () => (
@@ -57,9 +56,12 @@ const AboutAdminPage = () => {
     const { data: aboutData, isLoading: isQueryLoading, isError } = useGetAboutDataQuery();
     const [updateAboutData, { isLoading: isMutationLoading }] = useUpdateAboutDataMutation();
     const [addActionLog] = useAddActionLogMutation();
+    const [uploadImage, { isLoading: isUploading }] = useUploadImageMutation();
+
+    const [imageFile, setImageFile] = useState<File | null>(null);
     
-    const { register, control, handleSubmit, reset, watch } = useForm({
-        defaultValues: aboutData || initialAboutData
+    const { register, control, handleSubmit, reset, watch, setValue } = useForm({
+        // No defaultValues here, will be set in useEffect
     });
 
     const { fields, append, remove } = useFieldArray({
@@ -75,9 +77,33 @@ const AboutAdminPage = () => {
         }
     }, [aboutData, reset]);
 
+    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            setImageFile(file);
+            // Show a preview of the new image
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setValue('image.imageUrl', reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
     const onSubmit = async (data) => {
         try {
-            await updateAboutData(data).unwrap();
+            let finalData = { ...data };
+
+            if (imageFile) {
+                const uploadResult = await uploadImage(imageFile).unwrap();
+                if (uploadResult.url) {
+                    finalData.image.imageUrl = uploadResult.url;
+                } else {
+                    throw new Error('Image upload failed to return a URL.');
+                }
+            }
+
+            await updateAboutData(finalData).unwrap();
             await addActionLog({
                 user: 'Admin User',
                 action: 'updated the About section',
@@ -88,7 +114,9 @@ const AboutAdminPage = () => {
                 title: `Content Saved`,
                 description: `About section has been updated successfully.`,
             });
+            setImageFile(null); // Reset after successful submission
         } catch (error) {
+            console.error('Save failed:', error);
             toast({
                 variant: 'destructive',
                 title: `Save Failed`,
@@ -101,7 +129,7 @@ const AboutAdminPage = () => {
         return <AboutAdminSkeleton />;
     }
     
-    if (isError) {
+    if (isError || !aboutData) {
         return (
             <Card className="flex flex-col items-center justify-center p-8 text-center">
                 <AlertTriangle className="h-12 w-12 text-destructive mb-4" />
@@ -148,7 +176,7 @@ const AboutAdminPage = () => {
                                 </div>
                             </Card>
                         ))}
-                         <Button variant="outline" type="button" className="w-full" onClick={() => append("")}>
+                         <Button variant="outline" type="button" className="w-full" onClick={() => append({ value: "" })}>
                             <PlusCircle className="mr-2 h-4 w-4" />
                             Add Highlight
                         </Button>
@@ -158,13 +186,13 @@ const AboutAdminPage = () => {
                         <Label>Image</Label>
                         <Card className='p-2'>
                             <div className="relative aspect-[4/3] w-full max-w-sm rounded-md overflow-hidden">
-                                <Image src={watchedImage} alt="About section image" fill className='object-cover' />
+                                {watchedImage && <Image src={watchedImage} alt="About section image" fill className='object-cover' />}
                             </div>
-                            <Input type="file" className="mt-2" />
+                            <Input type="file" className="mt-2" onChange={handleFileChange} accept="image/*" />
                         </Card>
                     </div>
-                    <Button type="submit" disabled={isMutationLoading}>
-                        {isMutationLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    <Button type="submit" disabled={isMutationLoading || isUploading}>
+                        {(isMutationLoading || isUploading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         Save Changes
                     </Button>
                 </form>
@@ -174,4 +202,3 @@ const AboutAdminPage = () => {
 };
 
 export default AboutAdminPage;
-
