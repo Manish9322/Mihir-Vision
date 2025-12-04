@@ -370,5 +370,3 @@ const GalleryAdminPage = () => {
 }
 
 export default GalleryAdminPage;
-
-    

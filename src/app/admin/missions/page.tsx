@@ -415,5 +415,3 @@ const MissionsAdminPage = () => {
 }
 
 export default MissionsAdminPage;
-
-    

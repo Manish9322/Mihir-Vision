@@ -388,5 +388,3 @@ const TimelineAdminPage = () => {
 }
 
 export default TimelineAdminPage;
-
-    

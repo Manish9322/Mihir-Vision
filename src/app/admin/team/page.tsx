@@ -11,7 +11,7 @@ import { PlusCircle, Trash2, MoreHorizontal, FilePenLine, Eye, Loader2, Search, 
 import Image from 'next/image';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { useGetTeamDataQuery, useUpdateTeamDataMutation, useGetDesignationsQuery } from '@/services/api';
+import { useGetTeamDataQuery, useUpdateTeamDataMutation, useGetDesignationsQuery, useAddActionLogMutation } from '@/services/api';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -182,6 +182,7 @@ const TeamAdminPage = () => {
     const { data: teamMembers = [], isLoading: isQueryLoading, isError } = useGetTeamDataQuery();
     const { data: designations = [], isLoading: isDesignationsLoading } = useGetDesignationsQuery();
     const [updateTeam, { isLoading: isMutationLoading }] = useUpdateTeamDataMutation();
+    const [addActionLog] = useAddActionLogMutation();
 
     const [currentPage, setCurrentPage] = useState(1);
     const [searchQuery, setSearchQuery] = useState('');
@@ -209,9 +210,14 @@ const TeamAdminPage = () => {
         hidden: teamMembers.filter(m => !m.isVisible).length,
     }), [teamMembers]);
 
-    const triggerUpdate = async (updatedItems: TeamMember[]) => {
+    const triggerUpdate = async (updatedItems: TeamMember[], actionLog: Omit<Parameters<typeof addActionLog>[0], 'user' | 'section'>) => {
         try {
             await updateTeam(updatedItems).unwrap();
+            await addActionLog({
+                user: 'Admin User',
+                section: 'Team',
+                ...actionLog
+            }).unwrap();
             toast({
                 title: 'Content Saved',
                 description: 'Team list has been updated successfully.',
@@ -244,8 +250,9 @@ const TeamAdminPage = () => {
     };
 
     const handleDelete = (memberId: string) => {
+        const deletedMember = teamMembers.find(m => m._id === memberId);
         const newMembers = teamMembers.filter(m => m._id !== memberId);
-        triggerUpdate(newMembers);
+        triggerUpdate(newMembers, { action: `deleted team member "${deletedMember.name}"`, type: 'DELETE' });
         toast({
             variant: "destructive",
             title: "Team Member Deleted",
@@ -255,13 +262,19 @@ const TeamAdminPage = () => {
     
     const handleSave = (memberData: Omit<TeamMember, '_id'>) => {
         let newItems: TeamMember[];
+        let action: string, type: 'CREATE' | 'UPDATE';
+
         if (editingIndex !== null) {
             newItems = teamMembers.map((member, index) => index === editingIndex ? { ...teamMembers[editingIndex], ...memberData } : member);
+            action = `updated team member "${memberData.name}"`;
+            type = 'UPDATE';
         } else {
             const newMember = { ...memberData, _id: `new_${Date.now()}` } as TeamMember;
             newItems = [newMember, ...teamMembers];
+            action = `added team member "${memberData.name}"`;
+            type = 'CREATE';
         }
-        triggerUpdate(newItems);
+        triggerUpdate(newItems, { action, type });
         setIsFormOpen(false);
     };
     
@@ -269,7 +282,8 @@ const TeamAdminPage = () => {
         const newItems = teamMembers.map((item) =>
             item._id === memberId ? { ...item, isVisible } : item
         );
-        triggerUpdate(newItems);
+        const member = teamMembers.find(m => m._id === memberId);
+        triggerUpdate(newItems, { action: `set visibility of team member "${member.name}" to ${isVisible}`, type: 'UPDATE' });
     }
 
     if (isQueryLoading || isDesignationsLoading) {
