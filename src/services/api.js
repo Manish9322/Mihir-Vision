@@ -4,7 +4,7 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 export const contentApi = createApi({
   reducerPath: 'contentApi',
   baseQuery: fetchBaseQuery({ baseUrl: '/api/' }),
-  tagTypes: ['About', 'Activities', 'Videos', 'Gallery', 'Projects', 'Timeline', 'Faq', 'Contacts', 'Profile', 'Settings'],
+  tagTypes: ['About', 'Activities', 'Videos', 'Gallery', 'Projects', 'Timeline', 'Faq', 'Contacts', 'Profile', 'Settings', 'Countries', 'States', 'Cities'],
   endpoints: (builder) => ({
     getAboutData: builder.query({
       query: () => 'about',
@@ -141,6 +141,42 @@ export const contentApi = createApi({
       }),
       invalidatesTags: ['Settings'],
     }),
+    getCountries: builder.query({
+      query: () => 'countries',
+      providesTags: ['Countries'],
+    }),
+    updateCountries: builder.mutation({
+      query: (updatedData) => ({
+        url: 'countries',
+        method: 'POST',
+        body: updatedData,
+      }),
+      invalidatesTags: ['Countries'],
+    }),
+     getStates: builder.query({
+      query: () => 'states',
+      providesTags: ['States'],
+    }),
+    updateStates: builder.mutation({
+      query: (updatedData) => ({
+        url: 'states',
+        method: 'POST',
+        body: updatedData,
+      }),
+      invalidatesTags: ['States'],
+    }),
+     getCities: builder.query({
+      query: () => 'cities',
+      providesTags: ['Cities'],
+    }),
+    updateCities: builder.mutation({
+      query: (updatedData) => ({
+        url: 'cities',
+        method: 'POST',
+        body: updatedData,
+      }),
+      invalidatesTags: ['Cities'],
+    }),
   }),
 });
 
@@ -167,4 +203,10 @@ export const {
   useUpdateProfileDataMutation,
   useGetSettingsDataQuery,
   useUpdateSettingsDataMutation,
+  useGetCountriesQuery,
+  useUpdateCountriesMutation,
+  useGetStatesQuery,
+  useUpdateStatesMutation,
+  useGetCitiesQuery,
+  useUpdateCitiesMutation,
 } = contentApi;

@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useGetProfileDataQuery, useUpdateProfileDataMutation, useGetSettingsDataQuery } from '@/services/api';
+import { useGetProfileDataQuery, useUpdateProfileDataMutation, useGetCountriesQuery, useGetStatesQuery, useGetCitiesQuery } from '@/services/api';
 import { Loader2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -17,10 +17,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 export default function ProfilePage() {
     const { toast } = useToast();
     const { data: profileData, isLoading: isProfileLoading, isError: isProfileError } = useGetProfileDataQuery();
-    const { data: settingsData, isLoading: isSettingsLoading, isError: isSettingsError } = useGetSettingsDataQuery();
+    const { data: countries = [], isLoading: isCountriesLoading } = useGetCountriesQuery();
+    const { data: states = [], isLoading: isStatesLoading } = useGetStatesQuery();
+    const { data: cities = [], isLoading: isCitiesLoading } = useGetCitiesQuery();
+    
     const [updateProfile, { isLoading: isMutationLoading }] = useUpdateProfileDataMutation();
 
-    const { register, control, handleSubmit, reset, watch } = useForm({
+    const { register, control, handleSubmit, reset, watch, setValue } = useForm({
         defaultValues: profileData || {
             fullName: '',
             email: '',
@@ -35,14 +38,14 @@ export default function ProfilePage() {
     const watchedState = watch("address.state");
     
     const availableStates = useMemo(() => {
-        if (!settingsData || !watchedCountry) return [];
-        return settingsData.states.filter(s => s.country === watchedCountry);
-    }, [settingsData, watchedCountry]);
+        if (!states || !watchedCountry) return [];
+        return states.filter(s => s.country === watchedCountry);
+    }, [states, watchedCountry]);
 
     const availableCities = useMemo(() => {
-        if (!settingsData || !watchedState) return [];
-        return settingsData.cities.filter(c => c.state === watchedState);
-    }, [settingsData, watchedState]);
+        if (!cities || !watchedState) return [];
+        return cities.filter(c => c.state === watchedState);
+    }, [cities, watchedState]);
 
 
     useEffect(() => {
@@ -67,7 +70,7 @@ export default function ProfilePage() {
         }
     };
 
-    if (isProfileLoading || isSettingsLoading) {
+    if (isProfileLoading || isCountriesLoading || isStatesLoading || isCitiesLoading) {
         return (
             <div className="flex items-center justify-center h-full">
                 <Loader2 className="h-8 w-8 animate-spin" />
@@ -75,7 +78,7 @@ export default function ProfilePage() {
         );
     }
     
-    if (isProfileError || isSettingsError) {
+    if (isProfileError) {
         return <div>Error loading data.</div>;
     }
 
@@ -134,15 +137,14 @@ export default function ProfilePage() {
                                     render={({ field }) => (
                                         <Select onValueChange={(value) => {
                                             field.onChange(value);
-                                            // Reset state and city when country changes
-                                            control.setValue('address.state', '');
-                                            control.setValue('address.city', '');
+                                            setValue('address.state', '');
+                                            setValue('address.city', '');
                                         }} value={field.value}>
                                             <SelectTrigger>
                                                 <SelectValue placeholder="Select a country" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                {settingsData?.countries?.map(c => <SelectItem key={c.name} value={c.name}>{c.name}</SelectItem>)}
+                                                {countries?.map(c => <SelectItem key={c.name} value={c.name}>{c.name}</SelectItem>)}
                                             </SelectContent>
                                         </Select>
                                     )}
@@ -156,8 +158,7 @@ export default function ProfilePage() {
                                     render={({ field }) => (
                                         <Select onValueChange={(value) => {
                                             field.onChange(value);
-                                            // Reset city when state changes
-                                            control.setValue('address.city', '');
+                                            setValue('address.city', '');
                                         }} value={field.value} disabled={!watchedCountry || availableStates.length === 0}>
                                             <SelectTrigger>
                                                 <SelectValue placeholder="Select a state" />
