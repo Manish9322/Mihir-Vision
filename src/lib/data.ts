@@ -1,7 +1,7 @@
 
 import { PlaceHolderImages } from './placeholder-images';
 import type { ImagePlaceholder } from './placeholder-images';
-import { BarChart3, Dna, Rocket, Users, Target, Lightbulb, Bot, Check, Package, Award, UsersRound, Globe, Activity, DollarSign, BookOpen, Mail } from 'lucide-react';
+import { BarChart3, Dna, Rocket, Users, Target, Lightbulb, Bot, Check, Package, Award, UsersRound, Globe, Activity, DollarSign, BookOpen, Mail, Gamepad2 } from 'lucide-react';
 
 const getImage = (id: string): ImagePlaceholder => {
   const image = PlaceHolderImages.find((img) => img.id === id);
@@ -65,7 +65,7 @@ export const statsData = {
   subheadline: 'We measure our success by the tangible impact we create. Here are some of our key achievements.',
   stats: [
     { label: 'Projects Completed', value: '150+', icon: Package },
-    { label: 'Patents Filed', value: '75', icon: Award },
+    { label: 'Total Games', value: '25', icon: Gamepad2 },
     { label: 'Team Members', value: '200', icon: UsersRound },
     { label: 'Global Partners', value: '40+', icon: Globe },
   ],
@@ -74,14 +74,14 @@ export const statsData = {
 export const growthChartData = {
   title: 'Our Trajectory of Innovation',
   subheadline: 'The chart below illustrates our consistent growth in key areas of innovation, reflecting our commitment to pushing boundaries and achieving new milestones.',
-  chartTitle: 'Projects & Patents',
-  chartSubheadline: 'Projects and patents filed over the years',
+  chartTitle: 'Projects & Games Released',
+  chartSubheadline: 'Projects and games released over the years',
   chartData: [
-    { year: '2020', projects: 40, patents: 24, investment: 10 },
-    { year: '2021', projects: 30, patents: 13, investment: 15 },
-    { year: '2022', projects: 50, patents: 35, investment: 25 },
-    { year: '2023', projects: 60, patents: 42, investment: 30 },
-    { year: '2024', projects: 80, patents: 55, investment: 40 },
+    { year: '2020', projects: 40, games: 5, investment: 10 },
+    { year: '2021', projects: 30, games: 8, investment: 15 },
+    { year: '2022', projects: 50, games: 12, investment: 25 },
+    { year: '2023', projects: 60, games: 18, investment: 30 },
+    { year: '2024', projects: 80, games: 25, investment: 40 },
   ],
 };
 

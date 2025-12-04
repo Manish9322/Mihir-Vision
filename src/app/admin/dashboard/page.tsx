@@ -1,6 +1,8 @@
+
 'use client';
 import {
     ArrowUpRight,
+    Gamepad2,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -37,8 +39,8 @@ const chartConfig = {
     label: 'Projects',
     color: 'hsl(var(--primary))',
   },
-  patents: {
-    label: 'Patents',
+  games: {
+    label: 'Games',
     color: 'hsl(var(--muted-foreground))',
   },
   investment: {
@@ -74,7 +76,7 @@ const AdminDashboardPage = () => {
                  <Card>
                     <CardHeader>
                         <CardTitle>Innovation Growth</CardTitle>
-                        <CardDescription>Projects and patents filed over the past years.</CardDescription>
+                        <CardDescription>Projects and games released over the past years.</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <ChartContainer config={chartConfig} className="h-[250px] w-full">
@@ -94,7 +96,7 @@ const AdminDashboardPage = () => {
                                 />
                                 <Legend />
                                 <Bar dataKey="projects" fill="var(--color-projects)" radius={4} />
-                                <Bar dataKey="patents" fill="var(--color-patents)" radius={4} />
+                                <Bar dataKey="games" fill="var(--color-games)" radius={4} />
                             </BarChart>
                         </ChartContainer>
                     </CardContent>
