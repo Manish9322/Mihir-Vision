@@ -10,9 +10,55 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useGetProfileDataQuery, useUpdateProfileDataMutation, useGetCountriesQuery, useGetStatesQuery, useGetCitiesQuery, useAddActionLogMutation } from '@/services/api';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertTriangle } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
+
+const ProfilePageSkeleton = () => (
+    <Card>
+        <CardHeader>
+            <Skeleton className="h-8 w-24" />
+            <Skeleton className="h-4 w-64" />
+        </CardHeader>
+        <CardContent>
+            <div className="space-y-8">
+                 <div className="space-y-6">
+                    <div className="space-y-2">
+                        <Skeleton className="h-4 w-24" />
+                        <div className="flex items-center gap-4">
+                            <Skeleton className="h-24 w-24 rounded-full" />
+                            <Skeleton className="h-10 w-64" />
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2"><Skeleton className="h-4 w-16" /><Skeleton className="h-10 w-full" /></div>
+                        <div className="space-y-2"><Skeleton className="h-4 w-24" /><Skeleton className="h-10 w-full" /></div>
+                        <div className="space-y-2 md:col-span-2"><Skeleton className="h-4 w-12" /><Skeleton className="h-10 w-full" /></div>
+                    </div>
+                </div>
+                
+                <Separator />
+                
+                <div className="space-y-6">
+                    <div>
+                        <Skeleton className="h-6 w-20" />
+                        <Skeleton className="h-4 w-48 mt-2" />
+                    </div>
+                    <div className="space-y-2"><Skeleton className="h-4 w-24" /><Skeleton className="h-10 w-full" /></div>
+                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div className="space-y-2"><Skeleton className="h-4 w-16" /><Skeleton className="h-10 w-full" /></div>
+                        <div className="space-y-2"><Skeleton className="h-4 w-24" /><Skeleton className="h-10 w-full" /></div>
+                        <div className="space-y-2"><Skeleton className="h-4 w-12" /><Skeleton className="h-10 w-full" /></div>
+                    </div>
+                     <div className="space-y-2"><Skeleton className="h-4 w-24" /><Skeleton className="h-10 w-full" /></div>
+                </div>
+
+                <Skeleton className="h-10 w-32" />
+            </div>
+        </CardContent>
+    </Card>
+);
 
 export default function ProfilePage() {
     const { toast } = useToast();
@@ -78,15 +124,19 @@ export default function ProfilePage() {
     };
 
     if (isProfileLoading || isCountriesLoading || isStatesLoading || isCitiesLoading) {
-        return (
-            <div className="flex items-center justify-center h-full">
-                <Loader2 className="h-8 w-8 animate-spin" />
-            </div>
-        );
+        return <ProfilePageSkeleton />;
     }
     
     if (isProfileError) {
-        return <div>Error loading data.</div>;
+        return (
+            <Card className="flex flex-col items-center justify-center p-8 text-center">
+                <AlertTriangle className="h-12 w-12 text-destructive mb-4" />
+                <CardTitle className="text-xl text-destructive">Error Loading Profile</CardTitle>
+                <CardDescription className="mt-2">
+                    There was a problem fetching your profile data. Please try refreshing the page.
+                </CardDescription>
+            </Card>
+        );
     }
 
     return (
@@ -212,3 +262,5 @@ export default function ProfilePage() {
         </Card>
     );
 }
+
+    

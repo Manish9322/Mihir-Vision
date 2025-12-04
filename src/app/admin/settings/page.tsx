@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Switch } from "@/components/ui/switch";
-import { Loader2, PlusCircle, Trash2, ChevronLeft, ChevronRight, MoreHorizontal, FilePenLine, Eye, Search } from 'lucide-react';
+import { Loader2, PlusCircle, Trash2, ChevronLeft, ChevronRight, MoreHorizontal, FilePenLine, Eye, Search, AlertTriangle } from 'lucide-react';
 import { useGetSettingsDataQuery, useUpdateSettingsDataMutation, useGetCountriesQuery, useUpdateCountriesMutation, useGetStatesQuery, useUpdateStatesMutation, useGetCitiesQuery, useUpdateCitiesMutation, useGetDesignationsQuery, useUpdateDesignationsMutation, useAddActionLogMutation } from '@/services/api';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
@@ -18,6 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const ITEMS_PER_PAGE = 5;
 
@@ -111,7 +112,13 @@ const DesignationsManager = () => {
     };
     
     if (isLoading) return <div className="flex items-center justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>;
-    if (isError) return <div>Error loading designations.</div>;
+    if (isError) return (
+        <Card className="flex flex-col items-center justify-center p-4 text-center border-destructive">
+            <AlertTriangle className="h-8 w-8 text-destructive mb-2" />
+            <CardTitle className="text-md text-destructive">Error</CardTitle>
+            <CardDescription className="mt-1 text-xs">Failed to load designations.</CardDescription>
+        </Card>
+    );
 
     return (
         <Card>
@@ -265,7 +272,14 @@ const CountriesManager = () => {
     };
 
     if (isLoading) return <div className="flex items-center justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>;
-    if (isError) return <div>Error loading countries.</div>;
+    if (isError) return (
+        <Card className="flex flex-col items-center justify-center p-4 text-center border-destructive">
+            <AlertTriangle className="h-8 w-8 text-destructive mb-2" />
+            <CardTitle className="text-md text-destructive">Error</CardTitle>
+            <CardDescription className="mt-1 text-xs">Failed to load countries.</CardDescription>
+        </Card>
+    );
+
 
     return (
         <Card>
@@ -440,7 +454,13 @@ const StatesManager = () => {
     };
 
     if (isStatesLoading || isCountriesLoading) return <div className="flex items-center justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>;
-    if (isStatesError) return <div>Error loading states.</div>;
+    if (isStatesError) return (
+        <Card className="flex flex-col items-center justify-center p-4 text-center border-destructive">
+            <AlertTriangle className="h-8 w-8 text-destructive mb-2" />
+            <CardTitle className="text-md text-destructive">Error</CardTitle>
+            <CardDescription className="mt-1 text-xs">Failed to load states.</CardDescription>
+        </Card>
+    );
 
     return (
         <Card>
@@ -617,7 +637,13 @@ const CitiesManager = () => {
     };
     
     if (isCitiesLoading || isStatesLoading) return <div className="flex items-center justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>;
-    if (isCitiesError) return <div>Error loading cities.</div>;
+    if (isCitiesError) return (
+        <Card className="flex flex-col items-center justify-center p-4 text-center border-destructive">
+            <AlertTriangle className="h-8 w-8 text-destructive mb-2" />
+            <CardTitle className="text-md text-destructive">Error</CardTitle>
+            <CardDescription className="mt-1 text-xs">Failed to load cities.</CardDescription>
+        </Card>
+    );
 
     return (
         <Card>
@@ -749,7 +775,15 @@ export default function SettingsPage() {
     }
     
     if (isError) {
-        return <div>Error loading settings data.</div>;
+        return (
+            <Card className="flex flex-col items-center justify-center p-8 text-center">
+                <AlertTriangle className="h-12 w-12 text-destructive mb-4" />
+                <CardTitle className="text-xl text-destructive">Error Loading Settings</CardTitle>
+                <CardDescription className="mt-2">
+                    There was a problem fetching the settings data. Please try refreshing the page.
+                </CardDescription>
+            </Card>
+        );
     }
 
     return (
@@ -824,5 +858,7 @@ export default function SettingsPage() {
         </Tabs>
     );
 }
+
+    
 
     
