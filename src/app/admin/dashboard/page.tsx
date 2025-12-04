@@ -3,6 +3,11 @@
 import {
     ArrowUpRight,
     Gamepad2,
+    BookOpen,
+    Mail,
+    Users as UsersIcon,
+    DollarSign,
+    LineChart as LineChartIcon
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -32,7 +37,9 @@ import {
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Line, LineChart, Legend } from 'recharts';
 import type { ChartConfig } from '@/components/ui/chart';
 
-import { contactsData, growthChartData, dashboardData } from '@/lib/data';
+import { growthChartData, dashboardData } from '@/lib/data';
+import { useGetContactsQuery, useGetActionLogsQuery } from '@/services/api';
+
 
 const chartConfig = {
   projects: {
@@ -51,6 +58,9 @@ const chartConfig = {
 
 
 const AdminDashboardPage = () => {
+    const { data: contactsData = [] } = useGetContactsQuery();
+    const { data: actionLogs = [] } = useGetActionLogsQuery();
+
     return (
         <div className="flex flex-col gap-4 md:gap-8">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -155,8 +165,8 @@ const AdminDashboardPage = () => {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {contactsData.messages.slice(0, 6).map((message) => (
-                                    <TableRow key={message.id}>
+                                {contactsData.slice(0, 6).map((message) => (
+                                    <TableRow key={message._id}>
                                         <TableCell>
                                             <div className="font-medium">{message.name}</div>
                                             <div className="hidden text-sm text-muted-foreground sm:inline">
@@ -182,14 +192,14 @@ const AdminDashboardPage = () => {
                             <CardDescription>A log of recent actions taken in the admin panel.</CardDescription>
                         </div>
                          <Button asChild size="sm" className="ml-auto gap-1">
-                            <Link href="#">
+                            <Link href="/admin/history">
                                 View All
                                 <ArrowUpRight className="h-4 w-4" />
                             </Link>
                         </Button>
                     </CardHeader>
                     <CardContent className="grid gap-6">
-                        {dashboardData.activities.slice(0, 6).map((activity, index) => (
+                        {actionLogs.slice(0, 6).map((activity, index) => (
                              <div key={index} className="flex items-center gap-4">
                                 <Avatar className="hidden h-9 w-9 sm:flex">
                                     <AvatarImage src={`https://picsum.photos/seed/${activity.user.split(' ')[0]}/32/32`} alt="Avatar" />
@@ -200,7 +210,7 @@ const AdminDashboardPage = () => {
                                         <span className='font-semibold'>{activity.user}</span> {activity.action}
                                     </p>
                                     <p className="text-sm text-muted-foreground">
-                                        {activity.timestamp}
+                                        {new Date(activity.timestamp).toLocaleString()}
                                     </p>
                                 </div>
                             </div>
@@ -213,3 +223,5 @@ const AdminDashboardPage = () => {
 };
 
 export default AdminDashboardPage;
+
+    

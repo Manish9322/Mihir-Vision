@@ -1,3 +1,4 @@
+
 'use client';
 import Link from 'next/link';
 import {
@@ -50,6 +51,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 
 const navItems = [
     { href: "/admin/dashboard", icon: LayoutDashboard, label: "Dashboard" },
+    { href: "/admin/stats", icon: LineChart, label: "Stats" },
     { href: "/admin/about", icon: BookText, label: "About" },
     { href: "/admin/clients", icon: Handshake, label: "Clients" },
     { href: "/admin/activities", icon: Settings, label: "Activities" },
@@ -63,7 +65,6 @@ const navItems = [
     { href: "/admin/contacts", icon: Users, label: "Contacts" },
     { href: "/admin/history", icon: History, label: "History" },
     { href: "/admin/profile", icon: User, label: "Profile" },
-    { href: "#", icon: LineChart, label: "Stats" },
 ]
 
 function LogoutConfirmationDialog({ children }: { children: React.ReactNode }) {
@@ -176,3 +177,5 @@ export default function AdminLayout({
     </Provider>
   );
 }
+
+    
