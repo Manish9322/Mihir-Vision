@@ -1,6 +1,6 @@
 
 'use client';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -141,7 +141,6 @@ const FaqAdminPage = () => {
     const { data: faqs = [], isLoading: isQueryLoading, isError } = useGetFaqDataQuery();
     const [updateFaqs, { isLoading: isMutationLoading }] = useUpdateFaqDataMutation();
     const [addActionLog] = useAddActionLogMutation();
-    const [items, setItems] = useState<FAQ[]>(faqs);
 
     const [currentPage, setCurrentPage] = useState(1);
     const [isFormOpen, setIsFormOpen] = useState(false);
@@ -149,23 +148,17 @@ const FaqAdminPage = () => {
     const [selectedFaq, setSelectedFaq] = useState<FAQ | null>(null);
     const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
-    useState(() => {
-        if (faqs) {
-            setItems(faqs);
-        }
-    }, [faqs]);
-
-    const totalPages = Math.ceil(items.length / ITEMS_PER_PAGE);
-    const paginatedFaqs = items.slice(
+    const totalPages = Math.ceil(faqs.length / ITEMS_PER_PAGE);
+    const paginatedFaqs = faqs.slice(
         (currentPage - 1) * ITEMS_PER_PAGE,
         currentPage * ITEMS_PER_PAGE
     );
     
     const stats = useMemo(() => ({
-        total: items.length,
-        visible: items.filter(faq => faq.isVisible).length,
-        hidden: items.filter(faq => !faq.isVisible).length,
-    }), [items]);
+        total: faqs.length,
+        visible: faqs.filter(faq => faq.isVisible).length,
+        hidden: faqs.filter(faq => !faq.isVisible).length,
+    }), [faqs]);
 
     const triggerUpdate = async (updatedItems: FAQ[], actionLog: Omit<Parameters<typeof addActionLog>[0], 'user' | 'section'>) => {
         try {
@@ -190,7 +183,7 @@ const FaqAdminPage = () => {
 
     const handleMove = (index: number, direction: 'up' | 'down') => {
         const fullIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;
-        const newItems = [...items];
+        const newItems = [...faqs];
         const item = newItems[fullIndex];
 
         if (direction === 'up' && fullIndex > 0) {
@@ -200,7 +193,6 @@ const FaqAdminPage = () => {
             newItems.splice(fullIndex, 1);
             newItems.splice(fullIndex + 1, 0, item);
         }
-        setItems(newItems);
         triggerUpdate(newItems, { action: `reordered FAQs`, type: 'UPDATE' });
     };
 
@@ -224,9 +216,8 @@ const FaqAdminPage = () => {
 
     const handleDelete = (index: number) => {
         const fullIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;
-        const deletedFaq = items[fullIndex];
-        const newItems = items.filter((_, i) => i !== fullIndex);
-        setItems(newItems);
+        const deletedFaq = faqs[fullIndex];
+        const newItems = faqs.filter((_, i) => i !== fullIndex);
         triggerUpdate(newItems, { action: `deleted FAQ "${deletedFaq.question}"`, type: 'DELETE' });
         toast({
             variant: "destructive",
@@ -240,27 +231,25 @@ const FaqAdminPage = () => {
         let action: string, type: 'CREATE' | 'UPDATE';
 
         if (editingIndex !== null) {
-            newItems = [...items];
+            newItems = [...faqs];
             newItems[editingIndex] = { ...newItems[editingIndex], ...faqData };
             action = `updated FAQ "${faqData.question}"`;
             type = 'UPDATE';
         } else {
             const newFaq = { ...faqData, _id: `new_${Date.now()}`}; 
-            newItems = [newFaq, ...items];
+            newItems = [newFaq, ...faqs];
             action = `created FAQ "${faqData.question}"`;
             type = 'CREATE';
         }
-        setItems(newItems);
         triggerUpdate(newItems, { action, type });
         setIsFormOpen(false);
     };
 
     const handleVisibilityChange = (index: number, isVisible: boolean) => {
         const fullIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;
-        const newItems = [...items];
+        const newItems = [...faqs];
         newItems[fullIndex].isVisible = isVisible;
-        setItems(newItems);
-        const faq = items[fullIndex];
+        const faq = faqs[fullIndex];
         triggerUpdate(newItems, { action: `set visibility of FAQ "${faq.question}" to ${isVisible}`, type: 'UPDATE' });
     }
     
@@ -342,7 +331,7 @@ const FaqAdminPage = () => {
                                                     <ArrowUp className="h-4 w-4" />
                                                 </Button>
                                                 <GripVertical className="h-4 w-4 text-muted-foreground" />
-                                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleMove(index, 'down')} disabled={isMutationLoading || (currentPage - 1) * ITEMS_PER_PAGE + index === items.length - 1}>
+                                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleMove(index, 'down')} disabled={isMutationLoading || (currentPage - 1) * ITEMS_PER_PAGE + index === faqs.length - 1}>
                                                     <ArrowDown className="h-4 w-4" />
                                                 </Button>
                                             </div>
@@ -390,7 +379,7 @@ const FaqAdminPage = () => {
                         )}
                         <div className="flex items-center justify-between border-t p-4">
                         <div className="text-xs text-muted-foreground">
-                            Showing <strong>{(currentPage - 1) * ITEMS_PER_PAGE + 1}-{(currentPage - 1) * ITEMS_PER_PAGE + paginatedFaqs.length}</strong> of <strong>{items.length}</strong> FAQs
+                            Showing <strong>{(currentPage - 1) * ITEMS_PER_PAGE + 1}-{(currentPage - 1) * ITEMS_PER_PAGE + paginatedFaqs.length}</strong> of <strong>{faqs.length}</strong> FAQs
                         </div>
                         <div className="flex items-center gap-2">
                             <Button variant="outline" size="sm" onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1}>
