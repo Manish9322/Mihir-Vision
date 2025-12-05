@@ -43,66 +43,146 @@ const HistoryPageSkeleton = () => (
             <Card><CardHeader><Skeleton className="h-5 w-24" /></CardHeader><CardContent><Skeleton className="h-8 w-16" /></CardContent></Card>
             <Card><CardHeader><Skeleton className="h-5 w-24" /></CardHeader><CardContent><Skeleton className="h-8 w-16" /></CardContent></Card>
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
-            <div className="lg:col-span-3">
-                <Card>
-                    <CardHeader>
-                        <Skeleton className="h-8 w-48" />
-                        <Skeleton className="h-4 w-72" />
-                    </CardHeader>
-                    <CardContent>
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead><Skeleton className="h-5 w-24" /></TableHead>
-                                    <TableHead><Skeleton className="h-5 w-48" /></TableHead>
-                                    <TableHead><Skeleton className="h-5 w-20" /></TableHead>
-                                    <TableHead><Skeleton className="h-5 w-20" /></TableHead>
-                                    <TableHead className="text-right"><Skeleton className="h-5 w-28 ml-auto" /></TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {[...Array(ITEMS_PER_PAGE)].map((_, i) => (
-                                    <TableRow key={i}>
-                                        <TableCell><Skeleton className="h-5 w-24" /></TableCell>
-                                        <TableCell><Skeleton className="h-5 w-48" /></TableCell>
-                                        <TableCell><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
-                                        <TableCell><Skeleton className="h-6 w-24 rounded-full" /></TableCell>
-                                        <TableCell><Skeleton className="h-5 w-32 ml-auto" /></TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </CardContent>
-                    <div className="flex items-center justify-between border-t p-4">
-                        <Skeleton className="h-5 w-40" />
-                        <div className="flex items-center gap-2">
-                            <Skeleton className="h-8 w-8" />
-                            <Skeleton className="h-8 w-8" />
-                        </div>
+        <div className="space-y-4">
+             <Card>
+                <CardHeader>
+                    <Skeleton className="h-8 w-40" />
+                    <Skeleton className="h-4 w-56" />
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <Skeleton className="h-10 w-full" />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                        <Skeleton className="h-10 w-full" />
+                        <Skeleton className="h-10 w-full" />
+                        <Skeleton className="h-10 w-full" />
                     </div>
-                </Card>
-            </div>
-            <div className="lg:col-span-1 sticky top-16">
-                <Card>
-                    <CardHeader>
-                        <Skeleton className="h-8 w-40" />
-                        <Skeleton className="h-4 w-56" />
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <Skeleton className="h-10 w-full" />
-                        <Skeleton className="h-10 w-full" />
-                        <div className="grid grid-cols-2 gap-2">
-                            <Skeleton className="h-10 w-full" />
-                            <Skeleton className="h-10 w-full" />
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader>
+                    <Skeleton className="h-8 w-48" />
+                    <Skeleton className="h-4 w-72" />
+                </CardHeader>
+                <CardContent>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead><Skeleton className="h-5 w-24" /></TableHead>
+                                <TableHead><Skeleton className="h-5 w-48" /></TableHead>
+                                <TableHead><Skeleton className="h-5 w-20" /></TableHead>
+                                <TableHead><Skeleton className="h-5 w-20" /></TableHead>
+                                <TableHead className="text-right"><Skeleton className="h-5 w-28 ml-auto" /></TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {[...Array(ITEMS_PER_PAGE)].map((_, i) => (
+                                <TableRow key={i}>
+                                    <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+                                    <TableCell><Skeleton className="h-5 w-48" /></TableCell>
+                                    <TableCell><Skeleton className="h-6 w-20 rounded-full" /></TableCell>
+                                    <TableCell><Skeleton className="h-6 w-24 rounded-full" /></TableCell>
+                                    <TableCell><Skeleton className="h-5 w-32 ml-auto" /></TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </CardContent>
+                <div className="flex items-center justify-between border-t p-4">
+                    <Skeleton className="h-5 w-40" />
+                    <div className="flex items-center gap-2">
+                        <Skeleton className="h-8 w-8" />
+                        <Skeleton className="h-8 w-8" />
+                    </div>
+                </div>
+            </Card>
         </div>
     </div>
 );
 
+
+const FilterControls = ({
+    searchQuery,
+    setSearchQuery,
+    dateRange,
+    setDateRange,
+    availableTypes,
+    selectedTypes,
+    handleTypeToggle,
+    availableSections,
+    selectedSections,
+    handleSectionToggle,
+    setCurrentPage,
+}) => (
+     <Card>
+        <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-xl"><ListFilter className="h-5 w-5" /> Filter History</CardTitle>
+            <CardDescription>Refine the action logs shown in the table.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+            <div className="relative">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input placeholder="Search actions or users..." className="pl-8" value={searchQuery} onChange={(e) => {setSearchQuery(e.target.value); setCurrentPage(1);}} />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                 <Popover>
+                    <PopoverTrigger asChild>
+                        <Button variant="outline" className="w-full justify-start text-left font-normal">
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {dateRange.from ? (
+                                dateRange.to ? `${format(dateRange.from, "LLL dd, y")} - ${format(dateRange.to, "LLL dd, y")}` : format(dateRange.from, "LLL dd, y")
+                            ) : (
+                                <span>Pick a date range</span>
+                            )}
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                            mode="range"
+                            selected={dateRange}
+                            onSelect={(range) => { setDateRange(range || {}); setCurrentPage(1); }}
+                            initialFocus
+                        />
+                    </PopoverContent>
+                </Popover>
+
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="outline" className="w-full justify-between">
+                            Type {selectedTypes.length > 0 && `(${selectedTypes.length})`} <ChevronDown className="h-4 w-4" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-56">
+                        <DropdownMenuLabel>Action Type</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        {availableTypes.map(type => (
+                            <DropdownMenuCheckboxItem key={type} checked={selectedTypes.includes(type)} onCheckedChange={() => handleTypeToggle(type)}>
+                                {type}
+                            </DropdownMenuCheckboxItem>
+                        ))}
+                    </DropdownMenuContent>
+                </DropdownMenu>
+                
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="outline" className="w-full justify-between">
+                            Page {selectedSections.length > 0 && `(${selectedSections.length})`} <ChevronDown className="h-4 w-4" />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-56">
+                        <DropdownMenuLabel>Page / Section</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        {availableSections.map(section => (
+                            <DropdownMenuCheckboxItem key={section} checked={selectedSections.includes(section)} onCheckedChange={() => handleSectionToggle(section)}>
+                                {section}
+                            </DropdownMenuCheckboxItem>
+                        ))}
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            </div>
+        </CardContent>
+    </Card>
+);
 
 const HistoryPage = () => {
     const { data: logs = [], isLoading, isError } = useGetActionLogsQuery();
@@ -175,6 +255,13 @@ const HistoryPage = () => {
             </Card>
         );
     }
+    
+    const filterProps = {
+        searchQuery, setSearchQuery, dateRange, setDateRange,
+        availableTypes, selectedTypes, handleTypeToggle,
+        availableSections, selectedSections, handleSectionToggle,
+        setCurrentPage
+    };
 
     return (
         <div className="space-y-8">
@@ -210,6 +297,11 @@ const HistoryPage = () => {
                     </CardContent>
                 </Card>
             </div>
+            
+            <div className="lg:hidden">
+                <FilterControls {...filterProps} />
+            </div>
+
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
                 <div className="lg:col-span-3">
                     <Card>
@@ -223,8 +315,8 @@ const HistoryPage = () => {
                                     <TableRow>
                                         <TableHead>User</TableHead>
                                         <TableHead>Action</TableHead>
-                                        <TableHead>Page</TableHead>
-                                        <TableHead>Type</TableHead>
+                                        <TableHead className="hidden sm:table-cell">Page</TableHead>
+                                        <TableHead className="hidden md:table-cell">Type</TableHead>
                                         <TableHead className="text-right">Timestamp</TableHead>
                                     </TableRow>
                                 </TableHeader>
@@ -232,11 +324,11 @@ const HistoryPage = () => {
                                     {paginatedLogs.length > 0 ? paginatedLogs.map(log => (
                                         <TableRow key={log._id}>
                                             <TableCell className="font-medium">{log.user}</TableCell>
-                                            <TableCell className="max-w-sm truncate">{log.action}</TableCell>
-                                            <TableCell>
+                                            <TableCell className="max-w-xs truncate">{log.action}</TableCell>
+                                            <TableCell className="hidden sm:table-cell">
                                                 <Badge variant="outline">{log.section}</Badge>
                                             </TableCell>
-                                            <TableCell>
+                                            <TableCell className="hidden md:table-cell">
                                                 <Badge variant={typeColors[log.type] || 'secondary'}>{log.type}</Badge>
                                             </TableCell>
                                             <TableCell className="text-right text-muted-foreground text-xs">{format(new Date(log.timestamp), 'PPpp')}</TableCell>
@@ -266,82 +358,10 @@ const HistoryPage = () => {
                         </div>
                     </Card>
                 </div>
-                <div className="lg:col-span-1 sticky top-16">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2"><ListFilter className="h-5 w-5" /> Filter History</CardTitle>
-                            <CardDescription>Refine the action logs shown in the table.</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="relative">
-                                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                                <Input placeholder="Search actions..." className="pl-8" value={searchQuery} onChange={(e) => {setSearchQuery(e.target.value); setCurrentPage(1);}} />
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label>Date Range</Label>
-                                <Popover>
-                                    <PopoverTrigger asChild>
-                                        <Button variant="outline" className="w-full justify-start text-left font-normal">
-                                            <CalendarIcon className="mr-2 h-4 w-4" />
-                                            {dateRange.from ? (
-                                                dateRange.to ? `${format(dateRange.from, "LLL dd, y")} - ${format(dateRange.to, "LLL dd, y")}` : format(dateRange.from, "LLL dd, y")
-                                            ) : (
-                                                <span>Pick a date range</span>
-                                            )}
-                                        </Button>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-0" align="start">
-                                        <Calendar
-                                            mode="range"
-                                            selected={dateRange}
-                                            onSelect={(range) => { setDateRange(range || {}); setCurrentPage(1); }}
-                                            initialFocus
-                                        />
-                                    </PopoverContent>
-                                </Popover>
-                            </div>
-                            
-                            <div className="space-y-2">
-                                <Label>Filters</Label>
-                                <div className="grid grid-cols-2 gap-2">
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <Button variant="outline" className="w-full justify-between">
-                                                Type {selectedTypes.length > 0 && `(${selectedTypes.length})`} <ChevronDown className="h-4 w-4" />
-                                            </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent className="w-56">
-                                            <DropdownMenuLabel>Action Type</DropdownMenuLabel>
-                                            <DropdownMenuSeparator />
-                                            {availableTypes.map(type => (
-                                                <DropdownMenuCheckboxItem key={type} checked={selectedTypes.includes(type)} onCheckedChange={() => handleTypeToggle(type)}>
-                                                    {type}
-                                                </DropdownMenuCheckboxItem>
-                                            ))}
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
-                                    
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <Button variant="outline" className="w-full justify-between">
-                                                Page {selectedSections.length > 0 && `(${selectedSections.length})`} <ChevronDown className="h-4 w-4" />
-                                            </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent className="w-56">
-                                            <DropdownMenuLabel>Page / Section</DropdownMenuLabel>
-                                            <DropdownMenuSeparator />
-                                            {availableSections.map(section => (
-                                                <DropdownMenuCheckboxItem key={section} checked={selectedSections.includes(section)} onCheckedChange={() => handleSectionToggle(section)}>
-                                                    {section}
-                                                </DropdownMenuCheckboxItem>
-                                            ))}
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
+                <div className="hidden lg:block lg:col-span-1 sticky top-16">
+                     <div className="space-y-4">
+                        <FilterControls {...filterProps} />
+                    </div>
                 </div>
             </div>
         </div>
@@ -349,5 +369,3 @@ const HistoryPage = () => {
 };
 
 export default HistoryPage;
-
-    
