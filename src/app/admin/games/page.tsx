@@ -1,5 +1,4 @@
 
-
 'use client';
 import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
@@ -8,37 +7,20 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
-import { PlusCircle, Trash2, MoreHorizontal, FilePenLine, Eye, Loader2, Search, Gamepad2, EyeOff, AlertTriangle } from 'lucide-react';
-import Image from 'next/image';
+import { PlusCircle, Trash2, MoreHorizontal, FilePenLine, Eye, Loader2, Search, Presentation, AlertTriangle, Video } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { useGetGamesDataQuery, useUpdateGamesDataMutation, useAddActionLogMutation, useUploadImageMutation } from '@/services/api';
-import { Switch } from '@/components/ui/switch';
-import { Textarea } from '@/components/ui/textarea';
+import { useGetMatchesQuery, useAddMatchMutation, useUpdateMatchMutation, useDeleteMatchMutation, useGetSportsQuery, useUploadImageMutation, useAddActionLogMutation } from '@/services/api';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useRouter } from 'next/navigation';
+import { format } from 'date-fns';
 
+const ITEMS_PER_PAGE = 10;
 
-type Game = {
-    _id?: string;
-    title: string;
-    coverImageUrl: string;
-    description: string;
-    releaseDate: string;
-    platforms: string[];
-    websiteUrl?: string;
-    isVisible: boolean;
-};
-
-const ITEMS_PER_PAGE = 5;
-
-const GameAdminSkeleton = () => (
+const MatchAdminSkeleton = () => (
     <div className="space-y-6">
-        <div className="grid gap-4 md:grid-cols-3">
-            <Card><CardHeader><Skeleton className="h-5 w-24" /></CardHeader><CardContent><Skeleton className="h-8 w-16" /></CardContent></Card>
-            <Card><CardHeader><Skeleton className="h-5 w-24" /></CardHeader><CardContent><Skeleton className="h-8 w-16" /></CardContent></Card>
-            <Card><CardHeader><Skeleton className="h-5 w-24" /></CardHeader><CardContent><Skeleton className="h-8 w-16" /></CardContent></Card>
-        </div>
         <Card>
             <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
@@ -55,22 +37,18 @@ const GameAdminSkeleton = () => (
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead className="w-[100px] hidden md:table-cell">Cover</TableHead>
-                                <TableHead>Title</TableHead>
-                                <TableHead>Release Date</TableHead>
-                                <TableHead className="hidden sm:table-cell">Platforms</TableHead>
-                                <TableHead className="w-[100px]">Visible</TableHead>
+                                <TableHead>Match Name</TableHead>
+                                <TableHead>Sport</TableHead>
+                                <TableHead>Date</TableHead>
                                 <TableHead className="text-right">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {[...Array(3)].map((_, i) => (
+                            {[...Array(5)].map((_, i) => (
                                 <TableRow key={i}>
-                                    <TableCell className="hidden md:table-cell"><Skeleton className="h-20 w-16" /></TableCell>
-                                    <TableCell><Skeleton className="h-5 w-32" /></TableCell>
+                                    <TableCell><Skeleton className="h-5 w-40" /></TableCell>
                                     <TableCell><Skeleton className="h-5 w-24" /></TableCell>
-                                    <TableCell className="hidden sm:table-cell"><Skeleton className="h-5 w-48" /></TableCell>
-                                    <TableCell><Skeleton className="h-6 w-11" /></TableCell>
+                                    <TableCell><Skeleton className="h-5 w-32" /></TableCell>
                                     <TableCell className="text-right"><Skeleton className="h-8 w-8 ml-auto" /></TableCell>
                                 </TableRow>
                             ))}
@@ -90,428 +68,235 @@ const GameAdminSkeleton = () => (
 );
 
 
-const GameForm = ({ game, onSave, onFileChange, coverPreview }: { game?: Game | null, onSave: (game: Omit<Game, '_id' | 'coverImageUrl'> & { coverImageUrl?: string }) => void, onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void, coverPreview: string | null }) => {
-    const [title, setTitle] = useState(game?.title || '');
-    const [description, setDescription] = useState(game?.description || '');
-    const [releaseDate, setReleaseDate] = useState(game?.releaseDate || '');
-    const [platforms, setPlatforms] = useState(game?.platforms?.join(', ') || '');
-    const [websiteUrl, setWebsiteUrl] = useState(game?.websiteUrl || '');
+const MatchForm = ({ match, sports, onSave, onFileChange, isSaving }) => {
+    const [name, setName] = useState(match?.name || '');
+    const [sport, setSport] = useState(match?.sport || '');
+    const [matchDate, setMatchDate] = useState(match?.matchDate ? format(new Date(match.matchDate), 'yyyy-MM-dd') : '');
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = (e) => {
         e.preventDefault();
-        const newGame: Omit<Game, '_id' | 'coverImageUrl'> & { coverImageUrl?: string } = {
-            title,
-            description,
-            releaseDate,
-            platforms: platforms.split(',').map(p => p.trim()).filter(Boolean),
-            websiteUrl,
-            isVisible: game?.isVisible ?? true,
-        };
-        onSave(newGame);
+        onSave({ _id: match?._id, name, sport, matchDate });
     };
 
     return (
         <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                    <Label htmlFor="title">Game Title</Label>
-                    <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} required />
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="releaseDate">Release Date</Label>
-                    <Input id="releaseDate" type="date" value={releaseDate} onChange={(e) => setReleaseDate(e.target.value)} required />
-                </div>
+            <div className="space-y-2">
+                <Label htmlFor="name">Match Name</Label>
+                <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required />
             </div>
             <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} required />
-            </div>
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                    <Label htmlFor="platforms">Platforms (comma-separated)</Label>
-                    <Input id="platforms" value={platforms} onChange={(e) => setPlatforms(e.target.value)} placeholder="PC, PlayStation, Xbox..." />
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="websiteUrl">Website URL</Label>
-                    <Input id="websiteUrl" value={websiteUrl} onChange={(e) => setWebsiteUrl(e.target.value)} placeholder="https://example.com" />
-                </div>
+                <Label htmlFor="sport">Sport</Label>
+                <Select onValueChange={setSport} defaultValue={sport} required>
+                    <SelectTrigger id="sport"><SelectValue placeholder="Select a sport" /></SelectTrigger>
+                    <SelectContent>
+                        {sports?.map(s => <SelectItem key={s._id} value={s._id}>{s.name}</SelectItem>)}
+                    </SelectContent>
+                </Select>
             </div>
              <div className="space-y-2">
-                <Label>Cover Image</Label>
-                <div className="flex items-center gap-4">
-                    <Image src={coverPreview || game?.coverImageUrl || 'https://placehold.co/150x200/white/black?text=Cover'} alt={game?.title || 'New Game'} width={150} height={200} className="rounded-md object-cover bg-muted p-1" />
-                    <Input type="file" className="max-w-xs" onChange={onFileChange} accept="image/*" />
-                </div>
+                <Label htmlFor="matchDate">Match Date</Label>
+                <Input id="matchDate" type="date" value={matchDate} onChange={(e) => setMatchDate(e.target.value)} required />
             </div>
-            <DialogFooter className="pt-4">
-                <DialogClose asChild>
-                    <Button type="button" variant="outline">Cancel</Button>
-                </DialogClose>
-                <Button type="submit">Save Game</Button>
+            <div className="space-y-2">
+                <Label htmlFor="videoFile">Video File</Label>
+                <Input id="videoFile" type="file" onChange={onFileChange} accept="video/*" />
+            </div>
+            <DialogFooter>
+                <DialogClose asChild><Button type="button" variant="outline">Cancel</Button></DialogClose>
+                <Button type="submit" disabled={isSaving}>
+                    {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Save Match
+                </Button>
             </DialogFooter>
         </form>
-    )
-}
-
-const ViewGameDialog = ({ game, open, onOpenChange }: { game: Game | null; open: boolean; onOpenChange: (open: boolean) => void; }) => {
-    if (!game) return null;
-
-    return (
-         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                    <DialogTitle>View Game</DialogTitle>
-                    <DialogDescription>{game.title}</DialogDescription>
-                </DialogHeader>
-                <div className="flex justify-center items-center p-4 bg-muted rounded-md my-4">
-                    <Image src={game.coverImageUrl} alt={game.title} width={200} height={267} className="object-cover rounded-md" />
-                </div>
-                <div className="space-y-2 text-sm">
-                    <p><strong>Release Date:</strong> {new Date(game.releaseDate).toLocaleDateString()}</p>
-                    <p><strong>Platforms:</strong> {game.platforms.join(', ')}</p>
-                    <p><strong>Website:</strong> <a href={game.websiteUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">{game.websiteUrl}</a></p>
-                    <p><strong>Description:</strong> {game.description}</p>
-                </div>
-                 <DialogFooter>
-                    <DialogClose asChild>
-                        <Button type="button" variant="outline">Close</Button>
-                    </DialogClose>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
-    )
+    );
 };
 
-
-const GamesAdminPage = () => {
+const MatchesListPage = () => {
+    const router = useRouter();
     const { toast } = useToast();
-    const { data: games = [], isLoading: isQueryLoading, isError } = useGetGamesDataQuery();
-    const [updateGames, { isLoading: isMutationLoading }] = useUpdateGamesDataMutation();
+    const { data: matches = [], isLoading: isMatchesLoading, isError: isMatchesError } = useGetMatchesQuery();
+    const { data: sports = [], isLoading: isSportsLoading, isError: isSportsError } = useGetSportsQuery();
+    
+    const [addMatch, { isLoading: isAdding }] = useAddMatchMutation();
+    const [updateMatch, { isLoading: isUpdating }] = useUpdateMatchMutation();
+    const [deleteMatch, { isLoading: isDeleting }] = useDeleteMatchMutation();
+    const [uploadVideo, { isLoading: isUploading }] = useUploadImageMutation(); // Reusing for video
     const [addActionLog] = useAddActionLogMutation();
-    const [uploadImage, { isLoading: isUploading }] = useUploadImageMutation();
 
     const [currentPage, setCurrentPage] = useState(1);
     const [searchQuery, setSearchQuery] = useState('');
     const [isFormOpen, setIsFormOpen] = useState(false);
-    const [isViewOpen, setIsViewOpen] = useState(false);
-    const [selectedGame, setSelectedGame] = useState<Game | null>(null);
-    const [editingIndex, setEditingIndex] = useState<number | null>(null);
-    
-    const [imageFile, setImageFile] = useState<File | null>(null);
-    const [coverPreview, setCoverPreview] = useState<string | null>(null);
+    const [selectedMatch, setSelectedMatch] = useState(null);
+    const [videoFile, setVideoFile] = useState(null);
 
-    const filteredGames = useMemo(() => {
-        return games.filter(game => 
-            game.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            game.platforms.some(p => p.toLowerCase().includes(searchQuery.toLowerCase()))
+    const isMutating = isAdding || isUpdating || isDeleting || isUploading;
+
+    const filteredMatches = useMemo(() => {
+        return matches.filter(match =>
+            match.name.toLowerCase().includes(searchQuery.toLowerCase())
         );
-    }, [games, searchQuery]);
-    
-    const totalPages = Math.ceil(filteredGames.length / ITEMS_PER_PAGE);
-    const paginatedGames = filteredGames.slice(
+    }, [matches, searchQuery]);
+
+    const totalPages = Math.ceil(filteredMatches.length / ITEMS_PER_PAGE);
+    const paginatedMatches = filteredMatches.slice(
         (currentPage - 1) * ITEMS_PER_PAGE,
         currentPage * ITEMS_PER_PAGE
     );
-    
-    const stats = useMemo(() => ({
-        total: games.length,
-        visible: games.filter(g => g.isVisible).length,
-        hidden: games.filter(g => !g.isVisible).length,
-    }), [games]);
-    
-    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
+
+    const handleFileChange = (e) => {
+        const file = e.target.files?.[0];
         if (file) {
-            setImageFile(file);
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setCoverPreview(reader.result as string);
-            };
-            reader.readAsDataURL(file);
+            setVideoFile(file);
         }
     };
 
-    const triggerUpdate = async (updatedItems: Game[], actionLog: Omit<Parameters<typeof addActionLog>[0], 'user' | 'section'>) => {
+    const handleSave = async (matchData) => {
         try {
-            await updateGames(updatedItems).unwrap();
-            await addActionLog({
-                user: 'Admin User',
-                section: 'Games',
-                ...actionLog,
-            }).unwrap();
-            toast({
-                title: 'Content Saved',
-                description: 'Games list has been updated successfully.',
-            });
-        } catch (error) {
-            toast({
-                variant: 'destructive',
-                title: 'Save Failed',
-                description: 'There was an error saving the games.',
-            });
-        }
-    };
+            let finalData = { ...matchData };
 
-    const handleAddClick = () => {
-        setSelectedGame(null);
-        setEditingIndex(null);
-        setImageFile(null);
-        setCoverPreview(null);
-        setIsFormOpen(true);
-    };
-
-    const handleEditClick = (game: Game, index: number) => {
-        const fullIndex = games.findIndex(g => g._id === game._id);
-        setSelectedGame(game);
-        setEditingIndex(fullIndex);
-        setImageFile(null);
-        setCoverPreview(null);
-        setIsFormOpen(true);
-    };
-
-    const handleViewClick = (game: Game) => {
-        setSelectedGame(game);
-        setIsViewOpen(true);
-    };
-
-    const handleDelete = (gameId: string) => {
-        const deletedGame = games.find(g => g._id === gameId);
-        if (!deletedGame) return;
-        const newGames = games.filter(g => g._id !== gameId);
-        triggerUpdate(newGames, { action: `deleted game "${deletedGame.title}"`, type: 'DELETE' });
-        toast({
-            variant: "destructive",
-            title: "Game Deleted",
-            description: "The game has been removed from the list.",
-        });
-    };
-    
-    const handleSave = async (gameData: Omit<Game, '_id'>) => {
-        let finalData = { ...gameData };
-        let action: string, type: 'CREATE' | 'UPDATE';
-
-        try {
-            if (imageFile) {
-                const uploadResult = await uploadImage(imageFile).unwrap();
-                if (uploadResult.url) {
-                    finalData.coverImageUrl = uploadResult.url;
-                } else {
-                    throw new Error('Image upload failed to return a URL.');
-                }
-            } else if (selectedGame) {
-                 finalData.coverImageUrl = selectedGame.coverImageUrl;
-            } else {
-                 finalData.coverImageUrl = 'https://placehold.co/300x400/white/black?text=Cover';
+            if (videoFile) {
+                const uploadResult = await uploadVideo(videoFile).unwrap();
+                finalData.videoUrl = uploadResult.url;
             }
 
-            let newItems: Game[];
-
-            if (editingIndex !== null) {
-                newItems = games.map((game, index) => index === editingIndex ? { ...games[editingIndex], ...finalData } : game);
-                action = `updated game "${finalData.title}"`;
-                type = 'UPDATE';
+            if (selectedMatch) {
+                await updateMatch(finalData).unwrap();
+                await addActionLog({ user: 'Admin', action: `updated match "${finalData.name}"`, section: 'Match Analysis', type: 'UPDATE' });
+                toast({ title: 'Match Updated' });
             } else {
-                const newGame = { ...finalData, _id: `new_${Date.now()}` } as Game;
-                newItems = [newGame, ...games];
-                action = `created game "${finalData.title}"`;
-                type = 'CREATE';
+                await addMatch(finalData).unwrap();
+                await addActionLog({ user: 'Admin', action: `created match "${finalData.name}"`, section: 'Match Analysis', type: 'CREATE' });
+                toast({ title: 'Match Added' });
             }
-            await triggerUpdate(newItems, { action, type });
-            
             setIsFormOpen(false);
-            setEditingIndex(null);
-            setSelectedGame(null);
-            setImageFile(null);
-            setCoverPreview(null);
+            setSelectedMatch(null);
+            setVideoFile(null);
         } catch (error) {
-            console.error('Save failed:', error);
-            toast({
-                variant: 'destructive',
-                title: 'Save Failed',
-                description: `There was an error saving the game. ${error.message || ''}`,
-            });
+            console.error("Save failed:", error);
+            toast({ variant: 'destructive', title: 'Save Failed', description: 'Could not save the match details.' });
         }
     };
-    
-    const handleVisibilityChange = (gameId: string, isVisible: boolean) => {
-        const newItems = games.map((item) =>
-            item._id === gameId ? { ...item, isVisible } : item
-        );
-        const game = games.find(g => g._id === gameId);
-        if (!game) return;
-        triggerUpdate(newItems, { action: `set visibility of game "${game.title}" to ${isVisible}`, type: 'UPDATE' });
-    }
 
-    if (isQueryLoading) {
-        return <GameAdminSkeleton />;
-    }
-    
-    if (isError) {
-        return (
-            <Card className="flex flex-col items-center justify-center p-8 text-center">
-                <AlertTriangle className="h-12 w-12 text-destructive mb-4" />
-                <CardTitle className="text-xl text-destructive">Error Loading Data</CardTitle>
-                <CardDescription className="mt-2">
-                    There was a problem fetching the content for the Games page. Please try refreshing the page.
-                </CardDescription>
-            </Card>
-        );
-    }
+    const handleDelete = async (matchId) => {
+        const matchToDelete = matches.find(m => m._id === matchId);
+        if (window.confirm(`Are you sure you want to delete the match "${matchToDelete?.name}"?`)) {
+            try {
+                await deleteMatch(matchId).unwrap();
+                await addActionLog({ user: 'Admin', action: `deleted match "${matchToDelete.name}"`, section: 'Match Analysis', type: 'DELETE' });
+                toast({ variant: 'destructive', title: 'Match Deleted' });
+            } catch (error) {
+                toast({ variant: 'destructive', title: 'Deletion Failed' });
+            }
+        }
+    };
 
+    if (isMatchesLoading || isSportsLoading) return <MatchAdminSkeleton />;
+    if (isMatchesError || isSportsError) return (
+        <Card className="flex flex-col items-center justify-center p-8 text-center">
+            <AlertTriangle className="h-12 w-12 text-destructive mb-4" />
+            <CardTitle className="text-xl text-destructive">Error Loading Data</CardTitle>
+            <CardDescription className="mt-2">Could not fetch matches or sports data. Please try again.</CardDescription>
+        </Card>
+    );
 
     return (
         <div className="space-y-6">
-            <div className="grid gap-4 md:grid-cols-3">
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Total Games</CardTitle>
-                        <Gamepad2 className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{stats.total}</div>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Visible Games</CardTitle>
-                        <Eye className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{stats.visible}</div>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Hidden Games</CardTitle>
-                        <EyeOff className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{stats.hidden}</div>
-                    </CardContent>
-                </Card>
-            </div>
             <Card>
                 <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div>
-                        <CardTitle>Games Management</CardTitle>
-                        <CardDescription>Manage the games developed by your company.</CardDescription>
+                        <CardTitle className="flex items-center gap-2"><Presentation className="h-6 w-6" /> Match Analysis</CardTitle>
+                        <CardDescription>Manage and analyze sports matches.</CardDescription>
                     </div>
                     <div className="flex items-center gap-2 w-full sm:w-auto">
                         <div className="relative flex-1 sm:flex-initial">
                             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                             <Input
                                 type="search"
-                                placeholder="Search by name or platform..."
+                                placeholder="Search matches..."
                                 className="pl-8 sm:w-[200px] lg:w-[300px]"
                                 value={searchQuery}
-                                onChange={(e) => {
-                                    setSearchQuery(e.target.value);
-                                    setCurrentPage(1);
-                                }}
+                                onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
                             />
                         </div>
-                         <Button onClick={handleAddClick} disabled={isMutationLoading || isUploading}>
-                            <PlusCircle className="mr-2 h-4 w-4" /> Add Game
+                        <Button onClick={() => { setSelectedMatch(null); setIsFormOpen(true); }} disabled={isMutating}>
+                            <PlusCircle className="mr-2 h-4 w-4" /> Add Match
                         </Button>
                     </div>
                 </CardHeader>
                 <CardContent>
                     <Card className="relative">
-                            <Table>
+                        <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead className="w-[100px] hidden md:table-cell">Cover</TableHead>
-                                    <TableHead>Title</TableHead>
-                                    <TableHead>Release Date</TableHead>
-                                    <TableHead className="hidden sm:table-cell">Platforms</TableHead>
-                                    <TableHead className="w-[100px]">Visible</TableHead>
+                                    <TableHead>Match Name</TableHead>
+                                    <TableHead>Sport</TableHead>
+                                    <TableHead>Date</TableHead>
                                     <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {paginatedGames.map((game, index) => (
-                                    <TableRow key={game._id || index}>
-                                        <TableCell className="hidden md:table-cell">
-                                            <Image src={game.coverImageUrl} alt={game.title} width={60} height={80} className="rounded-sm object-cover bg-muted p-1" />
-                                        </TableCell>
-                                        <TableCell className="font-medium">{game.title}</TableCell>
-                                        <TableCell>{new Date(game.releaseDate).toLocaleDateString()}</TableCell>
-                                        <TableCell className="hidden sm:table-cell max-w-xs truncate text-muted-foreground">{game.platforms.join(', ')}</TableCell>
-                                        <TableCell>
-                                            <Switch
-                                                checked={game.isVisible}
-                                                onCheckedChange={(checked) => handleVisibilityChange(game._id, checked)}
-                                                disabled={isMutationLoading || isUploading}
-                                            />
-                                        </TableCell>
-                                        <TableCell className="text-right">
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
-                                                    <Button size="icon" variant="ghost" disabled={isMutationLoading || isUploading}>
-                                                        <MoreHorizontal className="h-4 w-4" />
-                                                    </Button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent align="end">
-                                                    <DropdownMenuItem onClick={() => handleViewClick(game)}>
-                                                        <Eye className="mr-2 h-4 w-4" />
-                                                        View
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuItem onClick={() => handleEditClick(game, index)}>
-                                                        <FilePenLine className="mr-2 h-4 w-4" />
-                                                        Edit
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(game._id)}>
-                                                        <Trash2 className="mr-2 h-4 w-4" />
-                                                        Delete
-                                                    </DropdownMenuItem>
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
+                                {paginatedMatches.length > 0 ? paginatedMatches.map((match) => {
+                                    const sport = sports.find(s => s._id === match.sport);
+                                    return (
+                                        <TableRow key={match._id}>
+                                            <TableCell className="font-medium">{match.name}</TableCell>
+                                            <TableCell>{sport?.name || 'N/A'}</TableCell>
+                                            <TableCell>{format(new Date(match.matchDate), 'PPP')}</TableCell>
+                                            <TableCell className="text-right">
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button size="icon" variant="ghost" disabled={isMutating}><MoreHorizontal className="h-4 w-4" /></Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent align="end">
+                                                        <DropdownMenuItem onClick={() => router.push(`/admin/games/${match._id}`)}>
+                                                            <Eye className="mr-2 h-4 w-4" />Analyze
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem onClick={() => { setSelectedMatch(match); setIsFormOpen(true); }}>
+                                                            <FilePenLine className="mr-2 h-4 w-4" />Edit
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(match._id)}>
+                                                            <Trash2 className="mr-2 h-4 w-4" />Delete
+                                                        </DropdownMenuItem>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                            </TableCell>
+                                        </TableRow>
+                                    );
+                                }) : (
+                                    <TableRow><TableCell colSpan={4} className="h-24 text-center">No matches found.</TableCell></TableRow>
+                                )}
                             </TableBody>
                         </Table>
-                         {(isMutationLoading || isUploading) && (
+                        {isMutating && (
                             <div className="absolute inset-0 bg-background/50 flex items-center justify-center">
                                 <Loader2 className="h-6 w-6 animate-spin text-primary" />
                             </div>
                         )}
                         <div className="flex items-center justify-between border-t p-4">
                             <div className="text-xs text-muted-foreground">
-                                Showing <strong>{(currentPage - 1) * ITEMS_PER_PAGE + 1}-{(currentPage - 1) * ITEMS_PER_PAGE + paginatedGames.length}</strong> of <strong>{filteredGames.length}</strong> games
+                                Showing <strong>{paginatedMatches.length > 0 ? (currentPage - 1) * ITEMS_PER_PAGE + 1 : 0}-{(currentPage - 1) * ITEMS_PER_PAGE + paginatedMatches.length}</strong> of <strong>{filteredMatches.length}</strong> matches
                             </div>
                             <div className="flex items-center gap-2">
-                                <Button variant="outline" size="sm" onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1}>
-                                    <ChevronLeft className="h-4 w-4" />
-                                    <span className="sr-only">Previous</span>
-                                </Button>
-                                <Button variant="outline" size="sm" onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages}>
-                                    <span className="sr-only">Next</span>
-                                    <ChevronRight className="h-4 w-4" />
-                                </Button>
+                                <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} disabled={currentPage === 1}><ChevronLeft className="h-4 w-4" /></Button>
+                                <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages}><ChevronRight className="h-4 w-4" /></Button>
                             </div>
                         </div>
                     </Card>
                 </CardContent>
             </Card>
 
-            <Dialog open={isFormOpen} onOpenChange={(isOpen) => { setIsFormOpen(isOpen); if (!isOpen) { setSelectedGame(null); setEditingIndex(null); }}}>
-                <DialogContent className="sm:max-w-2xl">
+            <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+                <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>{selectedGame ? 'Edit Game' : 'Add New Game'}</DialogTitle>
-                        <DialogDescription>
-                            {selectedGame ? 'Make changes to this game.' : 'Add a new game to your portfolio.'}
-                        </DialogDescription>
+                        <DialogTitle>{selectedMatch ? 'Edit Match' : 'Add New Match'}</DialogTitle>
+                        <DialogDescription>Fill out the details for the match.</DialogDescription>
                     </DialogHeader>
-                    <div className="max-h-[70vh] overflow-y-auto px-1 pr-6 pl-6 scrollbar-hide">
-                        <GameForm game={selectedGame} onSave={handleSave} onFileChange={handleFileChange} coverPreview={coverPreview} />
-                    </div>
+                    <MatchForm match={selectedMatch} sports={sports} onSave={handleSave} onFileChange={handleFileChange} isSaving={isMutating} />
                 </DialogContent>
             </Dialog>
-
-            <ViewGameDialog game={selectedGame} open={isViewOpen} onOpenChange={setIsViewOpen} />
         </div>
     );
 }
 
-export default GamesAdminPage;
+export default MatchesListPage;

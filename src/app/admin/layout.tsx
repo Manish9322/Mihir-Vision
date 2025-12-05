@@ -18,7 +18,8 @@ import {
   Handshake,
   Gamepad2,
   UsersRound,
-  History
+  History,
+  Presentation
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -56,7 +57,7 @@ const navItems = [
     { href: "/admin/clients", icon: Handshake, label: "Clients" },
     { href: "/admin/activities", icon: Settings, label: "Activities" },
     { href: "/admin/missions", icon: Rocket, label: "Projects" },
-    { href: "/admin/games", icon: Gamepad2, label: "Games" },
+    { href: "/admin/games", icon: Presentation, label: "Match Analysis" },
     { href: "/admin/team", icon: UsersRound, label: "Team" },
     { href: "/admin/timeline", icon: Milestone, label: "Timeline" },
     { href: "/admin/videos", icon: Clapperboard, label: "Videos"},
@@ -177,5 +178,3 @@ export default function AdminLayout({
     </Provider>
   );
 }
-
-    

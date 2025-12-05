@@ -4,7 +4,7 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 export const contentApi = createApi({
   reducerPath: 'contentApi',
   baseQuery: fetchBaseQuery({ baseUrl: '/api/' }),
-  tagTypes: ['About', 'Activities', 'Videos', 'Gallery', 'Projects', 'Timeline', 'Faq', 'Contacts', 'Profile', 'Settings', 'Countries', 'States', 'Cities', 'Clients', 'Games', 'Team', 'Designations', 'ActionLogs', 'Analytics'],
+  tagTypes: ['About', 'Activities', 'Videos', 'Gallery', 'Projects', 'Timeline', 'Faq', 'Contacts', 'Profile', 'Settings', 'Countries', 'States', 'Cities', 'Clients', 'Games', 'Team', 'Designations', 'ActionLogs', 'Analytics', 'Sports', 'Matches'],
   endpoints: (builder) => ({
     uploadImage: builder.mutation({
       query: (file) => {
@@ -252,6 +252,45 @@ export const contentApi = createApi({
       }),
       invalidatesTags: ['ActionLogs'],
     }),
+    getSports: builder.query({
+        query: () => 'sports',
+        providesTags: ['Sports'],
+    }),
+    getSportById: builder.query({
+      query: (id) => `sports/${id}`,
+      providesTags: (result, error, id) => [{ type: 'Sports', id }],
+    }),
+    getMatches: builder.query({
+        query: () => 'matches',
+        providesTags: ['Matches'],
+    }),
+    getMatchById: builder.query({
+        query: (id) => `matches/${id}`,
+        providesTags: (result, error, id) => [{ type: 'Matches', id }],
+    }),
+    addMatch: builder.mutation({
+        query: (newMatch) => ({
+            url: 'matches',
+            method: 'POST',
+            body: newMatch,
+        }),
+        invalidatesTags: ['Matches'],
+    }),
+    updateMatch: builder.mutation({
+        query: ({ _id, ...patch }) => ({
+            url: `matches/${_id}`,
+            method: 'PATCH',
+            body: patch,
+        }),
+        invalidatesTags: (result, error, { _id }) => [{ type: 'Matches', id: _id }],
+    }),
+    deleteMatch: builder.mutation({
+        query: (id) => ({
+            url: `matches/${id}`,
+            method: 'DELETE',
+        }),
+        invalidatesTags: ['Matches'],
+    }),
   }),
 });
 
@@ -296,4 +335,11 @@ export const {
   useUpdateDesignationsMutation,
   useGetActionLogsQuery,
   useAddActionLogMutation,
+  useGetSportsQuery,
+  useGetSportByIdQuery,
+  useGetMatchesQuery,
+  useGetMatchByIdQuery,
+  useAddMatchMutation,
+  useUpdateMatchMutation,
+  useDeleteMatchMutation,
 } = contentApi;
