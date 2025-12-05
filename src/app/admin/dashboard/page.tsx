@@ -8,10 +8,14 @@ import {
     BookOpen,
     Mail,
     Loader2,
-    AlertTriangle
+    AlertTriangle,
+    CalendarIcon
 } from 'lucide-react';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
+import { DateRange } from "react-day-picker"
+import { format } from "date-fns"
+
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -39,7 +43,10 @@ import {
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Line, LineChart, Legend } from 'recharts';
 import type { ChartConfig } from '@/components/ui/chart';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+import { cn } from "@/lib/utils";
+
 
 import { growthChartData } from '@/lib/data';
 import { useGetContactsQuery, useGetActionLogsQuery, useGetAnalyticsDataQuery, useGetProjectsDataQuery } from '@/services/api';
@@ -64,7 +71,6 @@ const chartConfig = {
   }
 } satisfies ChartConfig;
 
-const allYears = growthChartData.chartData.map(d => d.year);
 
 const AdminDashboardSkeleton = () => (
     <div className="flex flex-col gap-4 md:gap-8">
@@ -144,8 +150,10 @@ const AdminDashboardPage = () => {
     const { data: analyticsData, isLoading: isAnalyticsLoading, isError: isAnalyticsError } = useGetAnalyticsDataQuery();
     const { data: projectsData = [], isLoading: isProjectsLoading, isError: isProjectsError } = useGetProjectsDataQuery();
     
-    const [startYear, setStartYear] = useState(allYears[0]);
-    const [endYear, setEndYear] = useState(allYears[allYears.length - 1]);
+    const [date, setDate] = useState<DateRange | undefined>({
+      from: new Date(2020, 0, 1),
+      to: new Date(),
+    });
 
     const isLoading = isContactsLoading || isLogsLoading || isAnalyticsLoading || isProjectsLoading;
     const isError = isContactsError || isLogsError || isAnalyticsError || isProjectsError;
@@ -160,16 +168,18 @@ const AdminDashboardPage = () => {
     }, [analyticsData, contactsData, projectsData]);
     
     const filteredChartData = useMemo(() => {
-        const startIndex = allYears.indexOf(startYear);
-        const endIndex = allYears.indexOf(endYear);
-        if (startIndex === -1 || endIndex === -1 || startIndex > endIndex) {
+        if (!date?.from || !date?.to) {
             return growthChartData.chartData;
         }
-        return growthChartData.chartData.slice(startIndex, endIndex + 1);
-    }, [startYear, endYear]);
+        const startYear = date.from.getFullYear();
+        const endYear = date.to.getFullYear();
+        
+        return growthChartData.chartData.filter(d => {
+            const year = parseInt(d.year);
+            return year >= startYear && year <= endYear;
+        });
+    }, [date]);
 
-    const availableStartYears = allYears.slice(0, allYears.indexOf(endYear) + 1);
-    const availableEndYears = allYears.slice(allYears.indexOf(startYear));
 
     if (isLoading) {
         return <AdminDashboardSkeleton />;
@@ -233,29 +243,43 @@ const AdminDashboardPage = () => {
                 </Card>
             </div>
             
-             <div className="flex flex-col sm:flex-row justify-end items-center gap-4">
-                <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-muted-foreground">From</span>
-                    <Select value={startYear} onValueChange={setStartYear}>
-                        <SelectTrigger className="w-[120px]">
-                            <SelectValue placeholder="Start Year" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {availableStartYears.map(year => <SelectItem key={year} value={year}>{year}</SelectItem>)}
-                        </SelectContent>
-                    </Select>
-                </div>
-            <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-muted-foreground">To</span>
-                    <Select value={endYear} onValueChange={setEndYear}>
-                        <SelectTrigger className="w-[120px]">
-                            <SelectValue placeholder="End Year" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {availableEndYears.map(year => <SelectItem key={year} value={year}>{year}</SelectItem>)}
-                        </SelectContent>
-                    </Select>
-            </div>
+             <div className="flex justify-end">
+                <Popover>
+                    <PopoverTrigger asChild>
+                    <Button
+                        id="date"
+                        variant={"outline"}
+                        className={cn(
+                        "w-[300px] justify-start text-left font-normal",
+                        !date && "text-muted-foreground"
+                        )}
+                    >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {date?.from ? (
+                        date.to ? (
+                            <>
+                            {format(date.from, "LLL dd, y")} -{" "}
+                            {format(date.to, "LLL dd, y")}
+                            </>
+                        ) : (
+                            format(date.from, "LLL dd, y")
+                        )
+                        ) : (
+                        <span>Pick a date</span>
+                        )}
+                    </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="end">
+                    <Calendar
+                        initialFocus
+                        mode="range"
+                        defaultMonth={date?.from}
+                        selected={date}
+                        onSelect={setDate}
+                        numberOfMonths={2}
+                    />
+                    </PopoverContent>
+                </Popover>
             </div>
 
             <div className="grid gap-4 md:gap-8 lg:grid-cols-2">
@@ -399,3 +423,5 @@ const AdminDashboardPage = () => {
 };
 
 export default AdminDashboardPage;
+
+    
