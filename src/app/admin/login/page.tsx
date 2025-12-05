@@ -8,12 +8,17 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Mountain } from 'lucide-react';
+import { useGetSettingsDataQuery } from '@/services/api';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function AdminLoginPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const { data: settingsData, isLoading: isSettingsLoading } = useGetSettingsDataQuery();
+
+  const siteName = settingsData?.siteName || 'Pinnacle Pathways';
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,7 +48,11 @@ export default function AdminLoginPage() {
         <CardHeader className="text-center">
           <div className="mx-auto mb-4 flex items-center justify-center gap-2">
             <Mountain className="h-8 w-8" />
-            <span className="text-2xl font-bold font-headline">Pinnacle Pathways</span>
+             {isSettingsLoading ? (
+                <Skeleton className="h-8 w-48" />
+              ) : (
+                <span className="text-2xl font-bold font-headline">{siteName}</span>
+              )}
           </div>
           <CardTitle className="text-2xl">Admin Panel</CardTitle>
           <CardDescription>Enter your credentials to access the dashboard</CardDescription>

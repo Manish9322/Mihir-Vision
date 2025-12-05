@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from '@/components/ui/sheet';
 import { useState } from 'react';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { useGetSettingsDataQuery } from '@/services/api';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const navLinks = [
   { href: '#about', label: 'About' },
@@ -20,6 +22,9 @@ const navLinks = [
 
 export default function Header() {
   const [isSheetOpen, setSheetOpen] = useState(false);
+  const { data: settingsData, isLoading: isSettingsLoading } = useGetSettingsDataQuery();
+
+  const siteName = settingsData?.siteName || 'Pinnacle Pathways';
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -27,7 +32,9 @@ export default function Header() {
         <div className="flex items-center">
           <Link href="/" className="flex items-center gap-2 font-bold">
             <Mountain className="h-6 w-6" />
-            <span className="hidden sm:inline-block font-headline"></span>
+            <span className="hidden sm:inline-block font-headline">
+              {isSettingsLoading ? <Skeleton className="h-5 w-32" /> : siteName}
+            </span>
           </Link>
         </div>
         <nav className="hidden items-center justify-center gap-4 text-sm font-medium lg:flex">
@@ -51,7 +58,9 @@ export default function Header() {
                 <div className="flex items-center justify-between border-b pb-4">
                   <Link href="/" className="flex items-center gap-2 font-bold" onClick={() => setSheetOpen(false)}>
                     <Mountain className="h-6 w-6" />
-                    <span className="font-headline"></span>
+                    <span className="font-headline">
+                      {isSettingsLoading ? <Skeleton className="h-5 w-32" /> : siteName}
+                    </span>
                   </Link>
                 </div>
                 <nav className="flex flex-col gap-4 py-4">
