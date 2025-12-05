@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import _db from "@/lib/utils/db.js";
 import Contact from '@/models/contact.model.js';
 import User from '@/models/user.model.js';
+import Settings from '@/models/settings.model.js';
 import { Resend } from 'resend';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -30,7 +31,9 @@ export async function POST(request) {
         // 2. Fetch the admin user's email for notification
         const adminUser = await User.findOne();
         const notifyEmail = adminUser?.email;
-        const siteName = (await mongoose.model('Settings').findOne())?.siteName || 'Pinnacle Pathways';
+        const siteSettings = await Settings.findOne();
+        const siteName = siteSettings?.siteName || 'Pinnacle Pathways';
+
 
         // 3. If a notification email is set, send the email
         if (notifyEmail && process.env.RESEND_API_KEY) {
