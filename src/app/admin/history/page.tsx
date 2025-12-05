@@ -7,14 +7,16 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { useGetActionLogsQuery } from '@/services/api';
+import { useGetActionLogsQuery, useDeleteActionLogsMutation } from '@/services/api';
 import { format } from 'date-fns';
-import { Loader2, Search, CalendarIcon, ListFilter, ChevronLeft, ChevronRight, ChevronDown, History as HistoryIcon, Users, AlertTriangle } from 'lucide-react';
+import { Loader2, Search, CalendarIcon, ListFilter, ChevronLeft, ChevronRight, ChevronDown, History as HistoryIcon, Users, AlertTriangle, Trash2 } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuCheckboxItem } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuCheckboxItem, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { Skeleton } from '@/components/ui/skeleton';
-
+import { Checkbox } from '@/components/ui/checkbox';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { useToast } from '@/hooks/use-toast';
 
 type ActionLog = {
     _id: string;
@@ -111,6 +113,11 @@ const FilterControls = ({
     selectedSections,
     handleSectionToggle,
     setCurrentPage,
+    numSelected,
+    onDeleteSelected,
+    isMutating,
+    onDeleteFiltered,
+    hasFilters
 }) => (
      <Card>
         <CardHeader>
@@ -177,18 +184,68 @@ const FilterControls = ({
                         ))}
                     </DropdownMenuContent>
                 </DropdownMenu>
+
+                {numSelected > 0 && (
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <Button variant="destructive" disabled={isMutating}>
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Delete ({numSelected})
+                            </Button>
+                        </AlertDialogTrigger>
+                         <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    This will permanently delete {numSelected} selected log(s). This action cannot be undone.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={onDeleteSelected}>Delete</AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                )}
+                
+                {hasFilters && (
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <Button variant="outline" className="text-destructive border-destructive/50 hover:bg-destructive/10 hover:text-destructive" disabled={isMutating}>
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Delete Filtered
+                            </Button>
+                        </AlertDialogTrigger>
+                         <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>Delete all filtered logs?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                   This will permanently delete all logs matching the current filter criteria. This action cannot be undone.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={onDeleteFiltered}>Delete Filtered</AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                )}
             </div>
         </CardContent>
     </Card>
 );
 
 const HistoryPage = () => {
+    const { toast } = useToast();
     const { data: logs = [], isLoading, isError } = useGetActionLogsQuery();
+    const [deleteActionLogs, { isLoading: isMutating }] = useDeleteActionLogsMutation();
+    
     const [searchQuery, setSearchQuery] = useState('');
     const [dateRange, setDateRange] = useState<{from?: Date; to?: Date}>({ from: undefined, to: undefined });
     const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
     const [selectedSections, setSelectedSections] = useState<string[]>([]);
     const [currentPage, setCurrentPage] = useState(1);
+    const [selectedLogs, setSelectedLogs] = useState<string[]>([]);
 
     const availableTypes = useMemo(() => Array.from(new Set(logs.map(log => log.type))), [logs]);
     const availableSections = useMemo(() => Array.from(new Set(logs.map(log => log.section))), [logs]);
@@ -238,6 +295,49 @@ const HistoryPage = () => {
         setCurrentPage(1);
     };
 
+    const handleSelectAll = (checked: boolean) => {
+        if (checked) {
+            setSelectedLogs(paginatedLogs.map(log => log._id));
+        } else {
+            setSelectedLogs([]);
+        }
+    };
+
+    const handleSelectOne = (logId: string, checked: boolean) => {
+        if (checked) {
+            setSelectedLogs(prev => [...prev, logId]);
+        } else {
+            setSelectedLogs(prev => prev.filter(id => id !== logId));
+        }
+    };
+    
+    const handleDeleteSelected = async () => {
+        try {
+            const result = await deleteActionLogs({ ids: selectedLogs }).unwrap();
+            toast({ title: "Logs Deleted", description: result.message });
+            setSelectedLogs([]);
+        } catch (error) {
+            toast({ variant: 'destructive', title: "Deletion Failed" });
+        }
+    };
+    
+    const handleDeleteFiltered = async () => {
+        const filters = {
+            searchQuery,
+            dateRange,
+            selectedTypes,
+            selectedSections,
+        };
+        try {
+            const result = await deleteActionLogs({ filters }).unwrap();
+            toast({ title: "Filtered Logs Deleted", description: result.message });
+        } catch (error) {
+            toast({ variant: 'destructive', title: "Deletion Failed" });
+        }
+    };
+
+    const hasFilters = searchQuery || dateRange.from || dateRange.to || selectedTypes.length > 0 || selectedSections.length > 0;
+
     if (isLoading) {
         return <HistoryPageSkeleton />;
     }
@@ -258,7 +358,12 @@ const HistoryPage = () => {
         searchQuery, setSearchQuery, dateRange, setDateRange,
         availableTypes, selectedTypes, handleTypeToggle,
         availableSections, selectedSections, handleSectionToggle,
-        setCurrentPage
+        setCurrentPage,
+        numSelected: selectedLogs.length,
+        onDeleteSelected: handleDeleteSelected,
+        isMutating,
+        onDeleteFiltered: handleDeleteFiltered,
+        hasFilters,
     };
 
     return (
@@ -308,6 +413,13 @@ const HistoryPage = () => {
                         <Table>
                             <TableHeader>
                                 <TableRow>
+                                    <TableHead className="w-[50px]">
+                                        <Checkbox 
+                                            checked={selectedLogs.length > 0 && selectedLogs.length === paginatedLogs.length}
+                                            onCheckedChange={(checked) => handleSelectAll(checked as boolean)}
+                                            aria-label="Select all"
+                                        />
+                                    </TableHead>
                                     <TableHead>User</TableHead>
                                     <TableHead>Action</TableHead>
                                     <TableHead>Page</TableHead>
@@ -317,7 +429,14 @@ const HistoryPage = () => {
                             </TableHeader>
                             <TableBody>
                                 {paginatedLogs.length > 0 ? paginatedLogs.map(log => (
-                                    <TableRow key={log._id}>
+                                    <TableRow key={log._id} data-state={selectedLogs.includes(log._id) && "selected"}>
+                                        <TableCell>
+                                            <Checkbox
+                                                checked={selectedLogs.includes(log._id)}
+                                                onCheckedChange={(checked) => handleSelectOne(log._id, checked as boolean)}
+                                                aria-label="Select row"
+                                            />
+                                        </TableCell>
                                         <TableCell className="font-medium">{log.user}</TableCell>
                                         <TableCell className="max-w-xs truncate">{log.action}</TableCell>
                                         <TableCell>
@@ -330,7 +449,7 @@ const HistoryPage = () => {
                                     </TableRow>
                                 )) : (
                                     <TableRow>
-                                        <TableCell colSpan={5} className="h-24 text-center">No actions match your filters.</TableCell>
+                                        <TableCell colSpan={6} className="h-24 text-center">No actions match your filters.</TableCell>
                                     </TableRow>
                                 )}
                             </TableBody>
@@ -339,8 +458,14 @@ const HistoryPage = () => {
 
                     <div className="grid gap-4 md:hidden">
                         {paginatedLogs.length > 0 ? paginatedLogs.map(log => (
-                            <Card key={log._id} className="p-4">
-                                <div className="flex flex-col space-y-2">
+                            <Card key={log._id} className="p-4 flex gap-4">
+                                <Checkbox
+                                    checked={selectedLogs.includes(log._id)}
+                                    onCheckedChange={(checked) => handleSelectOne(log._id, checked as boolean)}
+                                    aria-label="Select row"
+                                    className="mt-1"
+                                />
+                                <div className="flex flex-col space-y-2 flex-1">
                                     <div className="flex items-center justify-between">
                                         <span className="font-medium">{log.user}</span>
                                         <span className="text-xs text-muted-foreground">{format(new Date(log.timestamp), 'P p')}</span>
@@ -379,5 +504,3 @@ const HistoryPage = () => {
 };
 
 export default HistoryPage;
-
-    

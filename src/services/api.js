@@ -252,6 +252,14 @@ export const contentApi = createApi({
       }),
       invalidatesTags: ['ActionLogs'],
     }),
+    deleteActionLogs: builder.mutation({
+      query: (body) => ({
+        url: 'action-logs/delete',
+        method: 'POST',
+        body: body,
+      }),
+      invalidatesTags: ['ActionLogs'],
+    }),
     getSports: builder.query({
         query: () => 'sports',
         providesTags: ['Sports'],
@@ -335,6 +343,7 @@ export const {
   useUpdateDesignationsMutation,
   useGetActionLogsQuery,
   useAddActionLogMutation,
+  useDeleteActionLogsMutation,
   useGetSportsQuery,
   useGetSportByIdQuery,
   useGetMatchesQuery,
