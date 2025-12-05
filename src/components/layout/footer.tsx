@@ -78,7 +78,7 @@ export default async function Footer() {
           <p className="text-sm text-center md:text-left text-muted-foreground italic">&quot;{quote}&quot;</p>
           <div className="flex items-center gap-4">
             {socialLinks.map((social) => (
-              <Link key={social.platform} href={social.url} className="text-sm text-muted-foreground hover:text-foreground">
+              <Link key={social.platform} href={social.url} target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-foreground">
                 {social.platform}
               </Link>
             ))}
