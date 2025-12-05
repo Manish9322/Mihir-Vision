@@ -73,28 +73,39 @@ const VideosAdminSkeleton = () => (
 );
 
 
-const VideoForm = ({ video, onSave, videoData }: { video?: VideoInfo | null, onSave: (video: VideoInfo) => void, videoData: VideoInfo[] }) => {
+const VideoForm = ({ video, onSave, onThumbnailChange, onVideoChange, thumbnailPreview }: { video?: VideoInfo | null, onSave: (video: Partial<VideoInfo>) => void, onThumbnailChange: (e: React.ChangeEvent<HTMLInputElement>) => void, onVideoChange: (e: React.ChangeEvent<HTMLInputElement>) => void, thumbnailPreview: string | null }) => {
     const [title, setTitle] = useState(video?.title || '');
     const [subtitle, setSubtitle] = useState(video?.subtitle || '');
     const [duration, setDuration] = useState(video?.duration || '');
     const { toast } = useToast();
 
+    const handleVideoFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        onVideoChange(e);
+        const file = e.target.files?.[0];
+        if (file) {
+            const videoElement = document.createElement('video');
+            videoElement.preload = 'metadata';
+            videoElement.onloadedmetadata = () => {
+                window.URL.revokeObjectURL(videoElement.src);
+                const videoDuration = Math.round(videoElement.duration);
+                const minutes = Math.floor(videoDuration / 60);
+                const seconds = videoDuration % 60;
+                setDuration(`${minutes}:${seconds < 10 ? '0' : ''}${seconds}`);
+            };
+            videoElement.src = URL.createObjectURL(file);
+        }
+    };
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        const newVideo: VideoInfo = {
+        const newVideo: Partial<VideoInfo> = {
             id: video?.id || `vid${Date.now()}`,
             title,
             subtitle,
             duration,
-            thumbnail: video?.thumbnail || videoData[0].thumbnail, // Placeholder
-            videoUrl: video?.videoUrl || videoData[0].videoUrl, // Placeholder
             isVisible: video?.isVisible ?? true,
         };
         onSave(newVideo);
-        toast({
-            title: `Video Clip ${video ? 'Updated' : 'Created'}`,
-            description: `The video "${title}" has been saved.`,
-        });
     };
 
     return (
@@ -114,13 +125,13 @@ const VideoForm = ({ video, onSave, videoData }: { video?: VideoInfo | null, onS
              <div className="space-y-2">
                 <Label>Thumbnail Image</Label>
                 <div className="flex items-center gap-4">
-                    <Image src={video?.thumbnail.imageUrl || 'https://placehold.co/150x100'} alt={video?.title || 'New Video'} width={150} height={100} className="rounded-md object-cover aspect-video" />
-                    <Input type="file" className="max-w-xs" />
+                    <Image src={thumbnailPreview || video?.thumbnail.imageUrl || 'https://placehold.co/150x100'} alt={video?.title || 'New Video'} width={150} height={100} className="rounded-md object-cover aspect-video" />
+                    <Input type="file" className="max-w-xs" onChange={onThumbnailChange} accept="image/*" />
                 </div>
             </div>
              <div className="space-y-2">
                 <Label>Video File</Label>
-                <Input type="file" />
+                <Input type="file" onChange={handleVideoFileChange} accept="video/*" />
             </div>
             <DialogFooter>
                 <DialogClose asChild>
@@ -144,7 +155,7 @@ const ViewVideoDialog = ({ video, open, onOpenChange }: { video: VideoInfo | nul
                 </DialogHeader>
                 <div className="space-y-4">
                     <div className="relative aspect-video w-full rounded-md overflow-hidden mt-4">
-                        <Image src={video.thumbnail.imageUrl} alt={video.title} fill className="object-cover" />
+                        <video src={video.videoUrl} controls poster={video.thumbnail.imageUrl} className="w-full h-full" />
                     </div>
                     <div>
                         <p className="font-semibold">{video.subtitle}</p>
@@ -173,6 +184,11 @@ const VideosAdminPage = () => {
     const [isViewOpen, setIsViewOpen] = useState(false);
     const [selectedVideo, setSelectedVideo] = useState<VideoInfo | null>(null);
     const [editingIndex, setEditingIndex] = useState<number | null>(null);
+
+    const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+    const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
+    const [videoFile, setVideoFile] = useState<File | null>(null);
+
 
     const totalPages = Math.ceil(videos.length / ITEMS_PER_PAGE);
     const paginatedVideos = videos.slice(
@@ -441,7 +457,24 @@ const VideosAdminPage = () => {
                             {selectedVideo ? 'Make changes to this video clip.' : 'Fill out the details for the new video clip.'}
                         </DialogDescription>
                     </DialogHeader>
-                    <VideoForm video={selectedVideo} onSave={handleSave} videoData={videos} />
+                    <VideoForm 
+                        video={selectedVideo} 
+                        onSave={handleSave} 
+                        onThumbnailChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                                setThumbnailFile(file);
+                                const reader = new FileReader();
+                                reader.onloadend = () => setThumbnailPreview(reader.result as string);
+                                reader.readAsDataURL(file);
+                            }
+                        }}
+                        onVideoChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) setVideoFile(file);
+                        }}
+                        thumbnailPreview={thumbnailPreview}
+                    />
                 </DialogContent>
             </Dialog>
 

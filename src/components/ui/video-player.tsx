@@ -49,6 +49,17 @@ export function VideoPlayer({ video, isLoading }: VideoPlayerProps) {
     }
   };
 
+  const parseDuration = (durationStr: string): number => {
+    if (!durationStr || typeof durationStr !== 'string') return 0;
+    const parts = durationStr.split(':').map(Number);
+    if (parts.length === 2) {
+      return parts[0] * 60 + parts[1];
+    }
+    return 0;
+  };
+  
+  const videoDuration = parseDuration(video.duration);
+
   useEffect(() => {
     const videoElement = videoRef.current;
     if (!videoElement) return;
@@ -57,7 +68,9 @@ export function VideoPlayer({ video, isLoading }: VideoPlayerProps) {
       setProgress(videoElement.currentTime);
     };
     const handleDurationChange = () => {
-      setDuration(videoElement.duration);
+        if (!isNaN(videoElement.duration)) {
+             setDuration(videoElement.duration);
+        }
     };
     const handleVideoEnd = () => {
       setIsPlaying(false);
@@ -229,12 +242,12 @@ export function VideoPlayer({ video, isLoading }: VideoPlayerProps) {
               </Button>
 
               <div className="text-xs font-mono">
-                {formatTime(progress)} / {formatTime(duration)}
+                {formatTime(progress)} / {formatTime(duration || videoDuration)}
               </div>
               
               <Slider
                 value={[progress]}
-                max={duration || 1}
+                max={duration || videoDuration || 1}
                 step={1}
                 onValueChange={handleSeek}
                 className="flex-1"
