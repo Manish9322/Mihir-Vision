@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Switch } from "@/components/ui/switch";
 import { Loader2, PlusCircle, Trash2, ChevronLeft, ChevronRight, MoreHorizontal, FilePenLine, Eye, Search, AlertTriangle } from 'lucide-react';
-import { useGetSettingsDataQuery, useUpdateSettingsDataMutation, useGetCountriesQuery, useUpdateCountriesMutation, useGetStatesQuery, useUpdateStatesMutation, useGetCitiesQuery, useUpdateCitiesMutation, useGetDesignationsQuery, useUpdateDesignationsMutation, useAddActionLogMutation } from '@/services/api';
+import { useGetSettingsDataQuery, useUpdateSettingsDataMutation, useGetCountriesQuery, useUpdateCountriesMutation, useGetStatesQuery, useUpdateStatesMutation, useGetCitiesQuery, useUpdateCitiesMutation, useGetDesignationsQuery, useUpdateDesignationsMutation, useGetSportsQuery, useUpdateSportsMutation, useAddActionLogMutation } from '@/services/api';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -20,6 +20,153 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuIte
 import { Skeleton } from '@/components/ui/skeleton';
 
 const ITEMS_PER_PAGE = 5;
+
+// #region Sports Manager
+const SportForm = ({ sport, onSave }) => {
+    const [name, setName] = useState(sport?.name || '');
+    const [description, setDescription] = useState(sport?.description || '');
+    const [eventTypes, setEventTypes] = useState(sport?.eventTypes?.join(', ') || '');
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        onSave({ 
+            name, 
+            description, 
+            eventTypes: eventTypes.split(',').map(et => et.trim()).filter(Boolean) 
+        });
+    };
+
+    return (
+        <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+                <Label htmlFor="sport-name">Sport Name</Label>
+                <Input id="sport-name" value={name} onChange={(e) => setName(e.target.value)} required />
+            </div>
+            <div className="space-y-2">
+                <Label htmlFor="sport-description">Description</Label>
+                <Textarea id="sport-description" value={description} onChange={(e) => setDescription(e.target.value)} />
+            </div>
+             <div className="space-y-2">
+                <Label htmlFor="sport-events">Event Types (comma-separated)</Label>
+                <Input id="sport-events" value={eventTypes} onChange={(e) => setEventTypes(e.target.value)} placeholder="e.g., Goal, Foul, Assist" />
+            </div>
+            <DialogFooter>
+                <DialogClose asChild><Button type="button" variant="outline">Cancel</Button></DialogClose>
+                <Button type="submit">Save Sport</Button>
+            </DialogFooter>
+        </form>
+    );
+};
+
+const SportsManager = () => {
+    const { toast } = useToast();
+    const { data: sports = [], isLoading, isError } = useGetSportsQuery();
+    const [updateSports, { isLoading: isMutating }] = useUpdateSportsMutation();
+    const [addActionLog] = useAddActionLogMutation();
+    
+    const [isFormOpen, setIsFormOpen] = useState(false);
+    const [selectedItem, setSelectedItem] = useState(null);
+    const [editingIndex, setEditingIndex] = useState(null);
+
+    const handleSave = async (data) => {
+        let updatedItems;
+        let action, type;
+
+        if (editingIndex !== null) {
+            updatedItems = sports.map((item, index) => index === editingIndex ? { ...item, ...data } : item);
+            action = `updated sport "${data.name}"`;
+            type = 'UPDATE';
+        } else {
+            updatedItems = [{ ...data, _id: `new_${Date.now()}` }, ...sports];
+            action = `created sport "${data.name}"`;
+            type = 'CREATE';
+        }
+
+        try {
+            await updateSports(updatedItems).unwrap();
+            await addActionLog({
+                user: 'Admin User',
+                section: 'Settings',
+                action,
+                type,
+            }).unwrap();
+            toast({ title: `Sport ${editingIndex !== null ? 'Updated' : 'Added'}` });
+            setIsFormOpen(false);
+        } catch (error) {
+            toast({ variant: 'destructive', title: 'Save Failed' });
+        }
+    };
+
+    const handleDelete = async (index) => {
+        const deletedItem = sports[index];
+        const updatedItems = sports.filter((_, i) => i !== index);
+        try {
+            await updateSports(updatedItems).unwrap();
+            await addActionLog({
+                user: 'Admin User',
+                section: 'Settings',
+                action: `deleted sport "${deletedItem.name}"`,
+                type: 'DELETE',
+            }).unwrap();
+            toast({ variant: 'destructive', title: 'Sport Deleted' });
+        } catch (error) {
+            toast({ variant: 'destructive', title: 'Deletion Failed' });
+        }
+    };
+    
+    if (isLoading) return <div className="flex items-center justify-center p-8"><Loader2 className="h-8 w-8 animate-spin" /></div>;
+    if (isError) return (
+        <Card className="flex flex-col items-center justify-center p-4 text-center border-destructive">
+            <AlertTriangle className="h-8 w-8 text-destructive mb-2" />
+            <CardTitle className="text-md text-destructive">Error</CardTitle>
+            <CardDescription className="mt-1 text-xs">Failed to load sports.</CardDescription>
+        </Card>
+    );
+
+    return (
+        <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                    <CardTitle>Manage Sports</CardTitle>
+                    <CardDescription>Define sport types for match analysis.</CardDescription>
+                </div>
+                <Button onClick={() => { setSelectedItem(null); setEditingIndex(null); setIsFormOpen(true); }}><PlusCircle className="mr-2 h-4 w-4" /> Add Sport</Button>
+            </CardHeader>
+            <CardContent>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Name</TableHead>
+                            <TableHead>Description</TableHead>
+                            <TableHead>Event Types</TableHead>
+                            <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {sports.map((item, index) => (
+                            <TableRow key={item._id || index}>
+                                <TableCell className="font-medium">{item.name}</TableCell>
+                                <TableCell>{item.description}</TableCell>
+                                <TableCell className="text-xs text-muted-foreground max-w-sm truncate">{item.eventTypes.join(', ')}</TableCell>
+                                <TableCell className="text-right">
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild><Button size="icon" variant="ghost"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
+                                        <DropdownMenuContent align="end">
+                                            <DropdownMenuItem onClick={() => { setSelectedItem(item); setEditingIndex(index); setIsFormOpen(true); }}><FilePenLine className="mr-2 h-4 w-4" />Edit</DropdownMenuItem>
+                                            <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(index)}><Trash2 className="mr-2 h-4 w-4" />Delete</DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </CardContent>
+             <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}><DialogContent><DialogHeader><DialogTitle>{editingIndex !== null ? 'Edit' : 'Add'} Sport</DialogTitle></DialogHeader><SportForm sport={selectedItem} onSave={handleSave} /></DialogContent></Dialog>
+        </Card>
+    );
+};
+// #endregion
 
 // #region Designations Manager
 const DesignationForm = ({ designation, onSave }) => {
@@ -708,10 +855,11 @@ const CitiesManager = () => {
 
 const SettingsPageSkeleton = () => (
     <Tabs defaultValue="general" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="general">General</TabsTrigger>
             <TabsTrigger value="profile-options">Profile Options</TabsTrigger>
             <TabsTrigger value="team">Team</TabsTrigger>
+            <TabsTrigger value="sports">Sports</TabsTrigger>
             <TabsTrigger value="notifications">Notifications</TabsTrigger>
         </TabsList>
         <TabsContent value="general">
@@ -806,6 +954,38 @@ const SettingsPageSkeleton = () => (
                 </CardContent>
             </Card>
         </TabsContent>
+         <TabsContent value="sports">
+            <Card>
+                <CardHeader>
+                    <Skeleton className="h-7 w-48" />
+                    <Skeleton className="h-4 w-64 mt-2" />
+                </CardHeader>
+                <CardContent>
+                     <div className="border rounded-md">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead><Skeleton className="h-5 w-24" /></TableHead>
+                                    <TableHead><Skeleton className="h-5 w-48" /></TableHead>
+                                    <TableHead><Skeleton className="h-5 w-32" /></TableHead>
+                                    <TableHead className="text-right"><Skeleton className="h-5 w-16 ml-auto" /></TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {[...Array(3)].map((_, i) => (
+                                    <TableRow key={i}>
+                                        <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+                                        <TableCell><Skeleton className="h-5 w-48" /></TableCell>
+                                        <TableCell><Skeleton className="h-5 w-32" /></TableCell>
+                                        <TableCell className="text-right"><Skeleton className="h-8 w-8 ml-auto" /></TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </div>
+                </CardContent>
+            </Card>
+        </TabsContent>
         <TabsContent value="notifications">
              <Card>
                 <CardHeader>
@@ -843,14 +1023,14 @@ export default function SettingsPage() {
     
     const { register, handleSubmit, reset } = useForm({ defaultValues: settingsData });
 
-    // Using a more robust check for loading state across multiple queries
     const { isLoading: isCountriesLoading, isError: isCountriesError } = useGetCountriesQuery();
     const { isLoading: isStatesLoading, isError: isStatesError } = useGetStatesQuery();
     const { isLoading: isCitiesLoading, isError: isCitiesError } = useGetCitiesQuery();
     const { isLoading: isDesignationsLoading, isError: isDesignationsError } = useGetDesignationsQuery();
+    const { isLoading: isSportsLoading, isError: isSportsError } = useGetSportsQuery();
     
-    const isQueryLoading = isSettingsLoading || isCountriesLoading || isStatesLoading || isCitiesLoading || isDesignationsLoading;
-    const isError = isSettingsError || isCountriesError || isStatesError || isCitiesError || isDesignationsError;
+    const isQueryLoading = isSettingsLoading || isCountriesLoading || isStatesLoading || isCitiesLoading || isDesignationsLoading || isSportsLoading;
+    const isError = isSettingsError || isCountriesError || isStatesError || isCitiesError || isDesignationsError || isSportsError;
 
     useState(() => {
         if (settingsData) {
@@ -920,10 +1100,11 @@ export default function SettingsPage() {
 
     return (
         <Tabs defaultValue="general" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
                 <TabsTrigger value="general">General</TabsTrigger>
                 <TabsTrigger value="profile-options">Profile Options</TabsTrigger>
                 <TabsTrigger value="team">Team</TabsTrigger>
+                <TabsTrigger value="sports">Sports</TabsTrigger>
                 <TabsTrigger value="notifications">Notifications</TabsTrigger>
             </TabsList>
             <TabsContent value="general">
@@ -960,6 +1141,9 @@ export default function SettingsPage() {
             <TabsContent value="team">
                 <DesignationsManager />
             </TabsContent>
+             <TabsContent value="sports">
+                <SportsManager />
+            </TabsContent>
             <TabsContent value="notifications">
                 <Card>
                     <CardHeader>
@@ -990,7 +1174,3 @@ export default function SettingsPage() {
         </Tabs>
     );
 }
-
-    
-
-    

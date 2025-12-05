@@ -264,6 +264,14 @@ export const contentApi = createApi({
         query: () => 'sports',
         providesTags: ['Sports'],
     }),
+    updateSports: builder.mutation({
+        query: (updatedData) => ({
+            url: 'sports',
+            method: 'POST',
+            body: updatedData,
+        }),
+        invalidatesTags: ['Sports'],
+    }),
     getSportById: builder.query({
       query: (id) => `sports/${id}`,
       providesTags: (result, error, id) => [{ type: 'Sports', id }],
@@ -345,6 +353,7 @@ export const {
   useAddActionLogMutation,
   useDeleteActionLogsMutation,
   useGetSportsQuery,
+  useUpdateSportsMutation,
   useGetSportByIdQuery,
   useGetMatchesQuery,
   useGetMatchByIdQuery,

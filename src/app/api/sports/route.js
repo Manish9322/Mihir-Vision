@@ -27,9 +27,23 @@ export async function POST(request) {
     try {
         await _db();
         const body = await request.json();
-        const newSport = await Sport.create(body);
-        return NextResponse.json(newSport, { status: 201 });
+        
+        if (!Array.isArray(body)) {
+            return NextResponse.json({ message: 'Request body must be an array of sports.' }, { status: 400 });
+        }
+
+        await Sport.deleteMany({});
+        
+        const sportsToInsert = body.map(sport => {
+            if (sport._id && String(sport._id).startsWith('new_')) {
+                delete sport._id;
+            }
+            return sport;
+        });
+        
+        const newSports = await Sport.insertMany(sportsToInsert);
+        return NextResponse.json(newSports, { status: 200 });
     } catch (error) {
-        return NextResponse.json({ message: 'Error creating sport.', error: error.message }, { status: 500 });
+        return NextResponse.json({ message: 'Error updating sports.', error: error.message }, { status: 500 });
     }
 }
