@@ -118,16 +118,15 @@ const FilterControls = ({
             <CardTitle className="flex items-center gap-2 text-xl"><ListFilter className="h-5 w-5" /> Filter History</CardTitle>
             <CardDescription>Refine the action logs shown in the table.</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-            <div className="relative">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Search actions or users..." className="pl-8" value={searchQuery} onChange={(e) => {setSearchQuery(e.target.value); setCurrentPage(1);}} />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+        <CardContent>
+             <div className="flex flex-wrap items-center gap-2">
+                <div className="relative flex-grow">
+                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input placeholder="Search actions or users..." className="pl-8 w-full" value={searchQuery} onChange={(e) => {setSearchQuery(e.target.value); setCurrentPage(1);}} />
+                </div>
                  <Popover>
                     <PopoverTrigger asChild>
-                        <Button variant="outline" className="w-full justify-start text-left font-normal">
+                        <Button variant="outline" className="w-full sm:w-auto justify-start text-left font-normal">
                             <CalendarIcon className="mr-2 h-4 w-4" />
                             {dateRange.from ? (
                                 dateRange.to ? `${format(dateRange.from, "LLL dd, y")} - ${format(dateRange.to, "LLL dd, y")}` : format(dateRange.from, "LLL dd, y")
@@ -148,8 +147,8 @@ const FilterControls = ({
 
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="outline" className="w-full justify-between">
-                            Type {selectedTypes.length > 0 && `(${selectedTypes.length})`} <ChevronDown className="h-4 w-4" />
+                        <Button variant="outline" className="w-full sm:w-auto justify-between">
+                            Type {selectedTypes.length > 0 && `(${selectedTypes.length})`} <ChevronDown className="h-4 w-4 ml-2" />
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent className="w-56">
@@ -165,8 +164,8 @@ const FilterControls = ({
                 
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <Button variant="outline" className="w-full justify-between">
-                            Page {selectedSections.length > 0 && `(${selectedSections.length})`} <ChevronDown className="h-4 w-4" />
+                        <Button variant="outline" className="w-full sm:w-auto justify-between">
+                            Page {selectedSections.length > 0 && `(${selectedSections.length})`} <ChevronDown className="h-4 w-4 ml-2" />
                         </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent className="w-56">
@@ -298,72 +297,61 @@ const HistoryPage = () => {
                 </Card>
             </div>
             
-            <div className="lg:hidden">
-                <FilterControls {...filterProps} />
-            </div>
+            <FilterControls {...filterProps} />
 
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
-                <div className="lg:col-span-3">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Action History</CardTitle>
-                            <CardDescription>A log of all administrative actions taken.</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>User</TableHead>
-                                        <TableHead>Action</TableHead>
-                                        <TableHead className="hidden sm:table-cell">Page</TableHead>
-                                        <TableHead className="hidden md:table-cell">Type</TableHead>
-                                        <TableHead className="text-right">Timestamp</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {paginatedLogs.length > 0 ? paginatedLogs.map(log => (
-                                        <TableRow key={log._id}>
-                                            <TableCell className="font-medium">{log.user}</TableCell>
-                                            <TableCell className="max-w-xs truncate">{log.action}</TableCell>
-                                            <TableCell className="hidden sm:table-cell">
-                                                <Badge variant="outline">{log.section}</Badge>
-                                            </TableCell>
-                                            <TableCell className="hidden md:table-cell">
-                                                <Badge variant={typeColors[log.type] || 'secondary'}>{log.type}</Badge>
-                                            </TableCell>
-                                            <TableCell className="text-right text-muted-foreground text-xs">{format(new Date(log.timestamp), 'PPpp')}</TableCell>
-                                        </TableRow>
-                                    )) : (
-                                        <TableRow>
-                                            <TableCell colSpan={5} className="h-24 text-center">No actions match your filters.</TableCell>
-                                        </TableRow>
-                                    )}
-                                </TableBody>
-                            </Table>
-                        </CardContent>
-                        <div className="flex items-center justify-between border-t p-4">
-                            <div className="text-xs text-muted-foreground">
-                                Showing <strong>{paginatedLogs.length > 0 ? (currentPage - 1) * ITEMS_PER_PAGE + 1 : 0}-{(currentPage - 1) * ITEMS_PER_PAGE + paginatedLogs.length}</strong> of <strong>{filteredLogs.length}</strong> logs
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <Button variant="outline" size="sm" onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1}>
-                                    <ChevronLeft className="h-4 w-4" />
-                                    <span className="sr-only">Previous</span>
-                                </Button>
-                                <Button variant="outline" size="sm" onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages}>
-                                    <span className="sr-only">Next</span>
-                                    <ChevronRight className="h-4 w-4" />
-                                </Button>
-                            </div>
-                        </div>
-                    </Card>
-                </div>
-                <div className="hidden lg:block lg:col-span-1 sticky top-16">
-                     <div className="space-y-4">
-                        <FilterControls {...filterProps} />
+            <Card>
+                <CardHeader>
+                    <CardTitle>Action History</CardTitle>
+                    <CardDescription>A log of all administrative actions taken.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>User</TableHead>
+                                <TableHead>Action</TableHead>
+                                <TableHead className="hidden sm:table-cell">Page</TableHead>
+                                <TableHead className="hidden md:table-cell">Type</TableHead>
+                                <TableHead className="text-right">Timestamp</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {paginatedLogs.length > 0 ? paginatedLogs.map(log => (
+                                <TableRow key={log._id}>
+                                    <TableCell className="font-medium">{log.user}</TableCell>
+                                    <TableCell className="max-w-xs truncate">{log.action}</TableCell>
+                                    <TableCell className="hidden sm:table-cell">
+                                        <Badge variant="outline">{log.section}</Badge>
+                                    </TableCell>
+                                    <TableCell className="hidden md:table-cell">
+                                        <Badge variant={typeColors[log.type] || 'secondary'}>{log.type}</Badge>
+                                    </TableCell>
+                                    <TableCell className="text-right text-muted-foreground text-xs">{format(new Date(log.timestamp), 'PPpp')}</TableCell>
+                                </TableRow>
+                            )) : (
+                                <TableRow>
+                                    <TableCell colSpan={5} className="h-24 text-center">No actions match your filters.</TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
+                </CardContent>
+                <div className="flex items-center justify-between border-t p-4">
+                    <div className="text-xs text-muted-foreground">
+                        Showing <strong>{paginatedLogs.length > 0 ? (currentPage - 1) * ITEMS_PER_PAGE + 1 : 0}-{(currentPage - 1) * ITEMS_PER_PAGE + paginatedLogs.length}</strong> of <strong>{filteredLogs.length}</strong> logs
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Button variant="outline" size="sm" onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1}>
+                            <ChevronLeft className="h-4 w-4" />
+                            <span className="sr-only">Previous</span>
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages}>
+                            <span className="sr-only">Next</span>
+                            <ChevronRight className="h-4 w-4" />
+                        </Button>
                     </div>
                 </div>
-            </div>
+            </Card>
         </div>
     );
 };
