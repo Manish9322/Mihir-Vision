@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect, useMemo } from 'react';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useGetProfileDataQuery, useUpdateProfileDataMutation, useGetCountriesQuery, useGetStatesQuery, useGetCitiesQuery, useAddActionLogMutation } from '@/services/api';
-import { Loader2, AlertTriangle } from 'lucide-react';
+import { Loader2, AlertTriangle, PlusCircle, Trash2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -54,6 +54,21 @@ const ProfilePageSkeleton = () => (
                      <div className="space-y-2"><Skeleton className="h-4 w-24" /><Skeleton className="h-10 w-full" /></div>
                 </div>
 
+                <Separator />
+
+                <div className="space-y-6">
+                    <div>
+                        <Skeleton className="h-6 w-28" />
+                        <Skeleton className="h-4 w-56 mt-2" />
+                    </div>
+                    <div className="space-y-4">
+                        <Skeleton className="h-14 w-full" />
+                        <Skeleton className="h-14 w-full" />
+                    </div>
+                    <Skeleton className="h-10 w-28" />
+                </div>
+
+
                 <Skeleton className="h-10 w-32" />
             </div>
         </CardContent>
@@ -77,7 +92,13 @@ export default function ProfilePage() {
             avatarUrl: '',
             phone: '',
             address: { street: '', city: '', state: '', zip: '', country: '' },
+            socialLinks: []
         },
+    });
+
+    const { fields, append, remove } = useFieldArray({
+        control,
+        name: "socialLinks",
     });
 
     const watchedAvatar = watch("avatarUrl", profileData?.avatarUrl);
@@ -251,6 +272,56 @@ export default function ProfilePage() {
                         </div>
                     </div>
 
+                    <Separator />
+
+                    <div className="space-y-6">
+                        <div>
+                            <h3 className="text-lg font-medium">Social Links</h3>
+                            <p className="text-sm text-muted-foreground">Add links to your social media profiles.</p>
+                        </div>
+                        <div className="space-y-4">
+                            {fields.map((field, index) => (
+                                <Card key={field.id} className="p-4">
+                                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-center">
+                                        <div className="space-y-2">
+                                            <Label>Platform</Label>
+                                            <Input
+                                                {...register(`socialLinks.${index}.platform`)}
+                                                placeholder="e.g., LinkedIn, Twitter"
+                                            />
+                                        </div>
+                                        <div className="space-y-2 sm:col-span-2">
+                                            <Label>URL</Label>
+                                             <div className="flex items-center gap-2">
+                                                <Input
+                                                    {...register(`socialLinks.${index}.url`)}
+                                                    placeholder="https://..."
+                                                />
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="icon"
+                                                    onClick={() => remove(index)}
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            </div>
+                                        </div>
+                                       
+                                    </div>
+                                </Card>
+                            ))}
+                        </div>
+                         <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => append({ platform: "", url: "" })}
+                        >
+                            <PlusCircle className="mr-2 h-4 w-4" />
+                            Add Social Link
+                        </Button>
+                    </div>
+
                     <div>
                         <Button type="submit" disabled={isMutationLoading}>
                             {isMutationLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -262,5 +333,3 @@ export default function ProfilePage() {
         </Card>
     );
 }
-
-    

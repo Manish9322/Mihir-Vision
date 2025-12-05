@@ -14,7 +14,11 @@ const seedUserData = {
         state: 'CA',
         zip: '90210',
         country: 'USA',
-    }
+    },
+    socialLinks: [
+        { platform: 'LinkedIn', url: 'https://linkedin.com' },
+        { platform: 'Twitter', url: 'https://twitter.com' },
+    ]
 };
 
 export async function GET() {
