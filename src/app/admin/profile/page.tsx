@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useGetProfileDataQuery, useUpdateProfileDataMutation, useGetCountriesQuery, useGetStatesQuery, useGetCitiesQuery, useAddActionLogMutation } from '@/services/api';
+import { useGetProfileDataQuery, useUpdateProfileDataMutation, useGetCountriesQuery, useGetStatesQuery, useGetCitiesQuery, useAddActionLogMutation, useUploadImageMutation } from '@/services/api';
 import { Loader2, AlertTriangle, PlusCircle, Trash2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -83,7 +83,10 @@ export default function ProfilePage() {
     const { data: cities = [], isLoading: isCitiesLoading } = useGetCitiesQuery();
     
     const [updateProfile, { isLoading: isMutationLoading }] = useUpdateProfileDataMutation();
+    const [uploadImage, { isLoading: isUploading }] = useUploadImageMutation();
     const [addActionLog] = useAddActionLogMutation();
+
+    const [imageFile, setImageFile] = useState<File | null>(null);
 
     const { register, control, handleSubmit, reset, watch, setValue } = useForm({
         defaultValues: profileData || {
@@ -121,10 +124,33 @@ export default function ProfilePage() {
             reset(profileData);
         }
     }, [profileData, reset]);
+    
+    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            setImageFile(file);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setValue('avatarUrl', reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
 
     const onSubmit = async (data) => {
         try {
-            await updateProfile(data).unwrap();
+            let finalData = { ...data };
+            
+            if (imageFile) {
+                const uploadResult = await uploadImage(imageFile).unwrap();
+                if (uploadResult.url) {
+                    finalData.avatarUrl = uploadResult.url;
+                } else {
+                    throw new Error('Image upload failed to return a URL.');
+                }
+            }
+
+            await updateProfile(finalData).unwrap();
             await addActionLog({
                 user: 'Admin User',
                 action: 'updated their profile',
@@ -135,6 +161,7 @@ export default function ProfilePage() {
                 title: "Profile Updated",
                 description: "Your profile information has been saved.",
             });
+            setImageFile(null);
         } catch (error) {
             toast({
                 variant: 'destructive',
@@ -176,7 +203,7 @@ export default function ProfilePage() {
                                     <AvatarImage src={watchedAvatar} />
                                     <AvatarFallback>{profileData?.fullName?.charAt(0) || 'A'}</AvatarFallback>
                                 </Avatar>
-                                <Input type="file" className="max-w-xs" />
+                                <Input type="file" className="max-w-xs" onChange={handleFileChange} accept="image/*" />
                             </div>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -323,8 +350,8 @@ export default function ProfilePage() {
                     </div>
 
                     <div>
-                        <Button type="submit" disabled={isMutationLoading}>
-                            {isMutationLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        <Button type="submit" disabled={isMutationLoading || isUploading}>
+                            {(isMutationLoading || isUploading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                             Save Changes
                         </Button>
                     </div>
