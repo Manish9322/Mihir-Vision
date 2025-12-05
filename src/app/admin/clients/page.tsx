@@ -11,7 +11,7 @@ import { PlusCircle, Trash2, ArrowUp, ArrowDown, GripVertical, ChevronLeft, Chev
 import Image from 'next/image';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { useGetClientsDataQuery, useUpdateClientsDataMutation, useAddActionLogMutation } from '@/services/api';
+import { useGetClientsDataQuery, useUpdateClientsDataMutation, useAddActionLogMutation, useUploadImageMutation } from '@/services/api';
 import { Switch } from '@/components/ui/switch';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -81,24 +81,20 @@ const ClientAdminSkeleton = () => (
 );
 
 
-const ClientForm = ({ client, onSave }: { client?: Client | null, onSave: (client: Omit<Client, '_id'>) => void }) => {
+const ClientForm = ({ client, onSave, onFileChange, logoPreview }: { client?: Client | null, onSave: (client: Omit<Client, '_id' | 'logoUrl'> & { logoUrl?: string }) => void, onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void, logoPreview: string | null }) => {
     const [name, setName] = useState(client?.name || '');
     const [website, setWebsite] = useState(client?.website || '');
     const { toast } = useToast();
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        const newClient: Omit<Client, '_id'> = {
+        const newClient: Omit<Client, '_id' | 'logoUrl'> & { logoUrl?: string } = {
             name,
             website,
-            logoUrl: client?.logoUrl || 'https://placehold.co/150x50/white/black?text=Logo', // Placeholder
             isVisible: client?.isVisible ?? true,
         };
+        // The logoUrl will be handled by the parent component after upload
         onSave(newClient);
-        toast({
-            title: `Client ${client ? 'Updated' : 'Created'}`,
-            description: `The client "${name}" has been saved.`,
-        });
     };
 
     return (
@@ -114,8 +110,8 @@ const ClientForm = ({ client, onSave }: { client?: Client | null, onSave: (clien
              <div className="space-y-2">
                 <Label>Logo</Label>
                 <div className="flex items-center gap-4">
-                    <Image src={client?.logoUrl || 'https://placehold.co/150x50/white/black?text=Logo'} alt={client?.name || 'New Client'} width={150} height={50} className="rounded-md object-contain bg-muted p-2" />
-                    <Input type="file" className="max-w-xs" />
+                    <Image src={logoPreview || client?.logoUrl || 'https://placehold.co/150x50/white/black?text=Logo'} alt={client?.name || 'New Client'} width={150} height={50} className="rounded-md object-contain bg-muted p-2" />
+                    <Input type="file" className="max-w-xs" onChange={onFileChange} accept="image/*" />
                 </div>
             </div>
             <DialogFooter>
@@ -157,6 +153,7 @@ const ClientsAdminPage = () => {
     const { data: clients = [], isLoading: isQueryLoading, isError } = useGetClientsDataQuery();
     const [updateClients, { isLoading: isMutationLoading }] = useUpdateClientsDataMutation();
     const [addActionLog] = useAddActionLogMutation();
+    const [uploadImage, { isLoading: isUploading }] = useUploadImageMutation();
 
     const [currentPage, setCurrentPage] = useState(1);
     const [searchQuery, setSearchQuery] = useState('');
@@ -164,6 +161,9 @@ const ClientsAdminPage = () => {
     const [isViewOpen, setIsViewOpen] = useState(false);
     const [selectedClient, setSelectedClient] = useState<Client | null>(null);
     const [editingIndex, setEditingIndex] = useState<number | null>(null);
+
+    const [imageFile, setImageFile] = useState<File | null>(null);
+    const [logoPreview, setLogoPreview] = useState<string | null>(null);
 
     const filteredClients = clients.filter(client => client.name.toLowerCase().includes(searchQuery.toLowerCase()));
     
@@ -178,6 +178,18 @@ const ClientsAdminPage = () => {
         visible: clients.filter(c => c.isVisible).length,
         hidden: clients.filter(c => !c.isVisible).length,
     }), [clients]);
+    
+    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            setImageFile(file);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setLogoPreview(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
 
     const triggerUpdate = async (updatedItems: Client[], actionLog: Omit<Parameters<typeof addActionLog>[0], 'user' | 'section'>) => {
         try {
@@ -219,6 +231,8 @@ const ClientsAdminPage = () => {
     const handleAddClick = () => {
         setSelectedClient(null);
         setEditingIndex(null);
+        setImageFile(null);
+        setLogoPreview(null);
         setIsFormOpen(true);
     };
 
@@ -226,6 +240,8 @@ const ClientsAdminPage = () => {
         const fullIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;
         setSelectedClient(client);
         setEditingIndex(fullIndex);
+        setImageFile(null);
+        setLogoPreview(null);
         setIsFormOpen(true);
     };
 
@@ -246,23 +262,54 @@ const ClientsAdminPage = () => {
         });
     };
     
-    const handleSave = (clientData: Omit<Client, '_id'>) => {
-        let newItems: Client[];
+    const handleSave = async (clientData: Omit<Client, '_id'>) => {
+        let finalData = { ...clientData };
         let action: string, type: 'CREATE' | 'UPDATE';
 
-        if (editingIndex !== null) {
-            newItems = [...clients];
-            newItems[editingIndex] = { ...clients[editingIndex], ...clientData };
-            action = `updated client "${clientData.name}"`;
-            type = 'UPDATE';
-        } else {
-            const newClient = { ...clientData, _id: `new_${Date.now()}` } as Client;
-            newItems = [newClient, ...clients];
-            action = `created client "${clientData.name}"`;
-            type = 'CREATE';
+        try {
+            if (imageFile) {
+                const uploadResult = await uploadImage(imageFile).unwrap();
+                if (uploadResult.url) {
+                    finalData.logoUrl = uploadResult.url;
+                } else {
+                    throw new Error('Image upload failed to return a URL.');
+                }
+            } else if (selectedClient) {
+                 finalData.logoUrl = selectedClient.logoUrl;
+            } else {
+                 finalData.logoUrl = 'https://placehold.co/150x50/white/black?text=Logo'; // Default placeholder
+            }
+
+            let newItems: Client[];
+
+            if (editingIndex !== null) {
+                newItems = [...clients];
+                newItems[editingIndex] = { ...clients[editingIndex], ...finalData };
+                action = `updated client "${finalData.name}"`;
+                type = 'UPDATE';
+            } else {
+                const newClient = { ...finalData } as Client;
+                newItems = [newClient, ...clients];
+                action = `created client "${finalData.name}"`;
+                type = 'CREATE';
+            }
+            await triggerUpdate(newItems, { action, type });
+            
+            setIsFormOpen(false);
+            setImageFile(null);
+            setLogoPreview(null);
+            toast({
+                title: `Client ${editingIndex !== null ? 'Updated' : 'Created'}`,
+                description: `The client "${finalData.name}" has been saved.`,
+            });
+        } catch (error) {
+            console.error('Save failed:', error);
+            toast({
+                variant: 'destructive',
+                title: 'Save Failed',
+                description: `There was an error saving the client. ${error.message || ''}`,
+            });
         }
-        triggerUpdate(newItems, { action, type });
-        setIsFormOpen(false);
     };
     
     const handleVisibilityChange = (index: number, isVisible: boolean) => {
@@ -342,7 +389,7 @@ const ClientsAdminPage = () => {
                                 }}
                             />
                         </div>
-                         <Button onClick={handleAddClick} disabled={isMutationLoading}>
+                         <Button onClick={handleAddClick} disabled={isMutationLoading || isUploading}>
                             <PlusCircle className="mr-2 h-4 w-4" /> Add Client
                         </Button>
                     </div>
@@ -364,11 +411,11 @@ const ClientsAdminPage = () => {
                                     <TableRow key={client._id || index}>
                                         <TableCell className="text-center align-middle">
                                             <div className="flex flex-col items-center gap-1">
-                                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleMove(index, 'up')} disabled={isMutationLoading || (currentPage - 1) * ITEMS_PER_PAGE + index === 0}>
+                                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleMove(index, 'up')} disabled={isMutationLoading || isUploading || (currentPage - 1) * ITEMS_PER_PAGE + index === 0}>
                                                     <ArrowUp className="h-4 w-4" />
                                                 </Button>
                                                 <GripVertical className="h-4 w-4 text-muted-foreground" />
-                                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleMove(index, 'down')} disabled={isMutationLoading || (currentPage - 1) * ITEMS_PER_PAGE + index === clients.length - 1}>
+                                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleMove(index, 'down')} disabled={isMutationLoading || isUploading || (currentPage - 1) * ITEMS_PER_PAGE + index === clients.length - 1}>
                                                     <ArrowDown className="h-4 w-4" />
                                                 </Button>
                                             </div>
@@ -381,13 +428,13 @@ const ClientsAdminPage = () => {
                                             <Switch
                                                 checked={client.isVisible}
                                                 onCheckedChange={(checked) => handleVisibilityChange(index, checked)}
-                                                disabled={isMutationLoading}
+                                                disabled={isMutationLoading || isUploading}
                                             />
                                         </TableCell>
                                         <TableCell className="text-right">
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
-                                                    <Button size="icon" variant="ghost" disabled={isMutationLoading}>
+                                                    <Button size="icon" variant="ghost" disabled={isMutationLoading || isUploading}>
                                                         <MoreHorizontal className="h-4 w-4" />
                                                     </Button>
                                                 </DropdownMenuTrigger>
@@ -411,7 +458,7 @@ const ClientsAdminPage = () => {
                                 ))}
                             </TableBody>
                         </Table>
-                         {isMutationLoading && (
+                         {(isMutationLoading || isUploading) && (
                             <div className="absolute inset-0 bg-background/50 flex items-center justify-center">
                                 <Loader2 className="h-6 w-6 animate-spin text-primary" />
                             </div>
@@ -443,7 +490,12 @@ const ClientsAdminPage = () => {
                             {selectedClient ? 'Make changes to this client.' : 'Add a new client to the marquee.'}
                         </DialogDescription>
                     </DialogHeader>
-                    <ClientForm client={selectedClient} onSave={handleSave} />
+                    <ClientForm 
+                        client={selectedClient} 
+                        onSave={handleSave}
+                        onFileChange={handleFileChange}
+                        logoPreview={logoPreview}
+                    />
                 </DialogContent>
             </Dialog>
 
