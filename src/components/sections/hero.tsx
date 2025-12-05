@@ -1,66 +1,28 @@
 
-'use server';
+'use client';
 
 import { heroData } from '@/lib/data';
 import { Button } from '@/components/ui/button';
 import { Phone, Mail, Package, Gamepad2, UsersRound, Globe } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import { MONGODB_URI } from '@/config/config';
+import { useGetProfileDataQuery, useGetProjectsDataQuery, useGetGamesDataQuery, useGetTeamDataQuery, useGetClientsDataQuery } from '@/services/api';
+import PageViewTracker from '@/components/analytics/page-view-tracker';
 
-type ProfileData = {
-  phone?: string;
-  email?: string;
-};
-
-type Countable = { _id?: string }[];
-
-async function getProfileData(): Promise<ProfileData | null> {
-  if (!MONGODB_URI) {
-    return null;
-  }
-  try {
-    const baseUrl = process.env.NODE_ENV === 'production' 
-      ? `https://` + process.env.NEXT_PUBLIC_VERCEL_URL
-      : 'http://localhost:9002';
-    const res = await fetch(`${baseUrl}/api/profile`, { cache: 'no-store' });
-    if (!res.ok) return null;
-    return await res.json();
-  } catch (error) {
-    console.error('Failed to fetch profile data for hero:', error);
-    return null;
-  }
-}
-
-async function getDataCount(apiPath: string): Promise<number> {
-  if (!MONGODB_URI) {
-    return 0;
-  }
-  try {
-    const baseUrl = process.env.NODE_ENV === 'production' 
-      ? `https://` + process.env.NEXT_PUBLIC_VERCEL_URL
-      : 'http://localhost:9002';
-    const res = await fetch(`${baseUrl}/api/${apiPath}`, { cache: 'no-store' });
-    if (!res.ok) return 0;
-    const data: Countable = await res.json();
-    return data.length;
-  } catch (error) {
-    console.error(`Failed to fetch count for ${apiPath}:`, error);
-    return 0;
-  }
-}
-
-export default async function Hero() {
-  const profile = await getProfileData();
+export default function Hero() {
+  const { data: profile } = useGetProfileDataQuery();
+  const { data: projectsData = [] } = useGetProjectsDataQuery();
+  const { data: gamesData = [] } = useGetGamesDataQuery();
+  const { data: teamData = [] } = useGetTeamDataQuery();
+  const { data: clientsData = [] } = useGetClientsDataQuery();
+  
   const phone = profile?.phone || '+1 (555) 123-4567';
   const email = profile?.email || 'contact@pinnaclepathways.com';
   
-  const [projectsCount, gamesCount, teamCount, clientsCount] = await Promise.all([
-    getDataCount('projects'),
-    getDataCount('games'),
-    getDataCount('team'),
-    getDataCount('clients'),
-  ]);
+  const projectsCount = projectsData.length;
+  const gamesCount = gamesData.length;
+  const teamCount = teamData.length;
+  const clientsCount = clientsData.length;
 
   const dynamicStats = [
     { label: 'Projects Completed', value: projectsCount, icon: Package },
@@ -75,6 +37,7 @@ export default async function Hero() {
       id="hero"
       className="relative w-full overflow-hidden flex items-center justify-center pt-16 md:pt-24"
     >
+      <PageViewTracker pageName="Home" />
       <div className="absolute inset-0 bg-gradient-to-br from-background via-secondary to-background" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary/10 to-transparent" />
 

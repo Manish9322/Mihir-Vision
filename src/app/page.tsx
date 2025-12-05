@@ -14,12 +14,10 @@ import Contact from '@/components/sections/contact';
 import Footer from '@/components/layout/footer';
 import { Suspense } from 'react';
 import AboutSkeleton from '@/components/skeletons/about-skeleton';
-import PageViewTracker from '@/components/analytics/page-view-tracker';
 
 export default function Home() {
   return (
     <div className="flex flex-col min-h-screen">
-      <PageViewTracker pageName="Home" />
       <Header />
       <main className="flex-1">
         <Hero />
