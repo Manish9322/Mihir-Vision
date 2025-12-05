@@ -13,6 +13,86 @@ import type { ChartConfig } from '@/components/ui/chart';
 import { useGetAnalyticsDataQuery } from '@/services/api';
 import { Loader2, AlertTriangle, Users, BarChart3, Clock, Globe, Tv, Smartphone, Tablet, Laptop, HelpCircle, LineChartIcon, PieChartIcon } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
+import { Skeleton } from '@/components/ui/skeleton';
+
+
+const StatsPageSkeleton = () => (
+    <div className="space-y-8">
+        <div className="grid gap-4 md:grid-cols-3">
+            {[...Array(3)].map((_, i) => (
+                <Card key={i}>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <Skeleton className="h-5 w-24" />
+                        <Skeleton className="h-4 w-4" />
+                    </CardHeader>
+                    <CardContent>
+                        <Skeleton className="h-8 w-16 mb-2" />
+                        <Skeleton className="h-4 w-32" />
+                    </CardContent>
+                </Card>
+            ))}
+        </div>
+        <Card>
+            <CardHeader>
+                <Skeleton className="h-7 w-48" />
+                <Skeleton className="h-4 w-64" />
+            </CardHeader>
+            <CardContent>
+                <Skeleton className="h-[300px] w-full" />
+            </CardContent>
+        </Card>
+        <div className="grid gap-8 md:grid-cols-2">
+            <Card>
+                <CardHeader><Skeleton className="h-7 w-48" /></CardHeader>
+                <CardContent>
+                     <Table>
+                        <TableHeader><TableRow><TableHead><Skeleton className="h-5 w-24" /></TableHead><TableHead className="text-right"><Skeleton className="h-5 w-16 ml-auto" /></TableHead></TableRow></TableHeader>
+                        <TableBody>
+                            {[...Array(5)].map((_, i) => (
+                                <TableRow key={i}><TableCell><Skeleton className="h-5 w-32" /></TableCell><TableCell className="text-right"><Skeleton className="h-5 w-14 ml-auto" /></TableCell></TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </CardContent>
+            </Card>
+             <Card>
+                <CardHeader><Skeleton className="h-7 w-48" /></CardHeader>
+                <CardContent className="flex items-center justify-center">
+                    <Skeleton className="h-[250px] w-[250px] rounded-full" />
+                </CardContent>
+            </Card>
+        </div>
+        <div className="grid gap-8 md:grid-cols-2">
+            <Card>
+                <CardHeader><Skeleton className="h-7 w-48" /></CardHeader>
+                <CardContent>
+                    <Table>
+                        <TableHeader><TableRow><TableHead><Skeleton className="h-5 w-24" /></TableHead><TableHead className="text-right"><Skeleton className="h-5 w-16 ml-auto" /></TableHead></TableRow></TableHeader>
+                        <TableBody>
+                             {[...Array(5)].map((_, i) => (
+                                <TableRow key={i}><TableCell><Skeleton className="h-5 w-28" /></TableCell><TableCell className="text-right"><Skeleton className="h-5 w-12 ml-auto" /></TableCell></TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader><Skeleton className="h-7 w-48" /></CardHeader>
+                <CardContent>
+                     <Table>
+                        <TableHeader><TableRow><TableHead><Skeleton className="h-5 w-32" /></TableHead><TableHead className="text-right"><Skeleton className="h-5 w-16 ml-auto" /></TableHead></TableRow></TableHeader>
+                        <TableBody>
+                            {[...Array(5)].map((_, i) => (
+                                <TableRow key={i}><TableCell><Skeleton className="h-5 w-28" /></TableCell><TableCell className="text-right"><Skeleton className="h-5 w-12 ml-auto" /></TableCell></TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </CardContent>
+            </Card>
+        </div>
+    </div>
+);
+
 
 const COLORS = ["hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))", "hsl(var(--chart-5))"];
 
@@ -62,12 +142,7 @@ const StatsPage = () => {
 
 
     if (isLoading) {
-        return (
-            <div className="flex items-center justify-center h-full">
-                <Loader2 className="h-12 w-12 animate-spin text-primary" />
-                <p className="ml-4 text-lg text-muted-foreground">Loading analytics...</p>
-            </div>
-        );
+        return <StatsPageSkeleton />;
     }
     
     if (isError || !stats) {
