@@ -207,9 +207,20 @@ const DesignationsManager = () => {
     const [updateDesignations, { isLoading: isMutating }] = useUpdateDesignationsMutation();
     const [addActionLog] = useAddActionLogMutation();
     
+    const [currentPage, setCurrentPage] = useState(1);
+    const [searchQuery, setSearchQuery] = useState('');
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [selectedItem, setSelectedItem] = useState(null);
     const [editingIndex, setEditingIndex] = useState(null);
+
+    const filteredItems = useMemo(() => {
+        return (designations || []).filter(item =>
+            item.name.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+    }, [designations, searchQuery]);
+
+    const totalPages = Math.ceil(filteredItems.length / ITEMS_PER_PAGE);
+    const paginatedItems = filteredItems.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
     const handleSave = async (data) => {
         let updatedItems;
@@ -227,12 +238,7 @@ const DesignationsManager = () => {
 
         try {
             await updateDesignations(updatedItems).unwrap();
-            await addActionLog({
-                user: 'Admin User',
-                section: 'Settings',
-                action,
-                type,
-            }).unwrap();
+            await addActionLog({ user: 'Admin User', section: 'Settings', action, type }).unwrap();
             toast({ title: `Designation ${editingIndex !== null ? 'Updated' : 'Added'}` });
             setIsFormOpen(false);
         } catch (error) {
@@ -241,8 +247,10 @@ const DesignationsManager = () => {
     };
 
     const handleDelete = async (index) => {
-        const deletedItem = designations[index];
-        const updatedItems = designations.filter((_, i) => i !== index);
+        const fullIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;
+        const deletedItem = filteredItems[fullIndex];
+        const updatedItems = designations.filter((item) => item._id !== deletedItem._id);
+        
         try {
             await updateDesignations(updatedItems).unwrap();
             await addActionLog({
@@ -268,12 +276,18 @@ const DesignationsManager = () => {
 
     return (
         <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
+            <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
                     <CardTitle>Manage Designations</CardTitle>
                     <CardDescription>Define roles for your team members.</CardDescription>
                 </div>
-                <Button onClick={() => { setSelectedItem(null); setEditingIndex(null); setIsFormOpen(true); }}><PlusCircle className="mr-2 h-4 w-4" /> Add Designation</Button>
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                     <div className="relative flex-1 sm:flex-initial">
+                        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input type="search" placeholder="Search designations..." className="pl-8" value={searchQuery} onChange={e => { setSearchQuery(e.target.value); setCurrentPage(1); }} />
+                    </div>
+                    <Button onClick={() => { setSelectedItem(null); setEditingIndex(null); setIsFormOpen(true); }}><PlusCircle className="mr-2 h-4 w-4" /> Add Designation</Button>
+                </div>
             </CardHeader>
             <CardContent>
                 <Table>
@@ -286,7 +300,7 @@ const DesignationsManager = () => {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {designations.map((item, index) => (
+                        {paginatedItems.map((item, index) => (
                             <TableRow key={item._id || index}>
                                 <TableCell className="font-medium">{item.name}</TableCell>
                                 <TableCell>{item.description}</TableCell>
@@ -295,7 +309,12 @@ const DesignationsManager = () => {
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild><Button size="icon" variant="ghost"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
                                         <DropdownMenuContent align="end">
-                                            <DropdownMenuItem onClick={() => { setSelectedItem(item); setEditingIndex(index); setIsFormOpen(true); }}><FilePenLine className="mr-2 h-4 w-4" />Edit</DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => { 
+                                                const fullIndex = designations.findIndex(d => d._id === item._id);
+                                                setSelectedItem(item); 
+                                                setEditingIndex(fullIndex); 
+                                                setIsFormOpen(true); 
+                                            }}><FilePenLine className="mr-2 h-4 w-4" />Edit</DropdownMenuItem>
                                             <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(index)}><Trash2 className="mr-2 h-4 w-4" />Delete</DropdownMenuItem>
                                         </DropdownMenuContent>
                                     </DropdownMenu>
@@ -304,6 +323,13 @@ const DesignationsManager = () => {
                         ))}
                     </TableBody>
                 </Table>
+                 <div className="flex items-center justify-between border-t p-4">
+                    <div className="text-xs text-muted-foreground">Showing <strong>{paginatedItems.length > 0 ? (currentPage - 1) * ITEMS_PER_PAGE + 1 : 0}-{(currentPage - 1) * ITEMS_PER_PAGE + paginatedItems.length}</strong> of <strong>{filteredItems.length}</strong> designations</div>
+                    <div className="flex items-center gap-2">
+                        <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} disabled={currentPage === 1}><ChevronLeft className="h-4 w-4" /></Button>
+                        <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages}><ChevronRight className="h-4 w-4" /></Button>
+                    </div>
+                </div>
             </CardContent>
              <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}><DialogContent><DialogHeader><DialogTitle>{editingIndex !== null ? 'Edit' : 'Add'} Designation</DialogTitle></DialogHeader><DesignationForm designation={selectedItem} onSave={handleSave} /></DialogContent></Dialog>
         </Card>
