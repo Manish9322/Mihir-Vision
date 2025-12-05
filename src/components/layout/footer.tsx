@@ -16,7 +16,6 @@ type ProfileData = {
 
 type FooterData = {
   companyName: string;
-  quote: string;
 };
 
 async function getProfileData(): Promise<ProfileData | null> {
@@ -52,7 +51,7 @@ async function getSettingsData(): Promise<FooterData | null> {
         const res = await fetch(`${baseUrl}/api/settings`, { cache: 'no-store' });
         if (!res.ok) return null;
         const data = await res.json();
-        return { companyName: data.siteName, quote: data.siteTagline };
+        return { companyName: data.siteName };
     } catch (error) {
         return null;
     }
@@ -64,7 +63,6 @@ export default async function Footer() {
   const settingsData = await getSettingsData();
   
   const companyName = settingsData?.companyName || 'Pinnacle Pathways';
-  const quote = settingsData?.quote || 'The best way to predict the future is to create it.';
   const socialLinks = profileData?.socialLinks || [];
 
   return (
@@ -75,7 +73,6 @@ export default async function Footer() {
             <Mountain className="h-6 w-6" />
             <span className="font-bold font-headline">{companyName}</span>
           </div>
-          <p className="text-sm text-center md:text-left text-muted-foreground italic">&quot;{quote}&quot;</p>
           <div className="flex items-center gap-4">
             {socialLinks.map((social) => (
               <Link key={social.platform} href={social.url} target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-foreground">
