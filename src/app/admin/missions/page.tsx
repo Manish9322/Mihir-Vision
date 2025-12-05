@@ -289,7 +289,7 @@ const MissionsAdminPage = () => {
         });
     };
     
-    const handleSave = async (projectData: Omit<Project, '_id'>) => {
+    const handleSave = async (projectData: Omit<Project, '_id' | 'image'> & { image?: Partial<ImagePlaceholder> }) => {
         let finalData = { ...projectData };
         let action: string, type: 'CREATE' | 'UPDATE';
 
@@ -298,8 +298,10 @@ const MissionsAdminPage = () => {
                 const uploadResult = await uploadImage(imageFile).unwrap();
                 if (uploadResult.url) {
                     finalData.image = {
-                        ...finalData.image,
-                        imageUrl: uploadResult.url
+                        id: `proj_img_${Date.now()}`,
+                        description: finalData.title || 'Project image',
+                        imageUrl: uploadResult.url,
+                        imageHint: finalData.title?.toLowerCase().split(' ').slice(0,2).join(' ') || 'project image'
                     };
                 } else {
                     throw new Error('Image upload failed to return a URL.');
@@ -314,7 +316,7 @@ const MissionsAdminPage = () => {
 
             if (editingIndex !== null) {
                 newItems = [...projects];
-                newItems[editingIndex] = { ...projects[editingIndex], ...finalData };
+                newItems[editingIndex] = { ...projects[editingIndex], ...finalData } as Project;
                 action = `updated project "${finalData.title}"`;
                 type = 'UPDATE';
             } else {
