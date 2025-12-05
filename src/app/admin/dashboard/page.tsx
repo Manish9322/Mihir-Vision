@@ -150,9 +150,12 @@ const AdminDashboardPage = () => {
     const { data: analyticsData, isLoading: isAnalyticsLoading, isError: isAnalyticsError } = useGetAnalyticsDataQuery();
     const { data: projectsData = [], isLoading: isProjectsLoading, isError: isProjectsError } = useGetProjectsDataQuery();
     
-    const [date, setDate] = useState<DateRange | undefined>({
-      from: new Date(2020, 0, 1),
-      to: new Date(),
+    const [date, setDate] = useState<DateRange | undefined>(() => {
+        const to = new Date();
+        const from = new Date();
+        from.setMonth(from.getMonth() - 1);
+        from.setDate(1);
+        return { from, to };
     });
 
     const isLoading = isContactsLoading || isLogsLoading || isAnalyticsLoading || isProjectsLoading;
