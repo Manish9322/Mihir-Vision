@@ -1,5 +1,5 @@
 
-import useragent from 'useragent';
+import UAParser from 'ua-parser-js';
 import crypto from 'crypto';
 
 export function getVisitorId(req) {
@@ -14,20 +14,12 @@ export function getVisitorId(req) {
 
 export function parseUserAgent(req) {
     const uaString = req.headers.get('user-agent') || '';
-    const agent = useragent.parse(uaString);
-
-    const os = agent.os.family;
-    const browser = agent.family;
-    let deviceType = 'Other';
-
-    if (agent.isDesktop) deviceType = 'Desktop';
-    if (agent.isMobile) deviceType = 'Mobile';
-    if (agent.isTablet) deviceType = 'Tablet';
-    if (agent.isTv) deviceType = 'TV';
+    const parser = new UAParser(uaString);
+    const result = parser.getResult();
 
     return {
-        os,
-        browser,
-        deviceType
+        os: result.os.name || 'Other',
+        browser: result.browser.name || 'Other',
+        deviceType: result.device.type || 'Desktop',
     };
 }

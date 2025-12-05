@@ -37,14 +37,6 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  webpack: (config, { isServer }) => {
-    // This is to fix a build error with the 'useragent' package.
-    // The 'request' module is a dependency of a file in 'useragent' that is not used at runtime.
-    if (!isServer) {
-        config.externals = [...config.externals, 'request'];
-    }
-    return config;
-  },
 };
 
 export default nextConfig;
