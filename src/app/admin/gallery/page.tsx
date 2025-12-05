@@ -1,5 +1,4 @@
 
-
 'use client';
 import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
@@ -254,9 +253,9 @@ const GalleryAdminPage = () => {
     };
     
     const handleSave = async (imageData: Omit<GalleryImage, '_id' | 'imageUrl' | 'id'>) => {
-        let finalData: GalleryImage | Omit<GalleryImage, '_id'> = { ...imageData, id: '', imageUrl: '' };
+        let finalData: Partial<GalleryImage> = { ...imageData };
         let action: string, type: 'CREATE' | 'UPDATE';
-
+    
         try {
             if (imageFile) {
                 const uploadResult = await uploadImage(imageFile).unwrap();
@@ -270,18 +269,21 @@ const GalleryAdminPage = () => {
             } else {
                  finalData.imageUrl = 'https://placehold.co/600x400';
             }
-
+    
             let newItems: GalleryImage[];
-
+    
             if (editingIndex !== null) {
                 const originalItem = images[editingIndex];
+                // Ensure the original id is preserved
+                finalData = { ...originalItem, ...finalData };
                 newItems = [...images];
-                newItems[editingIndex] = { ...originalItem, ...finalData };
+                newItems[editingIndex] = finalData as GalleryImage;
                 action = `updated image "${finalData.description}"`;
                 type = 'UPDATE';
             } else {
-                const newItem = { ...finalData, id: `gallery_${Date.now()}` } as GalleryImage;
-                newItems = [newItem, ...images];
+                // Create a new id for new items
+                finalData.id = `gallery_${Date.now()}`;
+                newItems = [finalData as GalleryImage, ...images];
                 action = `created image "${finalData.description}"`;
                 type = 'CREATE';
             }
@@ -476,3 +478,5 @@ const GalleryAdminPage = () => {
 }
 
 export default GalleryAdminPage;
+
+    
