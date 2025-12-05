@@ -1,4 +1,5 @@
 
+
 'use client';
 import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
@@ -12,7 +13,7 @@ import { PlusCircle, Trash2, ArrowUp, ArrowDown, GripVertical, ChevronLeft, Chev
 import Image from 'next/image';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { useGetGalleryDataQuery, useUpdateGalleryDataMutation, useAddActionLogMutation } from '@/services/api';
+import { useGetGalleryDataQuery, useUpdateGalleryDataMutation, useAddActionLogMutation, useUploadImageMutation } from '@/services/api';
 import { Switch } from '@/components/ui/switch';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -76,24 +77,18 @@ const GalleryAdminSkeleton = () => (
 );
 
 
-const ImageForm = ({ image, onSave }: { image?: GalleryImage | null, onSave: (image: Omit<GalleryImage, '_id'>) => void }) => {
+const ImageForm = ({ image, onSave, onFileChange, imagePreview }: { image?: GalleryImage | null, onSave: (image: Omit<GalleryImage, '_id' | 'imageUrl' | 'id'> & { imageUrl?: string; id?: string }) => void, onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void, imagePreview: string | null }) => {
     const [description, setDescription] = useState(image?.description || '');
-    const { toast } = useToast();
+    const [imageHint, setImageHint] = useState(image?.imageHint || '');
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        const newImage: Omit<GalleryImage, '_id'> = {
-            id: image?.id || `new_${Date.now()}`,
+        const newImage: Omit<GalleryImage, '_id' | 'imageUrl' | 'id'> & { imageUrl?: string; id?: string } = {
             description,
-            imageUrl: image?.imageUrl || 'https://placehold.co/600x400', // Placeholder
-            imageHint: image?.imageHint || 'placeholder',
+            imageHint,
             isVisible: image?.isVisible ?? true,
         };
         onSave(newImage);
-        toast({
-            title: `Image ${image ? 'Updated' : 'Created'}`,
-            description: `The image has been saved.`,
-        });
     };
 
     return (
@@ -103,10 +98,14 @@ const ImageForm = ({ image, onSave }: { image?: GalleryImage | null, onSave: (im
                 <Input id="description" value={description} onChange={(e) => setDescription(e.target.value)} required />
             </div>
              <div className="space-y-2">
+                <Label htmlFor="imageHint">Image Hint (for AI)</Label>
+                <Input id="imageHint" value={imageHint} onChange={(e) => setImageHint(e.target.value)} placeholder="e.g. futuristic city" />
+            </div>
+             <div className="space-y-2">
                 <Label>Image</Label>
                 <div className="flex items-center gap-4">
-                    <Image src={image?.imageUrl || 'https://placehold.co/150x100'} alt={image?.description || 'New Image'} width={150} height={100} className="rounded-md object-cover aspect-video" />
-                    <Input type="file" className="max-w-xs" />
+                    <Image src={imagePreview || image?.imageUrl || 'https://placehold.co/150x100'} alt={image?.description || 'New Image'} width={150} height={100} className="rounded-md object-cover aspect-video" />
+                    <Input type="file" className="max-w-xs" onChange={onFileChange} accept="image/*" />
                 </div>
             </div>
             <DialogFooter>
@@ -148,12 +147,16 @@ const GalleryAdminPage = () => {
     const { data: images = [], isLoading: isQueryLoading, isError } = useGetGalleryDataQuery();
     const [updateGallery, { isLoading: isMutationLoading }] = useUpdateGalleryDataMutation();
     const [addActionLog] = useAddActionLogMutation();
+    const [uploadImage, { isLoading: isUploading }] = useUploadImageMutation();
 
     const [currentPage, setCurrentPage] = useState(1);
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [isViewOpen, setIsViewOpen] = useState(false);
     const [selectedImage, setSelectedImage] = useState<GalleryImage | null>(null);
     const [editingIndex, setEditingIndex] = useState<number | null>(null);
+
+    const [imageFile, setImageFile] = useState<File | null>(null);
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
 
     const totalPages = Math.ceil(images.length / ITEMS_PER_PAGE);
     const paginatedImages = images.slice(
@@ -166,6 +169,18 @@ const GalleryAdminPage = () => {
         visible: images.filter(img => img.isVisible).length,
         hidden: images.filter(img => !img.isVisible).length,
     }), [images]);
+    
+    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            setImageFile(file);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setImagePreview(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
 
     const triggerUpdate = async (updatedItems: GalleryImage[], actionLog: Omit<Parameters<typeof addActionLog>[0], 'user' | 'section'>) => {
         try {
@@ -207,6 +222,8 @@ const GalleryAdminPage = () => {
     const handleAddClick = () => {
         setSelectedImage(null);
         setEditingIndex(null);
+        setImageFile(null);
+        setImagePreview(null);
         setIsFormOpen(true);
     };
 
@@ -214,6 +231,8 @@ const GalleryAdminPage = () => {
         const fullIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;
         setSelectedImage(image);
         setEditingIndex(fullIndex);
+        setImageFile(null);
+        setImagePreview(null);
         setIsFormOpen(true);
     };
 
@@ -234,22 +253,51 @@ const GalleryAdminPage = () => {
         });
     };
     
-    const handleSave = (image: Omit<GalleryImage, '_id'>) => {
-        let newItems: GalleryImage[];
+    const handleSave = async (imageData: Omit<GalleryImage, '_id' | 'imageUrl' | 'id'>) => {
+        let finalData: GalleryImage | Omit<GalleryImage, '_id'> = { ...imageData, id: '', imageUrl: '' };
         let action: string, type: 'CREATE' | 'UPDATE';
 
-        if (editingIndex !== null) {
-            newItems = [...images];
-            newItems[editingIndex] = { ...images[editingIndex], ...image } as GalleryImage;
-            action = `updated image "${image.description}"`;
-            type = 'UPDATE';
-        } else {
-            newItems = [image as GalleryImage, ...images];
-            action = `created image "${image.description}"`;
-            type = 'CREATE';
+        try {
+            if (imageFile) {
+                const uploadResult = await uploadImage(imageFile).unwrap();
+                if (uploadResult.url) {
+                    finalData.imageUrl = uploadResult.url;
+                } else {
+                    throw new Error('Image upload failed to return a URL.');
+                }
+            } else if (selectedImage) {
+                 finalData.imageUrl = selectedImage.imageUrl;
+            } else {
+                 finalData.imageUrl = 'https://placehold.co/600x400';
+            }
+
+            let newItems: GalleryImage[];
+
+            if (editingIndex !== null) {
+                const originalItem = images[editingIndex];
+                newItems = [...images];
+                newItems[editingIndex] = { ...originalItem, ...finalData };
+                action = `updated image "${finalData.description}"`;
+                type = 'UPDATE';
+            } else {
+                const newItem = { ...finalData, id: `gallery_${Date.now()}` } as GalleryImage;
+                newItems = [newItem, ...images];
+                action = `created image "${finalData.description}"`;
+                type = 'CREATE';
+            }
+            await triggerUpdate(newItems, { action, type });
+            
+            setIsFormOpen(false);
+            setImageFile(null);
+            setImagePreview(null);
+        } catch (error) {
+            console.error('Save failed:', error);
+            toast({
+                variant: 'destructive',
+                title: 'Save Failed',
+                description: `There was an error saving the image. ${error.message || ''}`,
+            });
         }
-        triggerUpdate(newItems, { action, type });
-        setIsFormOpen(false);
     };
 
     const handleVisibilityChange = (index: number, isVisible: boolean) => {
@@ -318,7 +366,7 @@ const GalleryAdminPage = () => {
                         <CardTitle>Screenshot Gallery Section</CardTitle>
                         <CardDescription>Manage the images in the screenshot gallery.</CardDescription>
                     </div>
-                     <Button onClick={handleAddClick} disabled={isMutationLoading}>
+                     <Button onClick={handleAddClick} disabled={isMutationLoading || isUploading}>
                         <PlusCircle className="mr-2 h-4 w-4" /> Add Image
                     </Button>
                 </CardHeader>
@@ -339,11 +387,11 @@ const GalleryAdminPage = () => {
                                     <TableRow key={image.id}>
                                         <TableCell className="text-center align-middle">
                                             <div className="flex flex-col items-center gap-1">
-                                                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleMove(index, 'up')} disabled={isMutationLoading || (currentPage - 1) * ITEMS_PER_PAGE + index === 0}>
+                                                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleMove(index, 'up')} disabled={isMutationLoading || isUploading || (currentPage - 1) * ITEMS_PER_PAGE + index === 0}>
                                                     <ArrowUp className="h-4 w-4" />
                                                 </Button>
                                                 <GripVertical className="h-4 w-4 text-muted-foreground" />
-                                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleMove(index, 'down')} disabled={isMutationLoading || (currentPage - 1) * ITEMS_PER_PAGE + index === images.length - 1}>
+                                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleMove(index, 'down')} disabled={isMutationLoading || isUploading || (currentPage - 1) * ITEMS_PER_PAGE + index === images.length - 1}>
                                                     <ArrowDown className="h-4 w-4" />
                                                 </Button>
                                             </div>
@@ -356,13 +404,13 @@ const GalleryAdminPage = () => {
                                             <Switch
                                                 checked={image.isVisible}
                                                 onCheckedChange={(checked) => handleVisibilityChange(index, checked)}
-                                                disabled={isMutationLoading}
+                                                disabled={isMutationLoading || isUploading}
                                             />
                                         </TableCell>
                                         <TableCell className="text-right">
                                                 <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
-                                                    <Button size="icon" variant="ghost" disabled={isMutationLoading}>
+                                                    <Button size="icon" variant="ghost" disabled={isMutationLoading || isUploading}>
                                                         <MoreHorizontal className="h-4 w-4" />
                                                     </Button>
                                                 </DropdownMenuTrigger>
@@ -386,7 +434,7 @@ const GalleryAdminPage = () => {
                                 ))}
                             </TableBody>
                         </Table>
-                         {isMutationLoading && (
+                         {(isMutationLoading || isUploading) && (
                             <div className="absolute inset-0 bg-background/50 flex items-center justify-center">
                                 <Loader2 className="h-6 w-6 animate-spin text-primary" />
                             </div>
@@ -418,7 +466,7 @@ const GalleryAdminPage = () => {
                             {selectedImage ? 'Make changes to this gallery image.' : 'Upload a new image for the gallery.'}
                         </DialogDescription>
                     </DialogHeader>
-                    <ImageForm image={selectedImage} onSave={handleSave} />
+                    <ImageForm image={selectedImage} onSave={handleSave} onFileChange={handleFileChange} imagePreview={imagePreview} />
                 </DialogContent>
             </Dialog>
 

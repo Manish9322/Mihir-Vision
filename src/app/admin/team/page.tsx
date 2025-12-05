@@ -1,4 +1,5 @@
 
+
 'use client';
 import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
@@ -11,7 +12,7 @@ import { PlusCircle, Trash2, MoreHorizontal, FilePenLine, Eye, Loader2, Search, 
 import Image from 'next/image';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { useGetTeamDataQuery, useUpdateTeamDataMutation, useGetDesignationsQuery, useAddActionLogMutation } from '@/services/api';
+import { useGetTeamDataQuery, useUpdateTeamDataMutation, useGetDesignationsQuery, useAddActionLogMutation, useUploadImageMutation } from '@/services/api';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -96,13 +97,12 @@ const TeamAdminSkeleton = () => (
 );
 
 
-const TeamMemberForm = ({ member, onSave, designations, allMembers }: { member?: TeamMember | null, onSave: (member: Omit<TeamMember, '_id'>) => void, designations: Designation[], allMembers: TeamMember[] }) => {
+const TeamMemberForm = ({ member, onSave, onFileChange, avatarPreview, designations, allMembers }: { member?: TeamMember | null, onSave: (member: Omit<TeamMember, '_id' | 'avatarUrl'> & { avatarUrl?: string }) => void, onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void, avatarPreview: string | null, designations: Designation[], allMembers: TeamMember[] }) => {
     const [name, setName] = useState(member?.name || '');
     const [designation, setDesignation] = useState(member?.designation || '');
     const [bio, setBio] = useState(member?.bio || '');
     const [linkedinUrl, setLinkedinUrl] = useState(member?.socialLinks?.find(l => l.platform === 'LinkedIn')?.url || '');
     const [twitterUrl, setTwitterUrl] = useState(member?.socialLinks?.find(l => l.platform === 'Twitter')?.url || '');
-    const { toast } = useToast();
     
     const availableDesignations = useMemo(() => {
         const assignedUniqueDesignations = allMembers
@@ -125,19 +125,14 @@ const TeamMemberForm = ({ member, onSave, designations, allMembers }: { member?:
         if (linkedinUrl) socialLinks.push({ platform: 'LinkedIn', url: linkedinUrl });
         if (twitterUrl) socialLinks.push({ platform: 'Twitter', url: twitterUrl });
 
-        const newMember: Omit<TeamMember, '_id'> = {
+        const newMember: Omit<TeamMember, '_id' | 'avatarUrl'> & { avatarUrl?: string } = {
             name,
             designation,
             bio,
             socialLinks,
-            avatarUrl: member?.avatarUrl || 'https://placehold.co/200x200/white/black?text=Avatar', // Placeholder
             isVisible: member?.isVisible ?? true,
         };
         onSave(newMember);
-        toast({
-            title: `Team Member ${member ? 'Updated' : 'Added'}`,
-            description: `"${name}" has been saved.`,
-        });
     };
 
     return (
@@ -176,8 +171,8 @@ const TeamMemberForm = ({ member, onSave, designations, allMembers }: { member?:
              <div className="space-y-2">
                 <Label>Avatar</Label>
                 <div className="flex items-center gap-4">
-                    <Image src={member?.avatarUrl || 'https://placehold.co/200x200/white/black?text=Avatar'} alt={member?.name || 'New Member'} width={100} height={100} className="rounded-full object-cover bg-muted p-1" />
-                    <Input type="file" className="max-w-xs" />
+                    <Image src={avatarPreview || member?.avatarUrl || 'https://placehold.co/200x200/white/black?text=Avatar'} alt={member?.name || 'New Member'} width={100} height={100} className="rounded-full object-cover bg-muted p-1" />
+                    <Input type="file" className="max-w-xs" onChange={onFileChange} accept="image/*" />
                 </div>
             </div>
             <DialogFooter>
@@ -240,6 +235,7 @@ const TeamAdminPage = () => {
     const { data: designations = [], isLoading: isDesignationsLoading } = useGetDesignationsQuery();
     const [updateTeam, { isLoading: isMutationLoading }] = useUpdateTeamDataMutation();
     const [addActionLog] = useAddActionLogMutation();
+    const [uploadImage, { isLoading: isUploading }] = useUploadImageMutation();
 
     const [currentPage, setCurrentPage] = useState(1);
     const [searchQuery, setSearchQuery] = useState('');
@@ -247,6 +243,9 @@ const TeamAdminPage = () => {
     const [isViewOpen, setIsViewOpen] = useState(false);
     const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
     const [editingIndex, setEditingIndex] = useState<number | null>(null);
+
+    const [imageFile, setImageFile] = useState<File | null>(null);
+    const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
     const filteredMembers = useMemo(() => {
         return teamMembers.filter(member =>
@@ -266,6 +265,18 @@ const TeamAdminPage = () => {
         visible: teamMembers.filter(m => m.isVisible).length,
         hidden: teamMembers.filter(m => !m.isVisible).length,
     }), [teamMembers]);
+    
+    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            setImageFile(file);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setAvatarPreview(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
 
     const triggerUpdate = async (updatedItems: TeamMember[], actionLog: Omit<Parameters<typeof addActionLog>[0], 'user' | 'section'>) => {
         try {
@@ -291,6 +302,8 @@ const TeamAdminPage = () => {
     const handleAddClick = () => {
         setSelectedMember(null);
         setEditingIndex(null);
+        setImageFile(null);
+        setAvatarPreview(null);
         setIsFormOpen(true);
     };
 
@@ -298,6 +311,8 @@ const TeamAdminPage = () => {
         const fullIndex = teamMembers.findIndex(m => m._id === member._id);
         setSelectedMember(member);
         setEditingIndex(fullIndex);
+        setImageFile(null);
+        setAvatarPreview(null);
         setIsFormOpen(true);
     };
 
@@ -319,22 +334,53 @@ const TeamAdminPage = () => {
         }
     };
     
-    const handleSave = (memberData: Omit<TeamMember, '_id'>) => {
-        let newItems: TeamMember[];
+    const handleSave = async (memberData: Omit<TeamMember, '_id'>) => {
+        let finalData = { ...memberData };
         let action: string, type: 'CREATE' | 'UPDATE';
 
-        if (editingIndex !== null) {
-            newItems = teamMembers.map((member, index) => index === editingIndex ? { ...teamMembers[editingIndex], ...memberData } : member);
-            action = `updated team member "${memberData.name}"`;
-            type = 'UPDATE';
-        } else {
-            const newMember = { ...memberData, _id: `new_${Date.now()}` } as TeamMember;
-            newItems = [newMember, ...teamMembers];
-            action = `added team member "${memberData.name}"`;
-            type = 'CREATE';
+        try {
+            if (imageFile) {
+                const uploadResult = await uploadImage(imageFile).unwrap();
+                if (uploadResult.url) {
+                    finalData.avatarUrl = uploadResult.url;
+                } else {
+                    throw new Error('Image upload failed to return a URL.');
+                }
+            } else if (selectedMember) {
+                finalData.avatarUrl = selectedMember.avatarUrl;
+            } else {
+                finalData.avatarUrl = 'https://placehold.co/200x200/white/black?text=Avatar';
+            }
+
+            let newItems: TeamMember[];
+
+            if (editingIndex !== null) {
+                newItems = teamMembers.map((member, index) => index === editingIndex ? { ...teamMembers[editingIndex], ...finalData } : member);
+                action = `updated team member "${finalData.name}"`;
+                type = 'UPDATE';
+            } else {
+                const newMember = { ...finalData, _id: `new_${Date.now()}` } as TeamMember;
+                newItems = [newMember, ...teamMembers];
+                action = `added team member "${finalData.name}"`;
+                type = 'CREATE';
+            }
+            await triggerUpdate(newItems, { action, type });
+            
+            setIsFormOpen(false);
+            setImageFile(null);
+            setAvatarPreview(null);
+            toast({
+                title: `Team Member ${editingIndex !== null ? 'Updated' : 'Added'}`,
+                description: `"${finalData.name}" has been saved.`,
+            });
+        } catch (error) {
+            console.error('Save failed:', error);
+            toast({
+                variant: 'destructive',
+                title: 'Save Failed',
+                description: `There was an error saving the team member. ${error.message || ''}`,
+            });
         }
-        triggerUpdate(newItems, { action, type });
-        setIsFormOpen(false);
     };
     
     const handleVisibilityChange = (memberId: string | undefined, isVisible: boolean) => {
@@ -415,7 +461,7 @@ const TeamAdminPage = () => {
                                 }}
                             />
                         </div>
-                         <Button onClick={handleAddClick} disabled={isMutationLoading}>
+                         <Button onClick={handleAddClick} disabled={isMutationLoading || isUploading}>
                             <PlusCircle className="mr-2 h-4 w-4" /> Add Member
                         </Button>
                     </div>
@@ -444,13 +490,13 @@ const TeamAdminPage = () => {
                                             <Switch
                                                 checked={member.isVisible}
                                                 onCheckedChange={(checked) => handleVisibilityChange(member._id, checked)}
-                                                disabled={isMutationLoading}
+                                                disabled={isMutationLoading || isUploading}
                                             />
                                         </TableCell>
                                         <TableCell className="text-right">
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
-                                                    <Button size="icon" variant="ghost" disabled={isMutationLoading}>
+                                                    <Button size="icon" variant="ghost" disabled={isMutationLoading || isUploading}>
                                                         <MoreHorizontal className="h-4 w-4" />
                                                     </Button>
                                                 </DropdownMenuTrigger>
@@ -474,7 +520,7 @@ const TeamAdminPage = () => {
                                 ))}
                             </TableBody>
                         </Table>
-                         {isMutationLoading && (
+                         {(isMutationLoading || isUploading) && (
                             <div className="absolute inset-0 bg-background/50 flex items-center justify-center">
                                 <Loader2 className="h-6 w-6 animate-spin text-primary" />
                             </div>
@@ -507,7 +553,7 @@ const TeamAdminPage = () => {
                         </DialogDescription>
                     </DialogHeader>
                     <div className="max-h-[70vh] overflow-y-auto px-1 pr-6 pl-6 scrollbar-hide">
-                        <TeamMemberForm member={selectedMember} onSave={handleSave} designations={designations || []} allMembers={teamMembers} />
+                        <TeamMemberForm member={selectedMember} onSave={handleSave} onFileChange={handleFileChange} avatarPreview={avatarPreview} designations={designations || []} allMembers={teamMembers} />
                     </div>
                 </DialogContent>
             </Dialog>

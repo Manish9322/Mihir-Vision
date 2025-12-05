@@ -12,7 +12,7 @@ import { PlusCircle, Trash2, MoreHorizontal, FilePenLine, Eye, Loader2, Search, 
 import Image from 'next/image';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { useGetGamesDataQuery, useUpdateGamesDataMutation, useAddActionLogMutation } from '@/services/api';
+import { useGetGamesDataQuery, useUpdateGamesDataMutation, useAddActionLogMutation, useUploadImageMutation } from '@/services/api';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
@@ -90,30 +90,24 @@ const GameAdminSkeleton = () => (
 );
 
 
-const GameForm = ({ game, onSave }: { game?: Game | null, onSave: (game: Omit<Game, '_id'>) => void }) => {
+const GameForm = ({ game, onSave, onFileChange, coverPreview }: { game?: Game | null, onSave: (game: Omit<Game, '_id' | 'coverImageUrl'> & { coverImageUrl?: string }) => void, onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void, coverPreview: string | null }) => {
     const [title, setTitle] = useState(game?.title || '');
     const [description, setDescription] = useState(game?.description || '');
     const [releaseDate, setReleaseDate] = useState(game?.releaseDate || '');
     const [platforms, setPlatforms] = useState(game?.platforms?.join(', ') || '');
     const [websiteUrl, setWebsiteUrl] = useState(game?.websiteUrl || '');
-    const { toast } = useToast();
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        const newGame: Omit<Game, '_id'> = {
+        const newGame: Omit<Game, '_id' | 'coverImageUrl'> & { coverImageUrl?: string } = {
             title,
             description,
             releaseDate,
             platforms: platforms.split(',').map(p => p.trim()).filter(Boolean),
             websiteUrl,
-            coverImageUrl: game?.coverImageUrl || 'https://placehold.co/300x400/white/black?text=Cover', // Placeholder
             isVisible: game?.isVisible ?? true,
         };
         onSave(newGame);
-        toast({
-            title: `Game ${game ? 'Updated' : 'Created'}`,
-            description: `The game "${title}" has been saved.`,
-        });
     };
 
     return (
@@ -145,8 +139,8 @@ const GameForm = ({ game, onSave }: { game?: Game | null, onSave: (game: Omit<Ga
              <div className="space-y-2">
                 <Label>Cover Image</Label>
                 <div className="flex items-center gap-4">
-                    <Image src={game?.coverImageUrl || 'https://placehold.co/150x200/white/black?text=Cover'} alt={game?.title || 'New Game'} width={150} height={200} className="rounded-md object-cover bg-muted p-1" />
-                    <Input type="file" className="max-w-xs" />
+                    <Image src={coverPreview || game?.coverImageUrl || 'https://placehold.co/150x200/white/black?text=Cover'} alt={game?.title || 'New Game'} width={150} height={200} className="rounded-md object-cover bg-muted p-1" />
+                    <Input type="file" className="max-w-xs" onChange={onFileChange} accept="image/*" />
                 </div>
             </div>
             <DialogFooter className="pt-4">
@@ -194,6 +188,7 @@ const GamesAdminPage = () => {
     const { data: games = [], isLoading: isQueryLoading, isError } = useGetGamesDataQuery();
     const [updateGames, { isLoading: isMutationLoading }] = useUpdateGamesDataMutation();
     const [addActionLog] = useAddActionLogMutation();
+    const [uploadImage, { isLoading: isUploading }] = useUploadImageMutation();
 
     const [currentPage, setCurrentPage] = useState(1);
     const [searchQuery, setSearchQuery] = useState('');
@@ -201,6 +196,9 @@ const GamesAdminPage = () => {
     const [isViewOpen, setIsViewOpen] = useState(false);
     const [selectedGame, setSelectedGame] = useState<Game | null>(null);
     const [editingIndex, setEditingIndex] = useState<number | null>(null);
+    
+    const [imageFile, setImageFile] = useState<File | null>(null);
+    const [coverPreview, setCoverPreview] = useState<string | null>(null);
 
     const filteredGames = useMemo(() => {
         return games.filter(game => 
@@ -220,6 +218,18 @@ const GamesAdminPage = () => {
         visible: games.filter(g => g.isVisible).length,
         hidden: games.filter(g => !g.isVisible).length,
     }), [games]);
+    
+    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            setImageFile(file);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setCoverPreview(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
 
     const triggerUpdate = async (updatedItems: Game[], actionLog: Omit<Parameters<typeof addActionLog>[0], 'user' | 'section'>) => {
         try {
@@ -245,6 +255,8 @@ const GamesAdminPage = () => {
     const handleAddClick = () => {
         setSelectedGame(null);
         setEditingIndex(null);
+        setImageFile(null);
+        setCoverPreview(null);
         setIsFormOpen(true);
     };
 
@@ -252,6 +264,8 @@ const GamesAdminPage = () => {
         const fullIndex = games.findIndex(g => g._id === game._id);
         setSelectedGame(game);
         setEditingIndex(fullIndex);
+        setImageFile(null);
+        setCoverPreview(null);
         setIsFormOpen(true);
     };
 
@@ -272,24 +286,51 @@ const GamesAdminPage = () => {
         });
     };
     
-    const handleSave = (gameData: Omit<Game, '_id'>) => {
-        let newItems: Game[];
+    const handleSave = async (gameData: Omit<Game, '_id'>) => {
+        let finalData = { ...gameData };
         let action: string, type: 'CREATE' | 'UPDATE';
 
-        if (editingIndex !== null) {
-            newItems = games.map((game, index) => index === editingIndex ? { ...games[editingIndex], ...gameData } : game);
-            action = `updated game "${gameData.title}"`;
-            type = 'UPDATE';
-        } else {
-            const newGame = { ...gameData, _id: `new_${Date.now()}` } as Game;
-            newItems = [newGame, ...games];
-            action = `created game "${gameData.title}"`;
-            type = 'CREATE';
+        try {
+            if (imageFile) {
+                const uploadResult = await uploadImage(imageFile).unwrap();
+                if (uploadResult.url) {
+                    finalData.coverImageUrl = uploadResult.url;
+                } else {
+                    throw new Error('Image upload failed to return a URL.');
+                }
+            } else if (selectedGame) {
+                 finalData.coverImageUrl = selectedGame.coverImageUrl;
+            } else {
+                 finalData.coverImageUrl = 'https://placehold.co/300x400/white/black?text=Cover';
+            }
+
+            let newItems: Game[];
+
+            if (editingIndex !== null) {
+                newItems = games.map((game, index) => index === editingIndex ? { ...games[editingIndex], ...finalData } : game);
+                action = `updated game "${finalData.title}"`;
+                type = 'UPDATE';
+            } else {
+                const newGame = { ...finalData, _id: `new_${Date.now()}` } as Game;
+                newItems = [newGame, ...games];
+                action = `created game "${finalData.title}"`;
+                type = 'CREATE';
+            }
+            await triggerUpdate(newItems, { action, type });
+            
+            setIsFormOpen(false);
+            setEditingIndex(null);
+            setSelectedGame(null);
+            setImageFile(null);
+            setCoverPreview(null);
+        } catch (error) {
+            console.error('Save failed:', error);
+            toast({
+                variant: 'destructive',
+                title: 'Save Failed',
+                description: `There was an error saving the game. ${error.message || ''}`,
+            });
         }
-        triggerUpdate(newItems, { action, type });
-        setIsFormOpen(false);
-        setEditingIndex(null);
-        setSelectedGame(null);
     };
     
     const handleVisibilityChange = (gameId: string, isVisible: boolean) => {
@@ -369,7 +410,7 @@ const GamesAdminPage = () => {
                                 }}
                             />
                         </div>
-                         <Button onClick={handleAddClick} disabled={isMutationLoading}>
+                         <Button onClick={handleAddClick} disabled={isMutationLoading || isUploading}>
                             <PlusCircle className="mr-2 h-4 w-4" /> Add Game
                         </Button>
                     </div>
@@ -400,13 +441,13 @@ const GamesAdminPage = () => {
                                             <Switch
                                                 checked={game.isVisible}
                                                 onCheckedChange={(checked) => handleVisibilityChange(game._id, checked)}
-                                                disabled={isMutationLoading}
+                                                disabled={isMutationLoading || isUploading}
                                             />
                                         </TableCell>
                                         <TableCell className="text-right">
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
-                                                    <Button size="icon" variant="ghost" disabled={isMutationLoading}>
+                                                    <Button size="icon" variant="ghost" disabled={isMutationLoading || isUploading}>
                                                         <MoreHorizontal className="h-4 w-4" />
                                                     </Button>
                                                 </DropdownMenuTrigger>
@@ -430,7 +471,7 @@ const GamesAdminPage = () => {
                                 ))}
                             </TableBody>
                         </Table>
-                         {isMutationLoading && (
+                         {(isMutationLoading || isUploading) && (
                             <div className="absolute inset-0 bg-background/50 flex items-center justify-center">
                                 <Loader2 className="h-6 w-6 animate-spin text-primary" />
                             </div>
@@ -463,7 +504,7 @@ const GamesAdminPage = () => {
                         </DialogDescription>
                     </DialogHeader>
                     <div className="max-h-[70vh] overflow-y-auto px-1 pr-6 pl-6 scrollbar-hide">
-                        <GameForm game={selectedGame} onSave={handleSave} />
+                        <GameForm game={selectedGame} onSave={handleSave} onFileChange={handleFileChange} coverPreview={coverPreview} />
                     </div>
                 </DialogContent>
             </Dialog>
@@ -474,5 +515,3 @@ const GamesAdminPage = () => {
 }
 
 export default GamesAdminPage;
-
-    

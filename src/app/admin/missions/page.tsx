@@ -1,4 +1,5 @@
 
+
 'use client';
 import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
@@ -14,7 +15,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { useGetProjectsDataQuery, useUpdateProjectsDataMutation, useAddActionLogMutation } from '@/services/api';
+import { useGetProjectsDataQuery, useUpdateProjectsDataMutation, useAddActionLogMutation, useUploadImageMutation } from '@/services/api';
 import { Switch } from '@/components/ui/switch';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -86,29 +87,23 @@ const MissionAdminSkeleton = () => (
 );
 
 
-const MissionForm = ({ project, onSave }: { project?: Project | null, onSave: (project: Omit<Project, '_id'>) => void }) => {
+const MissionForm = ({ project, onSave, onFileChange, imagePreview }: { project?: Project | null, onSave: (project: Omit<Project, '_id' | 'image'> & { image?: ImagePlaceholder }) => void, onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void, imagePreview: string | null }) => {
     const [title, setTitle] = useState(project?.title || '');
     const [description, setDescription] = useState(project?.description || '');
     const [details, setDetails] = useState(project?.details || '');
     const [tags, setTags] = useState(project?.tags?.join(', ') || '');
-    const { toast } = useToast();
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        const newMission: Omit<Project, '_id'> = {
+        const newMission: Omit<Project, '_id' | 'image'> & { image?: ImagePlaceholder } = {
             title,
             slug: title.toLowerCase().replace(/\s+/g, '-'),
             description,
             details,
             tags: tags.split(',').map(tag => tag.trim()).filter(Boolean),
-            image: project?.image || { id: 'placeholder', description: 'Placeholder', imageUrl: 'https://placehold.co/600x400', imageHint: 'placeholder' },
             isVisible: project?.isVisible ?? true,
         };
         onSave(newMission);
-        toast({
-            title: `Project ${project ? 'Updated' : 'Created'}`,
-            description: `The project "${title}" has been saved.`,
-        });
     };
 
     return (
@@ -132,8 +127,8 @@ const MissionForm = ({ project, onSave }: { project?: Project | null, onSave: (p
              <div className="space-y-2">
                 <Label>Project Image</Label>
                 <div className="flex items-center gap-4">
-                    <Image src={project?.image.imageUrl || 'https://placehold.co/150x100'} alt={project?.title || 'New Mission'} width={150} height={100} className="rounded-md object-cover aspect-video" />
-                    <Input type="file" className="max-w-xs" />
+                    <Image src={imagePreview || project?.image.imageUrl || 'https://placehold.co/150x100'} alt={project?.title || 'New Mission'} width={150} height={100} className="rounded-md object-cover aspect-video" />
+                    <Input type="file" className="max-w-xs" onChange={onFileChange} accept="image/*" />
                 </div>
             </div>
             <DialogFooter>
@@ -189,12 +184,16 @@ const MissionsAdminPage = () => {
     const { data: projects = [], isLoading: isQueryLoading, isError } = useGetProjectsDataQuery();
     const [updateProjects, { isLoading: isMutationLoading }] = useUpdateProjectsDataMutation();
     const [addActionLog] = useAddActionLogMutation();
+    const [uploadImage, { isLoading: isUploading }] = useUploadImageMutation();
 
     const [currentPage, setCurrentPage] = useState(1);
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [isViewOpen, setIsViewOpen] = useState(false);
     const [selectedMission, setSelectedMission] = useState<Project | null>(null);
     const [editingIndex, setEditingIndex] = useState<number | null>(null);
+    
+    const [imageFile, setImageFile] = useState<File | null>(null);
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
 
     const totalPages = Math.ceil(projects.length / ITEMS_PER_PAGE);
     const paginatedMissions = projects.slice(
@@ -207,6 +206,18 @@ const MissionsAdminPage = () => {
         visible: projects.filter(p => p.isVisible).length,
         hidden: projects.filter(p => !p.isVisible).length,
     }), [projects]);
+    
+    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            setImageFile(file);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setImagePreview(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
 
     const triggerUpdate = async (updatedItems: Project[], actionLog: Omit<Parameters<typeof addActionLog>[0], 'user' | 'section'>) => {
         try {
@@ -247,6 +258,8 @@ const MissionsAdminPage = () => {
     const handleAddClick = () => {
         setSelectedMission(null);
         setEditingIndex(null);
+        setImageFile(null);
+        setImagePreview(null);
         setIsFormOpen(true);
     };
 
@@ -254,6 +267,8 @@ const MissionsAdminPage = () => {
         const fullIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;
         setSelectedMission(mission);
         setEditingIndex(fullIndex);
+        setImageFile(null);
+        setImagePreview(null);
         setIsFormOpen(true);
     };
 
@@ -274,23 +289,57 @@ const MissionsAdminPage = () => {
         });
     };
     
-    const handleSave = (project: Omit<Project, '_id'>) => {
-        let newItems: Project[];
+    const handleSave = async (projectData: Omit<Project, '_id'>) => {
+        let finalData = { ...projectData };
         let action: string, type: 'CREATE' | 'UPDATE';
 
-        if (editingIndex !== null) {
-            newItems = [...projects];
-            newItems[editingIndex] = { ...newItems[editingIndex], ...project };
-            action = `updated project "${project.title}"`;
-            type = 'UPDATE';
-        } else {
-            const newProject = { ...project, _id: `new_${Date.now()}` } as Project;
-            newItems = [newProject, ...projects];
-            action = `created project "${project.title}"`;
-            type = 'CREATE';
+        try {
+            if (imageFile) {
+                const uploadResult = await uploadImage(imageFile).unwrap();
+                if (uploadResult.url) {
+                    finalData.image = {
+                        ...finalData.image,
+                        imageUrl: uploadResult.url
+                    };
+                } else {
+                    throw new Error('Image upload failed to return a URL.');
+                }
+            } else if (selectedMission) {
+                finalData.image = selectedMission.image;
+            } else {
+                finalData.image = { id: 'placeholder', description: 'Placeholder', imageUrl: 'https://placehold.co/600x400', imageHint: 'placeholder' };
+            }
+
+            let newItems: Project[];
+
+            if (editingIndex !== null) {
+                newItems = [...projects];
+                newItems[editingIndex] = { ...projects[editingIndex], ...finalData };
+                action = `updated project "${finalData.title}"`;
+                type = 'UPDATE';
+            } else {
+                const newProject = { ...finalData, _id: `new_${Date.now()}` } as Project;
+                newItems = [newProject, ...projects];
+                action = `created project "${finalData.title}"`;
+                type = 'CREATE';
+            }
+            await triggerUpdate(newItems, { action, type });
+            
+            setIsFormOpen(false);
+            setImageFile(null);
+            setImagePreview(null);
+            toast({
+                title: `Project ${editingIndex !== null ? 'Updated' : 'Created'}`,
+                description: `The project "${finalData.title}" has been saved.`,
+            });
+        } catch (error) {
+            console.error('Save failed:', error);
+            toast({
+                variant: 'destructive',
+                title: 'Save Failed',
+                description: `There was an error saving the project. ${error.message || ''}`,
+            });
         }
-        triggerUpdate(newItems, { action, type });
-        setIsFormOpen(false);
     };
 
     const handleVisibilityChange = (index: number, isVisible: boolean) => {
@@ -359,7 +408,7 @@ const MissionsAdminPage = () => {
                         <CardTitle>Featured Projects</CardTitle>
                         <CardDescription>Manage the content of the "Featured Projects" section.</CardDescription>
                     </div>
-                    <Button onClick={handleAddClick} disabled={isMutationLoading}>
+                    <Button onClick={handleAddClick} disabled={isMutationLoading || isUploading}>
                         <PlusCircle className="mr-2 h-4 w-4" /> Add Project
                     </Button>
                 </CardHeader>
@@ -381,11 +430,11 @@ const MissionsAdminPage = () => {
                                     <TableRow key={mission._id || index}>
                                         <TableCell className="text-center align-middle">
                                             <div className="flex flex-col items-center gap-1">
-                                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleMove(index, 'up')} disabled={isMutationLoading || (currentPage - 1) * ITEMS_PER_PAGE + index === 0}>
+                                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleMove(index, 'up')} disabled={isMutationLoading || isUploading || (currentPage - 1) * ITEMS_PER_PAGE + index === 0}>
                                                     <ArrowUp className="h-4 w-4" />
                                                 </Button>
                                                 <GripVertical className="h-4 w-4 text-muted-foreground" />
-                                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleMove(index, 'down')} disabled={isMutationLoading || (currentPage - 1) * ITEMS_PER_PAGE + index === projects.length - 1}>
+                                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleMove(index, 'down')} disabled={isMutationLoading || isUploading || (currentPage - 1) * ITEMS_PER_PAGE + index === projects.length - 1}>
                                                     <ArrowDown className="h-4 w-4" />
                                                 </Button>
                                             </div>
@@ -399,13 +448,13 @@ const MissionsAdminPage = () => {
                                             <Switch
                                                 checked={mission.isVisible}
                                                 onCheckedChange={(checked) => handleVisibilityChange(index, checked)}
-                                                disabled={isMutationLoading}
+                                                disabled={isMutationLoading || isUploading}
                                             />
                                         </TableCell>
                                         <TableCell className="text-right">
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
-                                                    <Button size="icon" variant="ghost" disabled={isMutationLoading}>
+                                                    <Button size="icon" variant="ghost" disabled={isMutationLoading || isUploading}>
                                                         <MoreHorizontal className="h-4 w-4" />
                                                     </Button>
                                                 </DropdownMenuTrigger>
@@ -433,7 +482,7 @@ const MissionsAdminPage = () => {
                                 )}
                             </TableBody>
                         </Table>
-                        {isMutationLoading && (
+                        {(isMutationLoading || isUploading) && (
                             <div className="absolute inset-0 bg-background/50 flex items-center justify-center">
                                 <Loader2 className="h-6 w-6 animate-spin text-primary" />
                             </div>
@@ -465,7 +514,7 @@ const MissionsAdminPage = () => {
                             {selectedMission ? 'Make changes to this project.' : 'Fill out the details for the new project.'}
                         </DialogDescription>
                     </DialogHeader>
-                    <MissionForm project={selectedMission} onSave={handleSave} />
+                    <MissionForm project={selectedMission} onSave={handleSave} onFileChange={handleFileChange} imagePreview={imagePreview} />
                 </DialogContent>
             </Dialog>
 
@@ -475,5 +524,3 @@ const MissionsAdminPage = () => {
 }
 
 export default MissionsAdminPage;
-
-    
