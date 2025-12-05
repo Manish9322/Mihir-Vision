@@ -12,7 +12,7 @@ import { PlusCircle, Trash2, ArrowUp, ArrowDown, GripVertical, ChevronLeft, Chev
 import Image from 'next/image';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { useGetVideosDataQuery, useUpdateVideosDataMutation, useAddActionLogMutation } from '@/services/api';
+import { useGetVideosDataQuery, useUpdateVideosDataMutation, useAddActionLogMutation, useUploadImageMutation } from '@/services/api';
 import { Switch } from '@/components/ui/switch';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -178,6 +178,8 @@ const VideosAdminPage = () => {
     const { data: videos = [], isLoading: isQueryLoading, isError } = useGetVideosDataQuery();
     const [updateVideos, { isLoading: isMutationLoading }] = useUpdateVideosDataMutation();
     const [addActionLog] = useAddActionLogMutation();
+    const [uploadImage, { isLoading: isUploading }] = useUploadImageMutation();
+
     
     const [currentPage, setCurrentPage] = useState(1);
     const [isFormOpen, setIsFormOpen] = useState(false);
@@ -242,6 +244,9 @@ const VideosAdminPage = () => {
     const handleAddClick = () => {
         setSelectedVideo(null);
         setEditingIndex(null);
+        setThumbnailFile(null);
+        setThumbnailPreview(null);
+        setVideoFile(null);
         setIsFormOpen(true);
     };
 
@@ -249,6 +254,9 @@ const VideosAdminPage = () => {
         const fullIndex = (currentPage - 1) * ITEMS_PER_PAGE + index;
         setSelectedVideo(video);
         setEditingIndex(fullIndex);
+        setThumbnailFile(null);
+        setThumbnailPreview(null);
+        setVideoFile(null);
         setIsFormOpen(true);
     };
 
@@ -269,22 +277,60 @@ const VideosAdminPage = () => {
         });
     };
     
-    const handleSave = (video: VideoInfo) => {
-        let newItems: VideoInfo[];
+    const handleSave = async (videoData: Partial<VideoInfo>) => {
+        let finalData = { ...videoData };
         let action: string, type: 'CREATE' | 'UPDATE';
 
-        if (editingIndex !== null) {
-            newItems = [...videos];
-            newItems[editingIndex] = video;
-            action = `updated video "${video.title}"`;
-            type = 'UPDATE';
-        } else {
-            newItems = [video, ...videos];
-            action = `created video "${video.title}"`;
-            type = 'CREATE';
+        try {
+            if (thumbnailFile) {
+                const uploadResult = await uploadImage(thumbnailFile).unwrap();
+                finalData.thumbnail = {
+                    id: `thumb_${finalData.id}`,
+                    imageUrl: uploadResult.url,
+                    description: `${finalData.title} thumbnail`,
+                    imageHint: 'video thumbnail'
+                };
+            } else if (selectedVideo) {
+                finalData.thumbnail = selectedVideo.thumbnail;
+            }
+
+            if (videoFile) {
+                const uploadResult = await uploadImage(videoFile).unwrap();
+                finalData.videoUrl = uploadResult.url;
+            } else if (selectedVideo) {
+                finalData.videoUrl = selectedVideo.videoUrl;
+            }
+
+            if (!finalData.thumbnail || !finalData.videoUrl) {
+                throw new Error("Thumbnail and video URL are required.");
+            }
+
+            let newItems: VideoInfo[];
+
+            if (editingIndex !== null) {
+                newItems = [...videos];
+                newItems[editingIndex] = finalData as VideoInfo;
+                action = `updated video "${finalData.title}"`;
+                type = 'UPDATE';
+            } else {
+                newItems = [finalData as VideoInfo, ...videos];
+                action = `created video "${finalData.title}"`;
+                type = 'CREATE';
+            }
+            await triggerUpdate(newItems, { action, type });
+            
+            setIsFormOpen(false);
+            setThumbnailFile(null);
+            setThumbnailPreview(null);
+            setVideoFile(null);
+        } catch (error) {
+            console.error('Save failed:', error);
+            toast({
+                variant: 'destructive',
+                title: 'Save Failed',
+                description: `There was an error saving the video. ${error.message || ''}`,
+            });
         }
-        triggerUpdate(newItems, { action, type });
-        setIsFormOpen(false);
     };
     
     const handleVisibilityChange = (index: number, isVisible: boolean) => {
@@ -425,7 +471,7 @@ const VideosAdminPage = () => {
                                 ))}
                             </TableBody>
                         </Table>
-                         {isMutationLoading && (
+                         {(isMutationLoading || isUploading) && (
                             <div className="absolute inset-0 bg-background/50 flex items-center justify-center">
                                 <Loader2 className="h-6 w-6 animate-spin text-primary" />
                             </div>
