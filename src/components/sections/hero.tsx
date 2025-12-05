@@ -6,13 +6,13 @@ import { Button } from '@/components/ui/button';
 import { Phone, Mail, Package, Gamepad2, UsersRound, Globe } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-import { useGetProfileDataQuery, useGetProjectsDataQuery, useGetGamesDataQuery, useGetTeamDataQuery, useGetClientsDataQuery } from '@/services/api';
+import { useGetProfileDataQuery, useGetProjectsDataQuery, useGetMatchesQuery, useGetTeamDataQuery, useGetClientsDataQuery } from '@/services/api';
 import PageViewTracker from '@/components/analytics/page-view-tracker';
 
 export default function Hero() {
   const { data: profile } = useGetProfileDataQuery();
   const { data: projectsData = [] } = useGetProjectsDataQuery();
-  const { data: gamesData = [] } = useGetGamesDataQuery();
+  const { data: matchesData = [] } = useGetMatchesQuery();
   const { data: teamData = [] } = useGetTeamDataQuery();
   const { data: clientsData = [] } = useGetClientsDataQuery();
   
@@ -20,7 +20,7 @@ export default function Hero() {
   const email = profile?.email || 'contact@pinnaclepathways.com';
   
   const projectsCount = projectsData.length;
-  const gamesCount = gamesData.length;
+  const gamesCount = matchesData.length;
   const teamCount = teamData.length;
   const clientsCount = clientsData.length;
 
