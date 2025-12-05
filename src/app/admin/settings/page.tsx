@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -707,14 +706,151 @@ const CitiesManager = () => {
 };
 // #endregion
 
+const SettingsPageSkeleton = () => (
+    <Tabs defaultValue="general" className="w-full">
+        <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="general">General</TabsTrigger>
+            <TabsTrigger value="profile-options">Profile Options</TabsTrigger>
+            <TabsTrigger value="team">Team</TabsTrigger>
+            <TabsTrigger value="notifications">Notifications</TabsTrigger>
+        </TabsList>
+        <TabsContent value="general">
+            <Card>
+                <CardHeader>
+                    <Skeleton className="h-7 w-40" />
+                    <Skeleton className="h-4 w-64 mt-2" />
+                </CardHeader>
+                <CardContent className="space-y-6">
+                    <div className="space-y-2">
+                        <Skeleton className="h-4 w-20" />
+                        <Skeleton className="h-10 w-full" />
+                    </div>
+                    <div className="space-y-2">
+                        <Skeleton className="h-4 w-16" />
+                        <Skeleton className="h-10 w-full" />
+                    </div>
+                    <Skeleton className="h-10 w-28" />
+                </CardContent>
+            </Card>
+        </TabsContent>
+        <TabsContent value="profile-options">
+            <div className="space-y-8">
+                {[...Array(3)].map((_, i) => (
+                    <Card key={i}>
+                        <CardHeader>
+                            <Skeleton className="h-7 w-48" />
+                            <Skeleton className="h-4 w-72 mt-2" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="border rounded-md">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead><Skeleton className="h-5 w-24" /></TableHead>
+                                            <TableHead><Skeleton className="h-5 w-48" /></TableHead>
+                                            <TableHead className="text-right"><Skeleton className="h-5 w-16 ml-auto" /></TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {[...Array(3)].map((_, j) => (
+                                            <TableRow key={j}>
+                                                <TableCell><Skeleton className="h-5 w-32" /></TableCell>
+                                                <TableCell><Skeleton className="h-5 w-56" /></TableCell>
+                                                <TableCell className="text-right"><Skeleton className="h-8 w-8 ml-auto" /></TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                                <div className="flex items-center justify-between border-t p-4">
+                                    <Skeleton className="h-5 w-40" />
+                                    <div className="flex items-center gap-2">
+                                        <Skeleton className="h-8 w-8" />
+                                        <Skeleton className="h-8 w-8" />
+                                    </div>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
+        </TabsContent>
+        <TabsContent value="team">
+             <Card>
+                <CardHeader>
+                    <Skeleton className="h-7 w-48" />
+                    <Skeleton className="h-4 w-64 mt-2" />
+                </CardHeader>
+                <CardContent>
+                     <div className="border rounded-md">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead><Skeleton className="h-5 w-24" /></TableHead>
+                                    <TableHead><Skeleton className="h-5 w-48" /></TableHead>
+                                    <TableHead><Skeleton className="h-5 w-20" /></TableHead>
+                                    <TableHead className="text-right"><Skeleton className="h-5 w-16 ml-auto" /></TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {[...Array(3)].map((_, i) => (
+                                    <TableRow key={i}>
+                                        <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+                                        <TableCell><Skeleton className="h-5 w-48" /></TableCell>
+                                        <TableCell><Skeleton className="h-5 w-16" /></TableCell>
+                                        <TableCell className="text-right"><Skeleton className="h-8 w-8 ml-auto" /></TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </div>
+                </CardContent>
+            </Card>
+        </TabsContent>
+        <TabsContent value="notifications">
+             <Card>
+                <CardHeader>
+                    <Skeleton className="h-7 w-40" />
+                    <Skeleton className="h-4 w-64 mt-2" />
+                </CardHeader>
+                <CardContent className="space-y-6">
+                    <div className="flex items-center justify-between rounded-lg border p-4">
+                        <div className="space-y-2">
+                            <Skeleton className="h-6 w-32" />
+                            <Skeleton className="h-4 w-72" />
+                        </div>
+                        <Skeleton className="h-6 w-11 rounded-full" />
+                    </div>
+                     <div className="flex items-center justify-between rounded-lg border p-4">
+                        <div className="space-y-2">
+                            <Skeleton className="h-6 w-36" />
+                            <Skeleton className="h-4 w-80" />
+                        </div>
+                        <Skeleton className="h-6 w-11 rounded-full" />
+                    </div>
+                    <Skeleton className="h-10 w-36" />
+                </CardContent>
+            </Card>
+        </TabsContent>
+    </Tabs>
+);
+
 
 export default function SettingsPage() {
     const { toast } = useToast();
-    const { data: settingsData, isLoading: isQueryLoading, isError } = useGetSettingsDataQuery();
+    const { data: settingsData, isLoading: isSettingsLoading, isError: isSettingsError } = useGetSettingsDataQuery();
     const [updateSettings, { isLoading: isMutationLoading }] = useUpdateSettingsDataMutation();
     const [addActionLog] = useAddActionLogMutation();
     
     const { register, handleSubmit, reset } = useForm({ defaultValues: settingsData });
+
+    // Using a more robust check for loading state across multiple queries
+    const { isLoading: isCountriesLoading, isError: isCountriesError } = useGetCountriesQuery();
+    const { isLoading: isStatesLoading, isError: isStatesError } = useGetStatesQuery();
+    const { isLoading: isCitiesLoading, isError: isCitiesError } = useGetCitiesQuery();
+    const { isLoading: isDesignationsLoading, isError: isDesignationsError } = useGetDesignationsQuery();
+    
+    const isQueryLoading = isSettingsLoading || isCountriesLoading || isStatesLoading || isCitiesLoading || isDesignationsLoading;
+    const isError = isSettingsError || isCountriesError || isStatesError || isCitiesError || isDesignationsError;
 
     useState(() => {
         if (settingsData) {
@@ -767,11 +903,7 @@ export default function SettingsPage() {
     };
 
     if (isQueryLoading) {
-        return (
-            <div className="flex items-center justify-center h-full">
-                <Loader2 className="h-8 w-8 animate-spin" />
-            </div>
-        );
+        return <SettingsPageSkeleton />;
     }
     
     if (isError) {
