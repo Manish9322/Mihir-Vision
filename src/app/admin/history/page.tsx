@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Label } from '@/components/ui/label';
 import { useGetActionLogsQuery } from '@/services/api';
 import { format } from 'date-fns';
 import { Loader2, Search, CalendarIcon, ListFilter, ChevronLeft, ChevronRight, ChevronDown, History as HistoryIcon, Users, AlertTriangle } from 'lucide-react';
@@ -305,36 +304,59 @@ const HistoryPage = () => {
                     <CardDescription>A log of all administrative actions taken.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>User</TableHead>
-                                <TableHead>Action</TableHead>
-                                <TableHead className="hidden sm:table-cell">Page</TableHead>
-                                <TableHead className="hidden md:table-cell">Type</TableHead>
-                                <TableHead className="text-right">Timestamp</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {paginatedLogs.length > 0 ? paginatedLogs.map(log => (
-                                <TableRow key={log._id}>
-                                    <TableCell className="font-medium">{log.user}</TableCell>
-                                    <TableCell className="max-w-xs truncate">{log.action}</TableCell>
-                                    <TableCell className="hidden sm:table-cell">
-                                        <Badge variant="outline">{log.section}</Badge>
-                                    </TableCell>
-                                    <TableCell className="hidden md:table-cell">
-                                        <Badge variant={typeColors[log.type] || 'secondary'}>{log.type}</Badge>
-                                    </TableCell>
-                                    <TableCell className="text-right text-muted-foreground text-xs">{format(new Date(log.timestamp), 'PPpp')}</TableCell>
-                                </TableRow>
-                            )) : (
+                    <div className="hidden md:block">
+                        <Table>
+                            <TableHeader>
                                 <TableRow>
-                                    <TableCell colSpan={5} className="h-24 text-center">No actions match your filters.</TableCell>
+                                    <TableHead>User</TableHead>
+                                    <TableHead>Action</TableHead>
+                                    <TableHead>Page</TableHead>
+                                    <TableHead>Type</TableHead>
+                                    <TableHead className="text-right">Timestamp</TableHead>
                                 </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
+                            </TableHeader>
+                            <TableBody>
+                                {paginatedLogs.length > 0 ? paginatedLogs.map(log => (
+                                    <TableRow key={log._id}>
+                                        <TableCell className="font-medium">{log.user}</TableCell>
+                                        <TableCell className="max-w-xs truncate">{log.action}</TableCell>
+                                        <TableCell>
+                                            <Badge variant="outline">{log.section}</Badge>
+                                        </TableCell>
+                                        <TableCell>
+                                            <Badge variant={typeColors[log.type] || 'secondary'}>{log.type}</Badge>
+                                        </TableCell>
+                                        <TableCell className="text-right text-muted-foreground text-xs">{format(new Date(log.timestamp), 'PPpp')}</TableCell>
+                                    </TableRow>
+                                )) : (
+                                    <TableRow>
+                                        <TableCell colSpan={5} className="h-24 text-center">No actions match your filters.</TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                    </div>
+
+                    <div className="grid gap-4 md:hidden">
+                        {paginatedLogs.length > 0 ? paginatedLogs.map(log => (
+                            <Card key={log._id} className="p-4">
+                                <div className="flex flex-col space-y-2">
+                                    <div className="flex items-center justify-between">
+                                        <span className="font-medium">{log.user}</span>
+                                        <span className="text-xs text-muted-foreground">{format(new Date(log.timestamp), 'P p')}</span>
+                                    </div>
+                                    <p className="text-sm text-muted-foreground">{log.action}</p>
+                                    <div className="flex items-center gap-2 pt-2">
+                                        <Badge variant={typeColors[log.type] || 'secondary'}>{log.type}</Badge>
+                                        <Badge variant="outline">{log.section}</Badge>
+                                    </div>
+                                </div>
+                            </Card>
+                        )) : (
+                           <div className="text-center text-muted-foreground py-12">No actions match your filters.</div>
+                        )}
+                    </div>
+
                 </CardContent>
                 <div className="flex items-center justify-between border-t p-4">
                     <div className="text-xs text-muted-foreground">
@@ -357,3 +379,5 @@ const HistoryPage = () => {
 };
 
 export default HistoryPage;
+
+    
