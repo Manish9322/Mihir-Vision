@@ -28,7 +28,7 @@ export const contentApi = createApi({
     updateAboutData: builder.mutation({
       query: (updatedData) => ({
         url: 'about',
-        method: 'POST',
+        method: 'PUT',
         body: updatedData,
       }),
       invalidatesTags: ['About'],

@@ -31,7 +31,7 @@ export async function GET() {
   }
 }
 
-export async function POST(request) {
+export async function PUT(request) {
     try {
         await _db();
         const body = await request.json();
