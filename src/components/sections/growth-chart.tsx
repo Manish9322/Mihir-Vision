@@ -12,8 +12,9 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { cn } from "@/lib/utils";
 import { format, isWithinInterval, eachMonthOfInterval } from "date-fns";
 import { DateRange } from "react-day-picker";
-import { CalendarIcon, Package, Presentation, UsersIcon, Loader2 } from 'lucide-react';
+import { CalendarIcon, Package, Presentation, UsersIcon } from 'lucide-react';
 import { useGetProjectsDataQuery, useGetMatchesQuery, useGetAnalyticsDataQuery } from '@/services/api';
+import GrowthChartSkeleton from '@/components/skeletons/growth-chart-skeleton';
 
 const chartConfig = {
   projects: {
@@ -39,14 +40,15 @@ const sectionData = {
 };
 
 export default function GrowthChart() {
-    const { data: projectsData = [], isLoading: isProjectsLoading } = useGetProjectsDataQuery();
-    const { data: matchesData = [], isLoading: isMatchesLoading } = useGetMatchesQuery();
-    const { data: analyticsData, isLoading: isAnalyticsLoading } = useGetAnalyticsDataQuery();
+    const { data: projectsData = [], isLoading: isProjectsLoading, isError: isProjectsError } = useGetProjectsDataQuery();
+    const { data: matchesData = [], isLoading: isMatchesLoading, isError: isMatchesError } = useGetMatchesQuery();
+    const { data: analyticsData, isLoading: isAnalyticsLoading, isError: isAnalyticsError } = useGetAnalyticsDataQuery();
     
     const [date, setDate] = useState<DateRange | undefined>(() => {
         const to = new Date();
         const from = new Date(to);
         from.setFullYear(from.getFullYear() - 1);
+        from.setDate(from.getDate() + 1);
         return { from, to };
     });
 
@@ -90,6 +92,19 @@ export default function GrowthChart() {
             .filter(visit => isWithinInterval(new Date(visit.date), { start: date.from, end: date.to }))
             .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     }, [analyticsData, date]);
+
+    if (isLoading) {
+        return <GrowthChartSkeleton />;
+    }
+
+    if (isProjectsError || isMatchesError || isAnalyticsError) {
+        // You can render a specific error state here if needed
+        return null;
+    }
+    
+    if (!creationChartData.length && !dailyVisitsChartData.length) {
+        return null; // Don't render the section if there's no data to show
+    }
 
   return (
     <section id="growth" className="py-16 md:py-24 bg-secondary">
@@ -142,73 +157,66 @@ export default function GrowthChart() {
             </Popover>
         </div>
 
-        {isLoading ? (
-             <div className="flex items-center justify-center h-[300px]">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-        ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <Card className="rounded-md">
-                    <CardHeader>
-                        <CardTitle>Content Creation</CardTitle>
-                        <CardDescription>New projects and matches created per month.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <ChartContainer config={chartConfig} className="h-[250px] md:h-[300px] w-full">
-                            <BarChart data={creationChartData} accessibilityLayer>
-                                <CartesianGrid vertical={false} />
-                                <XAxis
-                                dataKey="month"
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <Card className="rounded-md">
+                <CardHeader>
+                    <CardTitle>Content Creation</CardTitle>
+                    <CardDescription>New projects and matches created per month.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <ChartContainer config={chartConfig} className="h-[250px] md:h-[300px] w-full">
+                        <BarChart data={creationChartData} accessibilityLayer>
+                            <CartesianGrid vertical={false} />
+                            <XAxis
+                            dataKey="date"
+                            tickLine={false}
+                            tickMargin={10}
+                            axisLine={false}
+                            tickFormatter={(value) => format(new Date(value), 'MMM')}
+                            />
+                            <YAxis />
+                            <ChartTooltip
+                            cursor={false}
+                            content={<ChartTooltipContent indicator="dot" />}
+                            />
+                            <Legend />
+                            <Bar dataKey="projects" fill="var(--color-projects)" radius={4} />
+                            <Bar dataKey="matches" fill="var(--color-matches)" radius={4} />
+                        </BarChart>
+                    </ChartContainer>
+                </CardContent>
+            </Card>
+            <Card className="rounded-md">
+                <CardHeader>
+                    <CardTitle>Daily Visits</CardTitle>
+                    <CardDescription>Site visits over the selected period.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                     <ChartContainer config={chartConfig} className="h-[250px] md:h-[300px] w-full">
+                        <LineChart data={dailyVisitsChartData} accessibilityLayer>
+                            <CartesianGrid vertical={false} />
+                            <XAxis
+                                dataKey="date"
                                 tickLine={false}
                                 tickMargin={10}
                                 axisLine={false}
-                                tickFormatter={(value) => format(new Date(value), 'MMM')}
-                                />
-                                <YAxis />
-                                <ChartTooltip
+                                tickFormatter={(value) => format(new Date(value), 'MMM d')}
+                            />
+                            <YAxis domain={['dataMin', 'dataMax + 5']} />
+                            <ChartTooltip
                                 cursor={false}
-                                content={<ChartTooltipContent indicator="dot" />}
-                                />
-                                <Legend />
-                                <Bar dataKey="projects" fill="var(--color-projects)" radius={4} />
-                                <Bar dataKey="matches" fill="var(--color-matches)" radius={4} />
-                            </BarChart>
-                        </ChartContainer>
-                    </CardContent>
-                </Card>
-                <Card className="rounded-md">
-                    <CardHeader>
-                        <CardTitle>Daily Visits</CardTitle>
-                        <CardDescription>Site visits over the selected period.</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                         <ChartContainer config={chartConfig} className="h-[250px] md:h-[300px] w-full">
-                            <LineChart data={dailyVisitsChartData} accessibilityLayer>
-                                <CartesianGrid vertical={false} />
-                                <XAxis
-                                    dataKey="date"
-                                    tickLine={false}
-                                    tickMargin={10}
-                                    axisLine={false}
-                                    tickFormatter={(value) => format(new Date(value), 'MMM d')}
-                                />
-                                <YAxis domain={['dataMin', 'dataMax + 5']} />
-                                <ChartTooltip
-                                    cursor={false}
-                                    content={<ChartTooltipContent />}
-                                    formatter={(value, name) => [value, chartConfig.visits.label]}
-                                />
-                                <Legend />
-                                <Line type="monotone" dataKey="count" name="Visits" stroke="var(--color-visits)" strokeWidth={2} dot={{r: 2}} activeDot={{r: 5}} />
-                            </LineChart>
-                        </ChartContainer>
-                    </CardContent>
-                </Card>
-            </div>
-        )}
+                                content={<ChartTooltipContent />}
+                                formatter={(value, name) => [value, chartConfig.visits.label]}
+                            />
+                            <Legend />
+                            <Line type="monotone" dataKey="count" name="Visits" stroke="var(--color-visits)" strokeWidth={2} dot={{r: 2}} activeDot={{r: 5}} />
+                        </LineChart>
+                    </ChartContainer>
+                </CardContent>
+            </Card>
+        </div>
       </div>
     </section>
   );
 }
 
-    
