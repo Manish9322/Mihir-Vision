@@ -20,6 +20,7 @@ import VideoShowcaseSkeleton from '@/components/skeletons/video-showcase-skeleto
 import GallerySkeleton from '@/components/skeletons/gallery-skeleton';
 import FeaturedProjectsSkeleton from '@/components/skeletons/featured-projects-skeleton';
 import TimelineSkeleton from '@/components/skeletons/timeline-skeleton';
+import FaqSkeleton from '@/components/skeletons/faq-skeleton';
 
 export default function Home() {
   return (
@@ -49,7 +50,9 @@ export default function Home() {
         <Suspense fallback={<TimelineSkeleton />}>
             <Timeline />
         </Suspense>
-        <Faq />
+        <Suspense fallback={<FaqSkeleton />}>
+          <Faq />
+        </Suspense>
         <Contact />
       </main>
       <Footer />
