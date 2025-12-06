@@ -17,6 +17,7 @@ import ClientsMarqueeSkeleton from '@/components/skeletons/clients-marquee-skele
 import Footer from '@/components/layout/footer';
 import ActivitiesSkeleton from '@/components/skeletons/activities-skeleton';
 import VideoShowcaseSkeleton from '@/components/skeletons/video-showcase-skeleton';
+import GallerySkeleton from '@/components/skeletons/gallery-skeleton';
 
 export default function Home() {
   return (
@@ -37,7 +38,9 @@ export default function Home() {
         <Suspense fallback={<VideoShowcaseSkeleton />}>
           <VideoShowcase />
         </Suspense>
-        <Gallery />
+        <Suspense fallback={<GallerySkeleton />}>
+          <Gallery />
+        </Suspense>
         <FeaturedProjects />
         <Timeline />
         <Faq />
