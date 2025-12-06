@@ -1,3 +1,4 @@
+
 import mongoose from 'mongoose';
 
 const ImagePlaceholderSchema = new mongoose.Schema({
