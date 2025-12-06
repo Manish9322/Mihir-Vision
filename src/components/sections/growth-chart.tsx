@@ -58,12 +58,12 @@ export default function GrowthChart() {
         const filteredProjects = projectsData.filter(p => p.createdAt && isWithinInterval(new Date(p.createdAt), { start: date.from, end: date.to }));
         const filteredMatches = matchesData.filter(m => m.matchDate && isWithinInterval(new Date(m.matchDate), { start: date.from, end: date.to }));
         
-        const dataByMonth: { [key: string]: { month: string, projects: number, matches: number } } = {};
+        const dataByMonth: { [key: string]: { month: string, projects: number, matches: number, date: Date } } = {};
 
         const monthsInInterval = eachMonthOfInterval({ start: date.from, end: date.to });
         monthsInInterval.forEach(monthStart => {
             const monthKey = format(monthStart, 'yyyy-MM');
-            dataByMonth[monthKey] = { month: format(monthStart, 'MMM yyyy'), projects: 0, matches: 0 };
+            dataByMonth[monthKey] = { month: format(monthStart, 'MMM yyyy'), projects: 0, matches: 0, date: monthStart };
         });
 
         filteredProjects.forEach(project => {
@@ -80,15 +80,15 @@ export default function GrowthChart() {
             }
         });
 
-        return Object.values(dataByMonth);
+        return Object.values(dataByMonth).sort((a, b) => a.date.getTime() - b.date.getTime());
 
     }, [projectsData, matchesData, date]);
     
     const dailyVisitsChartData = useMemo(() => {
         if (!analyticsData?.dailyVisits || !date?.from || !date?.to) return [];
-        return analyticsData.dailyVisits.filter(visit =>
-            isWithinInterval(new Date(visit.date), { start: date.from, end: date.to })
-        );
+        return analyticsData.dailyVisits
+            .filter(visit => isWithinInterval(new Date(visit.date), { start: date.from, end: date.to }))
+            .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     }, [analyticsData, date]);
 
   return (
