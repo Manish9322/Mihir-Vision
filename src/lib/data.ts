@@ -1,4 +1,5 @@
 
+
 import { PlaceHolderImages } from './placeholder-images';
 import type { ImagePlaceholder } from './placeholder-images';
 import { BarChart3, Dna, Rocket, Users, Target, Lightbulb, Bot, Check, Package, Award, UsersRound, Globe, Activity, DollarSign, BookOpen, Mail, Gamepad2 } from 'lucide-react';
@@ -74,14 +75,14 @@ export const statsData = {
 export const growthChartData = {
   title: 'Our Trajectory of Innovation',
   subheadline: 'The chart below illustrates our consistent growth in key areas of innovation, reflecting our commitment to pushing boundaries and achieving new milestones.',
-  chartTitle: 'Projects & Games Released',
-  chartSubheadline: 'Projects and games released over the years',
+  chartTitle: 'Projects & Patents',
+  chartSubheadline: 'Projects and patents released over the years',
   chartData: [
-    { year: '2020', projects: 40, games: 5, investment: 10 },
-    { year: '2021', projects: 30, games: 8, investment: 15 },
-    { year: '2022', projects: 50, games: 12, investment: 25 },
-    { year: '2023', projects: 60, games: 18, investment: 30 },
-    { year: '2024', projects: 80, games: 25, investment: 40 },
+    { year: '2020', projects: 40, patents: 24, investment: 10 },
+    { year: '2021', projects: 30, patents: 13, investment: 15 },
+    { year: '2022', projects: 50, patents: 45, investment: 25 },
+    { year: '2023', projects: 60, patents: 38, investment: 30 },
+    { year: '2024', projects: 80, patents: 52, investment: 40 },
   ],
 };
 

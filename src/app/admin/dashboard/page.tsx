@@ -9,12 +9,14 @@ import {
     Mail,
     Loader2,
     AlertTriangle,
-    CalendarIcon
+    CalendarIcon,
+    Presentation,
+    Package,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { DateRange } from "react-day-picker"
-import { format } from "date-fns"
+import { format, startOfMonth, endOfMonth, eachMonthOfInterval, isWithinInterval } from "date-fns"
 
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -48,27 +50,25 @@ import { Calendar } from '@/components/ui/calendar';
 import { cn } from "@/lib/utils";
 
 
-import { growthChartData } from '@/lib/data';
-import { useGetContactsQuery, useGetActionLogsQuery, useGetAnalyticsDataQuery, useGetProjectsDataQuery } from '@/services/api';
+import { useGetContactsQuery, useGetActionLogsQuery, useGetAnalyticsDataQuery, useGetProjectsDataQuery, useGetMatchesQuery } from '@/services/api';
 
 
 const chartConfig = {
   projects: {
     label: 'Projects',
     color: 'hsl(var(--primary))',
+    icon: Package
   },
-  games: {
-    label: 'Games',
+  matches: {
+    label: 'Matches',
     color: 'hsl(var(--muted-foreground))',
+    icon: Presentation
   },
-  investment: {
-    label: 'R&D Investment (M)',
-    color: 'hsl(var(--primary))', // Updated to purple
+  visits: {
+    label: 'Visits',
+    color: 'hsl(var(--primary))',
+    icon: UsersIcon
   },
-  patents: {
-    label: 'Patents',
-    color: 'hsl(var(--muted-foreground))'
-  }
 } satisfies ChartConfig;
 
 
@@ -149,17 +149,17 @@ const AdminDashboardPage = () => {
     const { data: actionLogs = [], isLoading: isLogsLoading, isError: isLogsError } = useGetActionLogsQuery();
     const { data: analyticsData, isLoading: isAnalyticsLoading, isError: isAnalyticsError } = useGetAnalyticsDataQuery();
     const { data: projectsData = [], isLoading: isProjectsLoading, isError: isProjectsError } = useGetProjectsDataQuery();
+    const { data: matchesData = [], isLoading: isMatchesLoading, isError: isMatchesError } = useGetMatchesQuery();
     
     const [date, setDate] = useState<DateRange | undefined>(() => {
         const to = new Date();
-        const from = new Date();
-        from.setMonth(from.getMonth() - 1);
-        from.setDate(1);
+        const from = new Date(to);
+        from.setFullYear(from.getFullYear() - 1);
         return { from, to };
     });
 
-    const isLoading = isContactsLoading || isLogsLoading || isAnalyticsLoading || isProjectsLoading;
-    const isError = isContactsError || isLogsError || isAnalyticsError || isProjectsError;
+    const isLoading = isContactsLoading || isLogsLoading || isAnalyticsLoading || isProjectsLoading || isMatchesLoading;
+    const isError = isContactsError || isLogsError || isAnalyticsError || isProjectsError || isMatchesError;
 
     const stats = useMemo(() => {
         return {
@@ -170,18 +170,43 @@ const AdminDashboardPage = () => {
         }
     }, [analyticsData, contactsData, projectsData]);
     
-    const filteredChartData = useMemo(() => {
-        if (!date?.from || !date?.to) {
-            return growthChartData.chartData;
-        }
-        const startYear = date.from.getFullYear();
-        const endYear = date.to.getFullYear();
+    const creationChartData = useMemo(() => {
+        if (!projectsData || !matchesData || !date?.from || !date?.to) return [];
+
+        const filteredProjects = projectsData.filter(p => isWithinInterval(new Date(p.createdAt), { start: date.from, end: date.to }));
+        const filteredMatches = matchesData.filter(m => isWithinInterval(new Date(m.matchDate), { start: date.from, end: date.to }));
         
-        return growthChartData.chartData.filter(d => {
-            const year = parseInt(d.year);
-            return year >= startYear && year <= endYear;
+        const dataByMonth: { [key: string]: { month: string, projects: number, matches: number } } = {};
+
+        const months = eachMonthOfInterval({ start: date.from, end: date.to });
+        months.forEach(month => {
+            const monthKey = format(month, 'MMM yyyy');
+            dataByMonth[monthKey] = { month: monthKey, projects: 0, matches: 0 };
         });
-    }, [date]);
+
+        filteredProjects.forEach(project => {
+            const monthKey = format(new Date(project.createdAt), 'MMM yyyy');
+            if (dataByMonth[monthKey]) {
+                dataByMonth[monthKey].projects += 1;
+            }
+        });
+
+        filteredMatches.forEach(match => {
+            const monthKey = format(new Date(match.matchDate), 'MMM yyyy');
+            if (dataByMonth[monthKey]) {
+                dataByMonth[monthKey].matches += 1;
+            }
+        });
+
+        return Object.values(dataByMonth);
+    }, [projectsData, matchesData, date]);
+    
+    const dailyVisitsChartData = useMemo(() => {
+        if (!analyticsData?.dailyVisits || !date?.from || !date?.to) return [];
+        return analyticsData.dailyVisits.filter(visit =>
+            isWithinInterval(new Date(visit.date), { start: date.from, end: date.to })
+        );
+    }, [analyticsData, date]);
 
 
     if (isLoading) {
@@ -288,19 +313,18 @@ const AdminDashboardPage = () => {
             <div className="grid gap-4 md:gap-8 lg:grid-cols-2">
                  <Card>
                     <CardHeader>
-                        <CardTitle>Innovation Growth</CardTitle>
-                        <CardDescription>Projects and games released over the past years.</CardDescription>
+                        <CardTitle>Content Creation</CardTitle>
+                        <CardDescription>New projects and matches created per month.</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <ChartContainer config={chartConfig} className="h-[250px] w-full">
-                            <BarChart data={filteredChartData} accessibilityLayer>
+                            <BarChart data={creationChartData} accessibilityLayer>
                                 <CartesianGrid vertical={false} />
                                 <XAxis
-                                dataKey="year"
+                                dataKey="month"
                                 tickLine={false}
                                 tickMargin={10}
                                 axisLine={false}
-                                tickFormatter={(value) => value.slice(0, 4)}
                                 />
                                 <YAxis />
                                 <ChartTooltip
@@ -309,34 +333,35 @@ const AdminDashboardPage = () => {
                                 />
                                 <Legend />
                                 <Bar dataKey="projects" fill="var(--color-projects)" radius={4} />
-                                <Bar dataKey="games" fill="var(--color-games)" radius={4} />
+                                <Bar dataKey="matches" fill="var(--color-matches)" radius={4} />
                             </BarChart>
                         </ChartContainer>
                     </CardContent>
                 </Card>
                 <Card>
                     <CardHeader>
-                        <CardTitle>R&amp;D Investment Growth</CardTitle>
-                        <CardDescription>Millions of USD invested per year.</CardDescription>
+                        <CardTitle>Daily Visits</CardTitle>
+                        <CardDescription>Site visits over the selected period.</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <ChartContainer config={chartConfig} className="h-[250px] w-full">
-                            <LineChart data={filteredChartData} accessibilityLayer>
+                            <LineChart data={dailyVisitsChartData} accessibilityLayer>
                                 <CartesianGrid vertical={false} />
                                 <XAxis
-                                    dataKey="year"
+                                    dataKey="date"
                                     tickLine={false}
                                     tickMargin={10}
                                     axisLine={false}
-                                    tickFormatter={(value) => value.slice(0, 4)}
+                                    tickFormatter={(value) => format(new Date(value), 'MMM d')}
                                 />
-                                <YAxis domain={['dataMin - 5', 'dataMax + 5']} unit="M" />
+                                <YAxis domain={['dataMin', 'dataMax + 5']} />
                                 <ChartTooltip
                                     cursor={false}
                                     content={<ChartTooltipContent />}
+                                    formatter={(value, name) => [value, chartConfig.visits.label]}
                                 />
                                 <Legend />
-                                <Line type="monotone" dataKey="investment" stroke="var(--color-investment)" strokeWidth={2} dot={{r: 5, fill: 'var(--color-investment)'}} />
+                                <Line type="monotone" dataKey="count" name="Visits" stroke="var(--color-visits)" strokeWidth={2} dot={{r: 2}} activeDot={{r: 5}} />
                             </LineChart>
                         </ChartContainer>
                     </CardContent>
@@ -426,5 +451,3 @@ const AdminDashboardPage = () => {
 };
 
 export default AdminDashboardPage;
-
-    
