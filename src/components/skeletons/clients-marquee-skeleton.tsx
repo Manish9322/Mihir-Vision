@@ -10,7 +10,7 @@ export default function ClientsMarqueeSkeleton() {
         </div>
         <div className="relative overflow-hidden">
             <div className="flex">
-                {[...Array(6)].map((_, index) => (
+                {[...Array(12)].map((_, index) => (
                     <div key={index} className="flex-shrink-0 w-48 h-20 mx-6 flex items-center justify-center">
                         <Skeleton className="w-[150px] h-[50px]" />
                     </div>
