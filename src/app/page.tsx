@@ -18,6 +18,8 @@ import Footer from '@/components/layout/footer';
 import ActivitiesSkeleton from '@/components/skeletons/activities-skeleton';
 import VideoShowcaseSkeleton from '@/components/skeletons/video-showcase-skeleton';
 import GallerySkeleton from '@/components/skeletons/gallery-skeleton';
+import FeaturedProjectsSkeleton from '@/components/skeletons/featured-projects-skeleton';
+import TimelineSkeleton from '@/components/skeletons/timeline-skeleton';
 
 export default function Home() {
   return (
@@ -41,8 +43,12 @@ export default function Home() {
         <Suspense fallback={<GallerySkeleton />}>
           <Gallery />
         </Suspense>
-        <FeaturedProjects />
-        <Timeline />
+        <Suspense fallback={<FeaturedProjectsSkeleton />}>
+            <FeaturedProjects />
+        </Suspense>
+        <Suspense fallback={<TimelineSkeleton />}>
+            <Timeline />
+        </Suspense>
         <Faq />
         <Contact />
       </main>
