@@ -11,9 +11,10 @@ import Gallery from '@/components/sections/gallery';
 import Timeline from '@/components/sections/timeline';
 import Faq from '@/components/sections/faq';
 import Contact from '@/components/sections/contact';
-import Footer from '@/components/layout/footer';
 import { Suspense } from 'react';
 import AboutSkeleton from '@/components/skeletons/about-skeleton';
+import ClientsMarqueeSkeleton from '@/components/skeletons/clients-marquee-skeleton';
+import Footer from '@/components/layout/footer';
 
 export default function Home() {
   return (
@@ -24,7 +25,9 @@ export default function Home() {
         <Suspense fallback={<AboutSkeleton />}>
           <About />
         </Suspense>
-        <ClientsMarquee />
+        <Suspense fallback={<ClientsMarqueeSkeleton />}>
+            <ClientsMarquee />
+        </Suspense>
         <Activities />
         <GrowthChart />
         <VideoShowcase />
