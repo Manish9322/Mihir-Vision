@@ -55,15 +55,15 @@ export default function GrowthChart() {
     const creationChartData = useMemo(() => {
         if (!projectsData || !matchesData || !date?.from || !date?.to) return [];
 
-        const filteredProjects = projectsData.filter(p => isWithinInterval(new Date(p.createdAt), { start: date.from, end: date.to }));
-        const filteredMatches = matchesData.filter(m => isWithinInterval(new Date(m.matchDate), { start: date.from, end: date.to }));
+        const filteredProjects = projectsData.filter(p => p.createdAt && isWithinInterval(new Date(p.createdAt), { start: date.from, end: date.to }));
+        const filteredMatches = matchesData.filter(m => m.matchDate && isWithinInterval(new Date(m.matchDate), { start: date.from, end: date.to }));
         
         const dataByMonth: { [key: string]: { month: string, projects: number, matches: number } } = {};
 
         const months = eachMonthOfInterval({ start: date.from, end: date.to });
         months.forEach(month => {
             const monthKey = format(month, 'MMM');
-            dataByMonth[monthKey] = { month: monthKey, projects: 0, matches: 0 };
+            dataByMonth[monthKey] = { month: format(month, 'MMM yyyy'), projects: 0, matches: 0 };
         });
 
         filteredProjects.forEach(project => {
@@ -79,8 +79,12 @@ export default function GrowthChart() {
                 dataByMonth[monthKey].matches += 1;
             }
         });
+        
+        return months.map(month => {
+            const monthKey = format(month, 'MMM');
+            return dataByMonth[monthKey];
+        });
 
-        return Object.values(dataByMonth);
     }, [projectsData, matchesData, date]);
     
     const dailyVisitsChartData = useMemo(() => {
@@ -161,6 +165,7 @@ export default function GrowthChart() {
                                 tickLine={false}
                                 tickMargin={10}
                                 axisLine={false}
+                                tickFormatter={(value) => format(new Date(value), 'MMM')}
                                 />
                                 <YAxis />
                                 <ChartTooltip
@@ -208,3 +213,5 @@ export default function GrowthChart() {
     </section>
   );
 }
+
+    

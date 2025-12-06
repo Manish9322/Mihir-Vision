@@ -173,8 +173,8 @@ const AdminDashboardPage = () => {
     const creationChartData = useMemo(() => {
         if (!projectsData || !matchesData || !date?.from || !date?.to) return [];
 
-        const filteredProjects = projectsData.filter(p => isWithinInterval(new Date(p.createdAt), { start: date.from, end: date.to }));
-        const filteredMatches = matchesData.filter(m => isWithinInterval(new Date(m.matchDate), { start: date.from, end: date.to }));
+        const filteredProjects = projectsData.filter(p => p.createdAt && isWithinInterval(new Date(p.createdAt), { start: date.from, end: date.to }));
+        const filteredMatches = matchesData.filter(m => m.matchDate && isWithinInterval(new Date(m.matchDate), { start: date.from, end: date.to }));
         
         const dataByMonth: { [key: string]: { month: string, projects: number, matches: number } } = {};
 
@@ -198,7 +198,11 @@ const AdminDashboardPage = () => {
             }
         });
 
-        return Object.values(dataByMonth);
+        return months.map(month => {
+            const monthKey = format(month, 'MMM yyyy');
+            return dataByMonth[monthKey];
+        });
+
     }, [projectsData, matchesData, date]);
     
     const dailyVisitsChartData = useMemo(() => {
@@ -325,6 +329,7 @@ const AdminDashboardPage = () => {
                                 tickLine={false}
                                 tickMargin={10}
                                 axisLine={false}
+                                tickFormatter={(value) => format(new Date(value), 'MMM')}
                                 />
                                 <YAxis />
                                 <ChartTooltip
@@ -451,3 +456,5 @@ const AdminDashboardPage = () => {
 };
 
 export default AdminDashboardPage;
+
+    
