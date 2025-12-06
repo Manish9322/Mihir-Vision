@@ -15,6 +15,7 @@ import { Suspense } from 'react';
 import AboutSkeleton from '@/components/skeletons/about-skeleton';
 import ClientsMarqueeSkeleton from '@/components/skeletons/clients-marquee-skeleton';
 import Footer from '@/components/layout/footer';
+import ActivitiesSkeleton from '@/components/skeletons/activities-skeleton';
 
 export default function Home() {
   return (
@@ -28,7 +29,9 @@ export default function Home() {
         <Suspense fallback={<ClientsMarqueeSkeleton />}>
             <ClientsMarquee />
         </Suspense>
-        <Activities />
+        <Suspense fallback={<ActivitiesSkeleton />}>
+          <Activities />
+        </Suspense>
         <GrowthChart />
         <VideoShowcase />
         <Gallery />
