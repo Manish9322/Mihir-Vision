@@ -178,30 +178,27 @@ const AdminDashboardPage = () => {
         
         const dataByMonth: { [key: string]: { month: string, projects: number, matches: number } } = {};
 
-        const months = eachMonthOfInterval({ start: date.from, end: date.to });
-        months.forEach(month => {
-            const monthKey = format(month, 'MMM yyyy');
-            dataByMonth[monthKey] = { month: monthKey, projects: 0, matches: 0 };
+        const monthsInInterval = eachMonthOfInterval({ start: date.from, end: date.to });
+        monthsInInterval.forEach(monthStart => {
+            const monthKey = format(monthStart, 'yyyy-MM');
+            dataByMonth[monthKey] = { month: format(monthStart, 'MMM yyyy'), projects: 0, matches: 0 };
         });
 
         filteredProjects.forEach(project => {
-            const monthKey = format(new Date(project.createdAt), 'MMM yyyy');
+            const monthKey = format(new Date(project.createdAt), 'yyyy-MM');
             if (dataByMonth[monthKey]) {
                 dataByMonth[monthKey].projects += 1;
             }
         });
 
         filteredMatches.forEach(match => {
-            const monthKey = format(new Date(match.matchDate), 'MMM yyyy');
+            const monthKey = format(new Date(match.matchDate), 'yyyy-MM');
             if (dataByMonth[monthKey]) {
                 dataByMonth[monthKey].matches += 1;
             }
         });
 
-        return months.map(month => {
-            const monthKey = format(month, 'MMM yyyy');
-            return dataByMonth[monthKey];
-        });
+        return Object.values(dataByMonth);
 
     }, [projectsData, matchesData, date]);
     
@@ -456,5 +453,3 @@ const AdminDashboardPage = () => {
 };
 
 export default AdminDashboardPage;
-
-    

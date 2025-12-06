@@ -60,30 +60,27 @@ export default function GrowthChart() {
         
         const dataByMonth: { [key: string]: { month: string, projects: number, matches: number } } = {};
 
-        const months = eachMonthOfInterval({ start: date.from, end: date.to });
-        months.forEach(month => {
-            const monthKey = format(month, 'MMM');
-            dataByMonth[monthKey] = { month: format(month, 'MMM yyyy'), projects: 0, matches: 0 };
+        const monthsInInterval = eachMonthOfInterval({ start: date.from, end: date.to });
+        monthsInInterval.forEach(monthStart => {
+            const monthKey = format(monthStart, 'yyyy-MM');
+            dataByMonth[monthKey] = { month: format(monthStart, 'MMM yyyy'), projects: 0, matches: 0 };
         });
 
         filteredProjects.forEach(project => {
-            const monthKey = format(new Date(project.createdAt), 'MMM');
+            const monthKey = format(new Date(project.createdAt), 'yyyy-MM');
             if (dataByMonth[monthKey]) {
                 dataByMonth[monthKey].projects += 1;
             }
         });
 
         filteredMatches.forEach(match => {
-            const monthKey = format(new Date(match.matchDate), 'MMM');
+            const monthKey = format(new Date(match.matchDate), 'yyyy-MM');
             if (dataByMonth[monthKey]) {
                 dataByMonth[monthKey].matches += 1;
             }
         });
-        
-        return months.map(month => {
-            const monthKey = format(month, 'MMM');
-            return dataByMonth[monthKey];
-        });
+
+        return Object.values(dataByMonth);
 
     }, [projectsData, matchesData, date]);
     
