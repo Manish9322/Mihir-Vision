@@ -19,7 +19,7 @@ const getImage = (id: string): ImagePlaceholder => {
 
 export const heroData = {
   headline: 'Forging New Paths to the Pinnacle',
-  subheadline: 'At Pinnacle Pathways, we pioneer solutions for the next generation of challenges. Explore our journey of innovation and discovery.',
+  subheadline: 'At Mihir Vision, we pioneer solutions for the next generation of challenges. Explore our journey of innovation and discovery.',
   cta: 'Discover Our Mission',
   secondaryCta: 'Explore More',
   image: getImage('hero-background'),
@@ -29,7 +29,7 @@ export const heroData = {
 export const aboutData = {
   tagline: "Our Core Principles",
   title: 'Who We Are',
-  paragraph1: 'Pinnacle Pathways was founded on the principle of relentless innovation. We are a collective of thinkers, creators, and pioneers dedicated to pushing the boundaries of what\'s possible. Our diverse team brings together expertise from various fields to tackle complex problems with creative and effective solutions.',
+  paragraph1: 'Mihir Vision was founded on the principle of relentless innovation. We are a collective of thinkers, creators, and pioneers dedicated to pushing the boundaries of what\'s possible. Our diverse team brings together expertise from various fields to tackle complex problems with creative and effective solutions.',
   paragraph2: 'Our journey is one of constant evolution, driven by a passion for discovery and a commitment to excellence. We believe in the power of collaboration and technology to build a better future, one breakthrough at a time.',
   image: getImage('about-image'),
   highlights: [
@@ -135,7 +135,7 @@ export const timelineData = {
     {
       year: '2018',
       title: 'The Spark',
-      description: 'Pinnacle Pathways was founded by a small group of innovators with a shared vision for the future.',
+      description: 'Mihir Vision was founded by a small group of innovators with a shared vision for the future.',
       icon: Lightbulb,
     },
     {
@@ -164,7 +164,7 @@ export const faqData = {
     subheadline: 'Find answers to common questions about our work, mission, and partnerships.',
     faqs: [
         {
-            question: 'What is the primary focus of Pinnacle Pathways?',
+            question: 'What is the primary focus of Mihir Vision?',
             answer: 'Our primary focus is on pioneering solutions for next-generation challenges through advanced research, technology development, and strategic partnerships. We aim to create a significant impact in areas like connectivity, sustainability, and healthcare.'
         },
         {
@@ -233,7 +233,7 @@ export const contactsData = {
 };
 
 export const footerData = {
-  companyName: 'Pinnacle Pathways',
+  companyName: 'Mihir Vision',
   quote: 'The best way to predict the future is to create it.',
   socials: [
     { name: 'X', url: '#' },

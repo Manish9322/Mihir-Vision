@@ -34,7 +34,7 @@ export async function POST(request) {
         const adminUser = await User.findOne();
         const notifyEmail = adminUser?.email;
         const siteSettings = await Settings.findOne();
-        const siteName = siteSettings?.siteName || 'Pinnacle Pathways';
+        const siteName = siteSettings?.siteName || 'Mihir Vision';
 
         // 3. If a notification email is set and Resend is configured, send the email
         if (resend && notifyEmail) {

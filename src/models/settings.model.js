@@ -5,7 +5,7 @@ const settingsSchema = new mongoose.Schema({
   siteName: {
     type: String,
     required: true,
-    default: 'Pinnacle Pathways'
+    default: 'Mihir Vision'
   },
   siteTagline: {
     type: String,

@@ -40,7 +40,7 @@ export async function generateMetadata(
   const previousIcons = (await parent).icons || {}
 
   return {
-    title: settings?.siteName || 'Pinnacle Pathways',
+    title: settings?.siteName || 'Mihir Vision',
     description: settings?.siteTagline || 'Forging new paths to the peak of innovation.',
     icons: {
       icon: settings?.faviconUrl || previousIcons.icon,

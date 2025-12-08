@@ -4,7 +4,7 @@ import _db from "@/lib/utils/db.js";
 import Settings from '@/models/settings.model.js';
 
 const seedSettingsData = {
-    siteName: 'Pinnacle Pathways',
+    siteName: 'Mihir Vision',
     siteTagline: 'Forging new paths to the peak of innovation.',
 };
 

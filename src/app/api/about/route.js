@@ -5,7 +5,7 @@ import About from '@/models/about.model.js';
 // Seed data to ensure there's always one document
 const seedAboutData = {
     title: 'Who We Are',
-    paragraph1: 'Pinnacle Pathways was founded on the principle of relentless innovation. We are a collective of thinkers, creators, and pioneers dedicated to pushing the boundaries of what\'s possible. Our diverse team brings together expertise from various fields to tackle complex problems with creative and effective solutions.',
+    paragraph1: 'Mihir Vision was founded on the principle of relentless innovation. We are a collective of thinkers, creators, and pioneers dedicated to pushing the boundaries of what\'s possible. Our diverse team brings together expertise from various fields to tackle complex problems with creative and effective solutions.',
     highlights: [
         "Commitment to groundbreaking research and development.",
         "Fostering a culture of collaboration and creativity.",

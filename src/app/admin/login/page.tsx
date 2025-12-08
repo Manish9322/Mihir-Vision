@@ -19,7 +19,7 @@ export default function AdminLoginPage() {
   const [password, setPassword] = useState('');
   const { data: settingsData, isLoading: isSettingsLoading } = useGetSettingsDataQuery();
 
-  const siteName = settingsData?.siteName || 'Pinnacle Pathways';
+  const siteName = settingsData?.siteName || 'Mihir Vision';
   const siteLogoUrl = settingsData?.siteLogoUrl;
 
   const handleLogin = (e: React.FormEvent) => {

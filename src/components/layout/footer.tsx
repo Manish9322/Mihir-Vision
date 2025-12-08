@@ -9,7 +9,7 @@ export default function Footer() {
   const { data: profileData } = useGetProfileDataQuery(undefined);
   const { data: settingsData, isLoading: isSettingsLoading } = useGetSettingsDataQuery(undefined);
   
-  const companyName = settingsData?.siteName || 'Pinnacle Pathways';
+  const companyName = settingsData?.siteName || 'Mihir Vision';
   const socialLinks = profileData?.socialLinks || [];
   const siteLogoUrl = settingsData?.siteLogoUrl;
 

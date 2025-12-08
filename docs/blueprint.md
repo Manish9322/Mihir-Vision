@@ -1,4 +1,4 @@
-# **App Name**: Pinnacle Pathways
+# **App Name**: Mihir Vision
 
 ## Core Features:
 

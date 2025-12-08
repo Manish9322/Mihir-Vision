@@ -1,20 +1,20 @@
-# Pinnacle Pathways
+# Mihir Vision
 
-**Pinnacle Pathways** is a full-stack application designed to serve as a corporate showcase, combining a public-facing website with a comprehensive admin panel for content management. It provides a scalable, maintainable, and high-performance architecture for businesses to present their projects, team, and company information.
+**Mihir Vision** is a full-stack application designed to serve as a corporate showcase, combining a public-facing website with a comprehensive admin panel for content management. It provides a scalable, maintainable, and high-performance architecture for businesses to present their projects, team, and company information.
 
 The platform is built with a modern technology stack, including **Next.js**, **React**, **TypeScript**, **Tailwind CSS**, **Shadcn UI**, and **Mongoose**, ensuring a highly modular and efficient application.
 
-![Pinnacle Pathways](./public/images/PinnaclePathways.png)
+![Mihir Vision](./public/images/PinnaclePathways.png)
 
 ---
 
 ### Copyright Notice
 
-**Pinnacle Pathways**
+**Mihir Vision**
 
 Copyright © 2024. All rights reserved.
 
-This project, **Pinnacle Pathways**, is a demonstration of a full-stack corporate website and content management system. Unauthorized use, modification, or distribution of the software or its components is prohibited unless explicitly stated under the terms of the license.
+This project, **Mihir Vision**, is a demonstration of a full-stack corporate website and content management system. Unauthorized use, modification, or distribution of the software or its components is prohibited unless explicitly stated under the terms of the license.
 
 By using or contributing to this project, you agree to comply with the terms and conditions defined in the license. You may use the software for personal or educational purposes, provided that proper credit is given to the original author.
 

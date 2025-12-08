@@ -4,7 +4,7 @@ import Faq from '@/models/faq.model.js';
 
 const seedFaqs = [
     {
-        question: 'What is the primary focus of Pinnacle Pathways?',
+        question: 'What is the primary focus of Mihir Vision?',
         answer: 'Our primary focus is on pioneering solutions for next-generation challenges through advanced research, technology development, and strategic partnerships. We aim to create a significant impact in areas like connectivity, sustainability, and healthcare.',
         order: 0,
         isVisible: true,

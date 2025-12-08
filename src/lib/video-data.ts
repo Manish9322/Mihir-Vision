@@ -56,7 +56,7 @@ export const videoData: VideoInfo[] = [
   {
     id: 'vid4',
     title: 'The Genesis Idea',
-    subtitle: 'Our founder shares the story of Pinnacle Pathways.',
+    subtitle: 'Our founder shares the story of Mihir Vision.',
     duration: '1:00',
     thumbnail: getImage('video-thumb-4'),
     videoUrl: 'https://storage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4',

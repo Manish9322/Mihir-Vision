@@ -4,7 +4,7 @@ import _db from "@/lib/utils/db.js";
 import Timeline from '@/models/timeline.model.js';
 
 const seedTimelineEvents = [
-    { year: '2018', title: 'The Spark', description: 'Pinnacle Pathways was founded by a small group of innovators with a shared vision for the future.', icon: 'Lightbulb', order: 0 },
+    { year: '2018', title: 'The Spark', description: 'Mihir Vision was founded by a small group of innovators with a shared vision for the future.', icon: 'Lightbulb', order: 0 },
     { year: '2020', title: 'First Breakthrough', description: 'Launched our first major project, revolutionizing data processing with a new proprietary algorithm.', icon: 'Target', order: 1 },
     { year: '2022', title: 'Global Expansion', description: 'Opened our first international office and began forming strategic partnerships across the globe.', icon: 'Users', order: 2 },
     { year: '2024', title: 'AI Integration', description: 'Successfully integrated our advanced AI platform across all core operations, boosting efficiency and innovation.', icon: 'Bot', order: 3 },
