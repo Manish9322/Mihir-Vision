@@ -42,24 +42,54 @@ export async function POST(request) {
             
             try {
                 await resend.emails.send({
-                    from: `Contact Form <${process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev'}>`,
+                    from: `${siteName} <${process.env.RESEND_FROM_EMAIL || 'noreply@pinnacle-pathways.com'}>`,
                     to: notifyEmail,
-                    subject: `New Contact Form Submission from ${name}`,
+                    subject: `New Inquiry from ${name}`,
                     html: `
-                        <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-                            <div style="max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
-                                <h2 style="font-size: 24px; color: #000; border-bottom: 2px solid #eee; padding-bottom: 10px;">New Message from ${siteName} Contact Form</h2>
-                                <p style="font-size: 16px;">You have received a new message from your website's contact form.</p>
-                                <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin-top: 20px;">
-                                    <p style="margin: 0; padding-bottom: 10px;"><strong>Name:</strong> ${name}</p>
-                                    <p style="margin: 0; padding-bottom: 10px;"><strong>Email:</strong> <a href="mailto:${email}" style="color: #007bff;">${email}</a></p>
-                                    ${phone ? `<p style="margin: 0; padding-bottom: 10px;"><strong>Phone:</strong> ${phone}</p>` : ''}
-                                    <p style="margin: 0;"><strong>Message:</strong></p>
-                                    <p style="margin: 0; white-space: pre-wrap;">${message}</p>
+                        <!DOCTYPE html>
+                        <html lang="en">
+                        <head>
+                            <meta charset="UTF-8">
+                            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                            <style>
+                                body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji'; background-color: #f4f4f7; color: #333; margin: 0; padding: 0; }
+                                .container { max-width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); overflow: hidden; }
+                                .header { background-color: #4A00E0; /* A shade of purple */ color: #ffffff; padding: 30px; text-align: center; }
+                                .header h1 { margin: 0; font-size: 28px; font-weight: 600; }
+                                .content { padding: 30px; }
+                                .content h2 { font-size: 22px; color: #4A00E0; margin-top: 0; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+                                .details-grid { display: grid; grid-template-columns: 120px 1fr; gap: 10px 20px; }
+                                .details-grid dt { font-weight: 600; color: #555; }
+                                .details-grid dd { margin: 0; color: #333; }
+                                .message-box { background-color: #f9f9f9; border: 1px solid #eee; border-radius: 5px; padding: 20px; margin-top: 25px; }
+                                .message-box p { margin: 0; white-space: pre-wrap; line-height: 1.6; }
+                                .footer { background-color: #f4f4f7; padding: 20px; text-align: center; font-size: 12px; color: #888; }
+                            </style>
+                        </head>
+                        <body>
+                            <div class="container">
+                                <div class="header">
+                                    <h1>New Inquiry Received</h1>
                                 </div>
-                                <p style="font-size: 12px; color: #888; margin-top: 20px;">This is an automated notification. Please do not reply directly to this email.</p>
+                                <div class="content">
+                                    <h2>Sender's Details</h2>
+                                    <dl class="details-grid">
+                                        <dt>Name:</dt>
+                                        <dd>${name}</dd>
+                                        <dt>Email:</dt>
+                                        <dd><a href="mailto:${email}" style="color: #4A00E0; text-decoration: none;">${email}</a></dd>
+                                        ${phone ? `<dt>Phone:</dt><dd>${phone}</dd>` : ''}
+                                    </dl>
+                                    <div class="message-box">
+                                        <p>${message}</p>
+                                    </div>
+                                </div>
+                                <div class="footer">
+                                    This is an automated notification from ${siteName}.
+                                </div>
                             </div>
-                        </div>
+                        </body>
+                        </html>
                     `
                 });
             } catch (emailError) {
