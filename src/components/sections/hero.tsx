@@ -35,14 +35,9 @@ export default function Hero() {
   return (
     <section
       id="hero"
-      className="relative w-full overflow-hidden flex items-center justify-center pt-16 md:pt-24"
+      className="relative w-full overflow-hidden flex items-center justify-center pt-16 md:pt-24 bg-background"
     >
       <PageViewTracker pageName="Home" />
-      <div className="absolute inset-0 bg-gradient-to-br from-background via-secondary to-background" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-primary/10 to-transparent" />
-
-      <div className="absolute -left-1/4 -top-1/4 h-1/2 w-1/2 rounded-full bg-primary/10 blur-3xl" />
-      <div className="absolute -bottom-1/4 -right-1/4 h-1/2 w-1/2 rounded-full bg-primary/10 blur-3xl" />
 
       <div className="relative z-10 flex h-full flex-col items-center justify-center">
         <div className="container px-4 text-center mt-0 sm:mt-0">
