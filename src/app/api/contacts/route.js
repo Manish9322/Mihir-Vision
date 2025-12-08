@@ -52,41 +52,74 @@ export async function POST(request) {
                             <meta charset="UTF-8">
                             <meta name="viewport" content="width=device-width, initial-scale=1.0">
                             <style>
-                                body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji'; background-color: #f4f4f7; color: #333; margin: 0; padding: 0; }
-                                .container { max-width: 600px; margin: 20px auto; background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); overflow: hidden; }
-                                .header { background-color: #4A00E0; /* A shade of purple */ color: #ffffff; padding: 30px; text-align: center; }
-                                .header h1 { margin: 0; font-size: 28px; font-weight: 600; }
-                                .content { padding: 30px; }
-                                .content h2 { font-size: 22px; color: #4A00E0; margin-top: 0; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
-                                .details-grid { display: grid; grid-template-columns: 120px 1fr; gap: 10px 20px; }
-                                .details-grid dt { font-weight: 600; color: #555; }
-                                .details-grid dd { margin: 0; color: #333; }
-                                .message-box { background-color: #f9f9f9; border: 1px solid #eee; border-radius: 5px; padding: 20px; margin-top: 25px; }
-                                .message-box p { margin: 0; white-space: pre-wrap; line-height: 1.6; }
-                                .footer { background-color: #f4f4f7; padding: 20px; text-align: center; font-size: 12px; color: #888; }
+                                body { 
+                                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+                                    line-height: 1.6;
+                                    font-size: 16px;
+                                    color: #333;
+                                    margin: 20px;
+                                }
+                                h1 {
+                                    font-size: 24px;
+                                    font-weight: 600;
+                                    margin-bottom: 30px;
+                                }
+                                h2 {
+                                    font-size: 20px;
+                                    font-weight: 600;
+                                    margin-top: 30px;
+                                    margin-bottom: 15px;
+                                    border-bottom: 1px solid #ddd;
+                                    padding-bottom: 8px;
+                                }
+                                dl {
+                                    margin: 0;
+                                    padding: 0;
+                                }
+                                dt {
+                                    font-weight: 600;
+                                    color: #555;
+                                    margin-top: 10px;
+                                }
+                                dd {
+                                    margin-left: 0;
+                                    margin-bottom: 10px;
+                                    color: #333;
+                                }
+                                a {
+                                    color: #007bff;
+                                    text-decoration: none;
+                                }
+                                p {
+                                    white-space: pre-wrap;
+                                    font-size: 16px;
+                                }
+                                .footer {
+                                    margin-top: 40px;
+                                    font-size: 12px;
+                                    color: #888;
+                                }
                             </style>
                         </head>
                         <body>
-                            <div class="container">
-                                <div class="header">
-                                    <h1>New Inquiry Received</h1>
-                                </div>
-                                <div class="content">
-                                    <h2>Sender's Details</h2>
-                                    <dl class="details-grid">
-                                        <dt>Name:</dt>
-                                        <dd>${name}</dd>
-                                        <dt>Email:</dt>
-                                        <dd><a href="mailto:${email}" style="color: #4A00E0; text-decoration: none;">${email}</a></dd>
-                                        ${phone ? `<dt>Phone:</dt><dd>${phone}</dd>` : ''}
-                                    </dl>
-                                    <div class="message-box">
-                                        <p>${message}</p>
-                                    </div>
-                                </div>
-                                <div class="footer">
-                                    This is an automated notification from ${siteName}.
-                                </div>
+                            <h1>New Inquiry from ${siteName}</h1>
+                            
+                            <h2>Sender Details</h2>
+                            <dl>
+                                <dt>Name:</dt>
+                                <dd>${name}</dd>
+                                
+                                <dt>Email:</dt>
+                                <dd><a href="mailto:${email}">${email}</a></dd>
+                                
+                                ${phone ? `<dt>Phone:</dt><dd>${phone}</dd>` : ''}
+                            </dl>
+                            
+                            <h2>Message</h2>
+                            <p>${message}</p>
+
+                            <div class="footer">
+                                This is an automated notification from ${siteName}.
                             </div>
                         </body>
                         </html>
