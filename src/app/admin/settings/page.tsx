@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -1058,11 +1058,11 @@ export default function SettingsPage() {
     const isQueryLoading = isSettingsLoading || isCountriesLoading || isStatesLoading || isCitiesLoading || isDesignationsLoading || isSportsLoading;
     const isError = isSettingsError || isCountriesError || isStatesError || isCitiesError || isDesignationsError || isSportsError;
 
-    useState(() => {
+    useEffect(() => {
         if (settingsData) {
             reset(settingsData);
         }
-    });
+    }, [settingsData, reset]);
 
     const onSubmit = async (data) => {
         try {
