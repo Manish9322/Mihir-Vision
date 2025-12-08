@@ -30,7 +30,7 @@ export default function AdminLoginPage() {
     setIsLoading(true);
 
     // Hardcoded credentials check
-    if (email === 'mihir-vision.vercel.app' && password === 'Mihir-Vision@2025') {
+    if (email === 'mihir-vision@vercel.app' && password === 'Mihir-Vision@2025') {
       
       // Simulate JWT creation and storage
       const tokenPayload = { user: email, role: 'admin', iat: Math.floor(Date.now() / 1000) };
