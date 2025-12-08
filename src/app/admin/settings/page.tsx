@@ -1049,10 +1049,8 @@ export default function SettingsPage() {
     const [uploadImage, { isLoading: isUploading }] = useUploadImageMutation();
     const [addActionLog] = useAddActionLogMutation();
     
-    const [logoFile, setLogoFile] = useState(null);
-    const [faviconFile, setFaviconFile] = useState(null);
-    const [logoPreview, setLogoPreview] = useState(null);
-    const [faviconPreview, setFaviconPreview] = useState(null);
+    const [logoFile, setLogoFile] = useState<File | null>(null);
+    const [faviconFile, setFaviconFile] = useState<File | null>(null);
 
     const { register, handleSubmit, reset, watch, setValue } = useForm({ defaultValues: settingsData });
     const watchedLogo = watch("siteLogoUrl");
@@ -1074,43 +1072,59 @@ export default function SettingsPage() {
         }
     }, [settingsData, reset]);
     
-    const handleLogoChange = (e) => {
-        const file = e.target.files[0];
+    const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
         if (file) {
             setLogoFile(file);
             const reader = new FileReader();
             reader.onloadend = () => {
-                setLogoPreview(reader.result);
-                setValue('siteLogoUrl', reader.result);
+                setValue('siteLogoUrl', reader.result as string);
             };
             reader.readAsDataURL(file);
         }
     };
     
-    const handleFaviconChange = (e) => {
-        const file = e.target.files[0];
+    const handleFaviconChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
         if (file) {
             setFaviconFile(file);
             const reader = new FileReader();
             reader.onloadend = () => {
-                setFaviconPreview(reader.result);
-                setValue('faviconUrl', reader.result);
+                setValue('faviconUrl', reader.result as string);
             };
             reader.readAsDataURL(file);
         }
     };
 
-    const onSubmit = async (data) => {
-        try {
-            let finalData = { ...data };
+    const onSubmit = async (data: any) => {
+        let finalData = { ...data };
 
+        try {
             if (logoFile) {
-                const uploadResult = await uploadImage(logoFile).unwrap();
-                finalData.siteLogoUrl = uploadResult.url;
+                try {
+                    const uploadResult = await uploadImage(logoFile).unwrap();
+                    finalData.siteLogoUrl = uploadResult.url;
+                } catch (uploadError: any) {
+                    toast({
+                        variant: 'destructive',
+                        title: "Logo Upload Failed",
+                        description: `There was an error uploading the logo: ${uploadError.data?.message || uploadError.message}`,
+                    });
+                    return; // Stop if upload fails
+                }
             }
             if (faviconFile) {
-                const uploadResult = await uploadImage(faviconFile).unwrap();
-                finalData.faviconUrl = uploadResult.url;
+                 try {
+                    const uploadResult = await uploadImage(faviconFile).unwrap();
+                    finalData.faviconUrl = uploadResult.url;
+                } catch (uploadError: any) {
+                    toast({
+                        variant: 'destructive',
+                        title: "Favicon Upload Failed",
+                        description: `There was an error uploading the favicon: ${uploadError.data?.message || uploadError.message}`,
+                    });
+                    return; // Stop if upload fails
+                }
             }
 
             await updateSettings(finalData).unwrap();
@@ -1120,22 +1134,24 @@ export default function SettingsPage() {
                 section: 'Settings',
                 type: 'UPDATE',
             }).unwrap();
+
             toast({
                 title: "Settings Saved",
                 description: "Your general settings have been updated.",
             });
+
             setLogoFile(null);
             setFaviconFile(null);
-        } catch (error) {
+        } catch (error: any) {
             toast({
                 variant: 'destructive',
                 title: "Save Failed",
-                description: `There was an error saving the settings. ${error.message}`,
+                description: `There was an error saving the settings. ${error.data?.message || error.message}`,
             });
         }
     };
     
-    const handleNotificationsSubmit = async (e) => {
+    const handleNotificationsSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
             await addActionLog({
