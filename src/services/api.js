@@ -6,6 +6,13 @@ export const contentApi = createApi({
   baseQuery: fetchBaseQuery({ baseUrl: '/api/' }),
   tagTypes: ['About', 'Activities', 'Videos', 'Gallery', 'Projects', 'Timeline', 'Faq', 'Contacts', 'Profile', 'Settings', 'Countries', 'States', 'Cities', 'Clients', 'Games', 'Team', 'Designations', 'ActionLogs', 'Analytics', 'Sports', 'Matches'],
   endpoints: (builder) => ({
+    login: builder.mutation({
+      query: (credentials) => ({
+        url: 'auth/login',
+        method: 'POST',
+        body: credentials,
+      }),
+    }),
     uploadImage: builder.mutation({
       query: (file) => {
         const formData = new FormData();
@@ -123,7 +130,7 @@ export const contentApi = createApi({
         method: 'PATCH',
         body: patch,
       }),
-      invalidatesTags: (result, error, { id }) => [{ type: 'Contacts', id }],
+      invalidatesTags: ['Contacts'],
     }),
     deleteContact: builder.mutation({
       query: (id) => ({
@@ -311,6 +318,7 @@ export const contentApi = createApi({
 });
 
 export const { 
+  useLoginMutation,
   useUploadImageMutation,
   useGetAnalyticsDataQuery,
   useGetAboutDataQuery, 

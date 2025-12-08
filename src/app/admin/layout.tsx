@@ -44,11 +44,11 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { usePathname, useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Provider } from 'react-redux';
 import { store } from '@/store/store';
 import { ScrollArea } from '@/components/ui/scroll-area';
-
+import { Skeleton } from '@/components/ui/skeleton';
 
 const navItems = [
     { href: "/admin/dashboard", icon: LayoutDashboard, label: "Dashboard" },
@@ -68,12 +68,14 @@ const navItems = [
     { href: "/admin/profile", icon: User, label: "Profile" },
 ]
 
-function LogoutConfirmationDialog({ children }: { children: React.ReactNode }) {
-    const router = useRouter();
+function LogoutConfirmationDialog({ onLogout }: { onLogout: () => void }) {
     return (
         <AlertDialog>
             <AlertDialogTrigger asChild>
-                {children}
+                <button className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-destructive transition-all hover:text-primary text-sm">
+                    <LogOut className="h-4 w-4" />
+                    Logout
+                </button>
             </AlertDialogTrigger>
             <AlertDialogContent>
                 <AlertDialogHeader>
@@ -84,12 +86,40 @@ function LogoutConfirmationDialog({ children }: { children: React.ReactNode }) {
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => router.push('/admin/login')}>Logout</AlertDialogAction>
+                    <AlertDialogAction onClick={onLogout}>Logout</AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
     );
 }
+
+function AuthGuard({ children }: { children: React.ReactNode }) {
+    const router = useRouter();
+    const [isVerified, setIsVerified] = useState(false);
+
+    useEffect(() => {
+        const token = localStorage.getItem('admin-access-token');
+        if (!token) {
+            router.replace('/admin/login');
+        } else {
+            setIsVerified(true);
+        }
+    }, [router]);
+
+    if (!isVerified) {
+        return (
+            <div className="flex min-h-screen w-full items-center justify-center bg-muted/40">
+                <div className="w-full max-w-4xl p-8 space-y-8">
+                    <Skeleton className="h-16 w-1/3" />
+                    <Skeleton className="h-40 w-full" />
+                    <Skeleton className="h-40 w-full" />
+                </div>
+            </div>
+        );
+    }
+    return <>{children}</>;
+}
+
 
 export default function AdminLayout({
   children,
@@ -97,14 +127,21 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [isSheetOpen, setSheetOpen] = useState(false);
 
   if (pathname === '/admin/login') {
-    return <>{children}</>;
+    return <Provider store={store}><main>{children}</main></Provider>;
   }
+
+  const handleLogout = () => {
+    localStorage.removeItem('admin-access-token');
+    router.push('/admin/login');
+  };
 
   return (
     <Provider store={store}>
+     <AuthGuard>
       <div className="flex min-h-screen w-full flex-col bg-muted/40">
         <aside className="fixed inset-y-0 left-0 z-10 hidden w-64 flex-col border-r bg-background sm:flex">
           <div className="flex h-full flex-col">
@@ -131,12 +168,7 @@ export default function AdminLayout({
                           <Settings className="h-4 w-4" />
                           Settings
                       </Link>
-                      <LogoutConfirmationDialog>
-                          <button className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-destructive transition-all hover:text-primary text-sm">
-                              <LogOut className="h-4 w-4" />
-                              Logout
-                          </button>
-                      </LogoutConfirmationDialog>
+                      <LogoutConfirmationDialog onLogout={handleLogout} />
                   </nav>
               </div>
           </div>
@@ -175,6 +207,7 @@ export default function AdminLayout({
           </main>
         </div>
       </div>
+      </AuthGuard>
     </Provider>
   );
 }
