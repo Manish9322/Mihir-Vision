@@ -42,7 +42,7 @@ export async function POST(request) {
             
             try {
                 await resend.emails.send({
-                    from: `${siteName} <noreply@pinnacle-pathways.com>`,
+                    from: `${siteName} <onboarding@resend.dev>`,
                     to: notifyEmail,
                     subject: `New Inquiry from ${name}`,
                     html: `
