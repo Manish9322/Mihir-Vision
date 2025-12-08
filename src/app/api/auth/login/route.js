@@ -2,9 +2,9 @@
 import { NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-key-that-is-long-and-secure';
-const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'mihir-vision.vercel.app';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Mihir-Vision@2025';
+const JWT_SECRET = process.env.JWT_SECRET;
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME;
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 
 export async function POST(request) {
     try {
