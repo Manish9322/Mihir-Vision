@@ -1,51 +1,17 @@
 
-'use server';
-import { MONGODB_URI } from '@/config/config';
+'use client';
+import { useGetClientsDataQuery } from '@/services/api';
 import ClientsMarqueeClient from './clients-marquee-client';
-
-type Client = {
-    _id?: string;
-    name: string;
-    logoUrl: string;
-    website?: string;
-    isVisible: boolean;
-};
 
 const sectionData = {
     title: "Trusted by Industry Leaders",
 };
 
-async function getClientsData(): Promise<Client[] | null> {
-  if (!MONGODB_URI) {
-    console.error('MongoDB URI is not configured, skipping fetch for Clients section.');
-    return null;
-  }
+export default function ClientsMarquee() {
+    const { data: clients, isLoading, isError } = useGetClientsDataQuery(undefined);
+    const visibleClients = clients?.filter((c: any) => c.isVisible) || [];
 
-  try {
-    const baseUrl = process.env.NODE_ENV === 'production' 
-      ? `https://` + process.env.NEXT_PUBLIC_VERCEL_URL
-      : 'http://localhost:9002';
-      
-    const res = await fetch(`${baseUrl}/api/clients`, { cache: 'no-store' });
-
-    if (!res.ok) {
-      console.error(`Failed to fetch clients data: ${res.status} ${res.statusText}`);
-      return null;
-    }
-
-    const data = await res.json();
-    return data;
-  } catch (error) {
-    console.error('An error occurred while fetching clients data:', error);
-    return null;
-  }
-}
-
-export default async function ClientsMarquee() {
-    const clients = await getClientsData();
-    const visibleClients = clients?.filter(c => c.isVisible) || [];
-
-    if (!visibleClients || visibleClients.length === 0) {
+    if (isLoading || isError || !visibleClients || visibleClients.length === 0) {
         return null;
     }
 

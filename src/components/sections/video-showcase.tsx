@@ -1,7 +1,6 @@
-'use server';
+'use client';
 
-import { MONGODB_URI } from '@/config/config';
-import type { VideoInfo } from '@/lib/video-data';
+import { useGetVideosDataQuery } from '@/services/api';
 import VideoPlayerClient from './video-player-client';
 
 const videoSectionData = {
@@ -9,39 +8,12 @@ const videoSectionData = {
     subheadline: 'A showcase of our latest projects, breakthroughs, and team stories. Click on any video to play.'
 }
 
-async function getVideosData(): Promise<VideoInfo[] | null> {
-    if (!MONGODB_URI) {
-        console.error('MongoDB URI is not configured, skipping fetch for Videos section.');
-        return null;
-    }
-
-    try {
-        const baseUrl = process.env.NODE_ENV === 'production'
-            ? `https://` + process.env.NEXT_PUBLIC_VERCEL_URL
-            : 'http://localhost:9002';
-        
-        const res = await fetch(`${baseUrl}/api/videos`, { cache: 'no-store' });
-
-        if (!res.ok) {
-            console.error(`Failed to fetch videos data: ${res.status} ${res.statusText}`);
-            return null;
-        }
-
-        const data = await res.json();
-        return data;
-    } catch (error) {
-        console.error('An error occurred while fetching videos data:', error);
-        return null;
-    }
-}
-
-
-export default async function VideoShowcase() {
-  const videoData = await getVideosData();
+export default function VideoShowcase() {
+  const { data: videoData, isLoading, isError } = useGetVideosDataQuery(undefined);
   
-  const visibleVideos = videoData?.filter(video => video.isVisible) || [];
+  const visibleVideos = videoData?.filter((video: any) => video.isVisible) || [];
 
-  if (!visibleVideos || visibleVideos.length === 0) {
+  if (isLoading || isError || !visibleVideos || visibleVideos.length === 0) {
     return null;
   }
 

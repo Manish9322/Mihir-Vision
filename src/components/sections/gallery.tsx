@@ -1,50 +1,19 @@
-'use server';
+'use client';
 
-import { MONGODB_URI } from '@/config/config';
-import type { ImagePlaceholder } from '@/lib/placeholder-images';
+import { useGetGalleryDataQuery } from '@/services/api';
 import GalleryClient from './gallery-client';
-
-interface GalleryImage extends ImagePlaceholder {
-    isVisible: boolean;
-}
 
 const gallerySectionData = {
     title: 'Screenshot Gallery',
     subheadline: 'A glimpse into the worlds we are creating. Explore a selection of screenshots from our flagship projects.',
 };
 
-async function getGalleryData(): Promise<GalleryImage[] | null> {
-    if (!MONGODB_URI) {
-        console.error('MongoDB URI is not configured, skipping fetch for Gallery section.');
-        return null;
-    }
-
-    try {
-        const baseUrl = process.env.NODE_ENV === 'production'
-            ? `https://` + process.env.NEXT_PUBLIC_VERCEL_URL
-            : 'http://localhost:9002';
-        
-        const res = await fetch(`${baseUrl}/api/gallery`, { cache: 'no-store' });
-
-        if (!res.ok) {
-            console.error(`Failed to fetch gallery data: ${res.status} ${res.statusText}`);
-            return null;
-        }
-
-        const data = await res.json();
-        return data;
-    } catch (error) {
-        console.error('An error occurred while fetching gallery data:', error);
-        return null;
-    }
-}
-
-export default async function Gallery() {
-  const galleryData = await getGalleryData();
+export default function Gallery() {
+  const { data: galleryData, isLoading, isError } = useGetGalleryDataQuery(undefined);
   
-  const visibleImages = galleryData?.filter(img => img.isVisible) || [];
+  const visibleImages = galleryData?.filter((img: any) => img.isVisible) || [];
 
-  if (!visibleImages || visibleImages.length === 0) {
+  if (isLoading || isError || !visibleImages || visibleImages.length === 0) {
     return null;
   }
 

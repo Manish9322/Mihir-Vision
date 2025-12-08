@@ -1,17 +1,9 @@
 
-'use server';
+'use client';
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { MONGODB_URI } from '@/config/config';
+import { useGetActivitiesDataQuery } from '@/services/api';
 import { Rocket, Dna, Users } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-
-type Activity = {
-    _id?: string;
-    icon: string;
-    title: string;
-    description: string;
-    isVisible: boolean;
-};
 
 const iconMap: { [key: string]: LucideIcon } = {
     Rocket: Rocket,
@@ -19,38 +11,12 @@ const iconMap: { [key: string]: LucideIcon } = {
     Users: Users,
 };
 
-async function getActivitiesData(): Promise<Activity[] | null> {
-  if (!MONGODB_URI) {
-    console.error('MongoDB URI is not configured, skipping fetch for Activities section.');
-    return null;
-  }
+export default function Activities() {
+  const { data: activities, isLoading, isError } = useGetActivitiesDataQuery(undefined);
 
-  try {
-    const baseUrl = process.env.NODE_ENV === 'production' 
-      ? `https://` + process.env.NEXT_PUBLIC_VERCEL_URL
-      : 'http://localhost:9002';
-      
-    const res = await fetch(`${baseUrl}/api/activities`, { cache: 'no-store' });
+  const visibleActivities = activities?.filter((a: any) => a.isVisible) || [];
 
-    if (!res.ok) {
-      console.error(`Failed to fetch activities data: ${res.status} ${res.statusText}`);
-      return null;
-    }
-
-    const data = await res.json();
-    return data;
-  } catch (error) {
-    console.error('An error occurred while fetching activities data:', error);
-    return null;
-  }
-}
-
-export default async function Activities() {
-  const activities = await getActivitiesData();
-
-  const visibleActivities = activities?.filter(a => a.isVisible) || [];
-
-  if (!visibleActivities || visibleActivities.length === 0) {
+  if (isLoading || isError || !visibleActivities || visibleActivities.length === 0) {
     return null;
   }
 
@@ -71,7 +37,7 @@ export default async function Activities() {
           </p>
         </div>
         <div className="grid md:grid-cols-3 gap-8">
-          {visibleActivities.map((activity) => {
+          {visibleActivities.map((activity: any) => {
             const Icon = iconMap[activity.icon] || Rocket;
             return (
               <Card

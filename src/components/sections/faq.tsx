@@ -1,54 +1,22 @@
-'use server';
+'use client';
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import { MONGODB_URI } from '@/config/config';
-
-type FAQ = {
-    _id?: string;
-    question: string;
-    answer: string;
-    isVisible: boolean;
-};
+import { useGetFaqDataQuery } from '@/services/api';
 
 const faqSectionData = {
     title: 'Frequently Asked Questions',
     subheadline: 'Find answers to common questions about our work, mission, and partnerships.',
 };
 
-async function getFaqData(): Promise<FAQ[] | null> {
-    if (!MONGODB_URI) {
-        console.error('MongoDB URI is not configured, skipping fetch for FAQ section.');
-        return null;
-    }
+export default function Faq() {
+  const { data: allFaqs, isLoading, isError } = useGetFaqDataQuery(undefined);
+  const faqs = allFaqs?.filter((faq: any) => faq.isVisible) || [];
 
-    try {
-        const baseUrl = process.env.NODE_ENV === 'production'
-            ? `https://` + process.env.NEXT_PUBLIC_VERCEL_URL
-            : 'http://localhost:9002';
-        
-        const res = await fetch(`${baseUrl}/api/faq`, { cache: 'no-store' });
-
-        if (!res.ok) {
-            console.error(`Failed to fetch FAQ data: ${res.status} ${res.statusText}`);
-            return null;
-        }
-
-        const data = await res.json();
-        return data.filter(faq => faq.isVisible);
-    } catch (error) {
-        console.error('An error occurred while fetching FAQ data:', error);
-        return null;
-    }
-}
-
-export default async function Faq() {
-  const faqs = await getFaqData();
-
-  if (!faqs || faqs.length === 0) {
+  if (isLoading || isError || !faqs || faqs.length === 0) {
     return null;
   }
   

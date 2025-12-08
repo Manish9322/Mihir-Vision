@@ -1,18 +1,9 @@
 
-'use server';
+'use client';
 
-import { MONGODB_URI } from '@/config/config';
+import { useGetTimelineDataQuery } from '@/services/api';
 import { Lightbulb, Target, Users, Bot } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-
-type TimelineEvent = {
-    _id?: string;
-    year: string;
-    title: string;
-    description: string;
-    icon: string;
-    isVisible: boolean;
-};
 
 const iconMap: { [key: string]: LucideIcon } = {
     Lightbulb: Lightbulb,
@@ -21,42 +12,16 @@ const iconMap: { [key: string]: LucideIcon } = {
     Bot: Bot,
 };
 
-async function getTimelineData(): Promise<TimelineEvent[] | null> {
-    if (!MONGODB_URI) {
-        console.error('MongoDB URI is not configured, skipping fetch for Timeline section.');
-        return null;
-    }
-
-    try {
-        const baseUrl = process.env.NODE_ENV === 'production'
-            ? `https://` + process.env.NEXT_PUBLIC_VERCEL_URL
-            : 'http://localhost:9002';
-        
-        const res = await fetch(`${baseUrl}/api/timeline`, { cache: 'no-store' });
-
-        if (!res.ok) {
-            console.error(`Failed to fetch timeline data: ${res.status} ${res.statusText}`);
-            return null;
-        }
-
-        const data = await res.json();
-        return data;
-    } catch (error) {
-        console.error('An error occurred while fetching timeline data:', error);
-        return null;
-    }
-}
-
-export default async function Timeline() {
-    const timelineEvents = await getTimelineData();
-    const visibleEvents = timelineEvents?.filter(event => event.isVisible) || [];
+export default function Timeline() {
+    const { data: timelineEvents, isLoading, isError } = useGetTimelineDataQuery(undefined);
+    const visibleEvents = timelineEvents?.filter((event: any) => event.isVisible) || [];
 
     const timelineData = {
         title: 'Our DNA Timeline',
         subheadline: 'A look back at the key milestones that have shaped our journey and defined who we are today.',
     };
 
-    if (!visibleEvents || visibleEvents.length === 0) {
+    if (isLoading || isError || !visibleEvents || visibleEvents.length === 0) {
         return null;
     }
 

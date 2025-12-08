@@ -53,7 +53,7 @@ const AboutAdminSkeleton = () => (
 
 const AboutAdminPage = () => {
     const { toast } = useToast();
-    const { data: aboutData, isLoading: isQueryLoading, isError } = useGetAboutDataQuery();
+    const { data: aboutData, isLoading: isQueryLoading, isError } = useGetAboutDataQuery(undefined);
     const [updateAboutData, { isLoading: isMutationLoading }] = useUpdateAboutDataMutation();
     const [addActionLog] = useAddActionLogMutation();
     const [uploadImage, { isLoading: isUploading }] = useUploadImageMutation();
@@ -90,7 +90,7 @@ const AboutAdminPage = () => {
         }
     };
 
-    const onSubmit = async (data) => {
+    const onSubmit = async (data : any) => {
         try {
             let finalData = { ...data };
 

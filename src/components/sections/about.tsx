@@ -1,55 +1,14 @@
 
-'use server';
+'use client';
 import Image from 'next/image';
 import { Check } from 'lucide-react';
-import { MONGODB_URI } from '@/config/config';
+import { useGetAboutDataQuery } from '@/services/api';
 
-// Define the data type based on your Mongoose schema
-type AboutData = {
-  title: string;
-  paragraph1: string;
-  highlights: string[];
-  image: {
-    imageUrl: string;
-    description: string;
-  };
-};
-
-async function getAboutData(): Promise<AboutData | null> {
-  // If no MONGODB_URI is configured, we can't fetch data.
-  if (!MONGODB_URI) {
-    console.error('MongoDB URI is not configured, skipping fetch for About section.');
-    return null;
-  }
-
-  try {
-    // This fetch needs to be absolute when running on the server.
-    // We'll use the localhost address for development.
-    // In production, this should be your domain.
-    const baseUrl = process.env.NODE_ENV === 'production' 
-      ? `https://` + process.env.NEXT_PUBLIC_VERCEL_URL // Replace with your actual domain if not on Vercel
-      : 'http://localhost:9002';
-      
-    const res = await fetch(`${baseUrl}/api/about`, { cache: 'no-store' });
-
-    if (!res.ok) {
-      console.error(`Failed to fetch about data: ${res.status} ${res.statusText}`);
-      return null;
-    }
-
-    const data = await res.json();
-    return data;
-  } catch (error) {
-    console.error('An error occurred while fetching about data:', error);
-    return null;
-  }
-}
-
-export default async function About() {
-  const aboutData = await getAboutData();
+export default function About() {
+  const { data: aboutData, isLoading, isError } = useGetAboutDataQuery(undefined);
 
   // If data fetching fails or returns nothing, render nothing to avoid errors.
-  if (!aboutData) {
+  if (isLoading || isError || !aboutData) {
     return null;
   }
 
