@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Switch } from "@/components/ui/switch";
 import { Loader2, PlusCircle, Trash2, ChevronLeft, ChevronRight, MoreHorizontal, FilePenLine, Eye, Search, AlertTriangle } from 'lucide-react';
-import { useGetSettingsDataQuery, useUpdateSettingsDataMutation, useGetCountriesQuery, useUpdateCountriesMutation, useGetStatesQuery, useUpdateStatesMutation, useGetCitiesQuery, useUpdateCitiesMutation, useGetDesignationsQuery, useUpdateDesignationsMutation, useGetSportsQuery, useUpdateSportsMutation, useAddActionLogMutation } from '@/services/api';
+import { useGetSettingsDataQuery, useUpdateSettingsDataMutation, useGetCountriesQuery, useUpdateCountriesMutation, useGetStatesQuery, useUpdateStatesMutation, useGetCitiesQuery, useUpdateCitiesMutation, useGetDesignationsQuery, useUpdateDesignationsMutation, useGetSportsQuery, useUpdateSportsMutation, useAddActionLogMutation, useUploadImageMutation } from '@/services/api';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -18,6 +18,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { Skeleton } from '@/components/ui/skeleton';
+import Image from 'next/image';
 
 const ITEMS_PER_PAGE = 5;
 
@@ -1045,9 +1046,18 @@ export default function SettingsPage() {
     const { toast } = useToast();
     const { data: settingsData, isLoading: isSettingsLoading, isError: isSettingsError } = useGetSettingsDataQuery();
     const [updateSettings, { isLoading: isMutationLoading }] = useUpdateSettingsDataMutation();
+    const [uploadImage, { isLoading: isUploading }] = useUploadImageMutation();
     const [addActionLog] = useAddActionLogMutation();
     
-    const { register, handleSubmit, reset } = useForm({ defaultValues: settingsData });
+    const [logoFile, setLogoFile] = useState(null);
+    const [faviconFile, setFaviconFile] = useState(null);
+    const [logoPreview, setLogoPreview] = useState(null);
+    const [faviconPreview, setFaviconPreview] = useState(null);
+
+    const { register, handleSubmit, reset, watch, setValue } = useForm({ defaultValues: settingsData });
+    const watchedLogo = watch("siteLogoUrl");
+    const watchedFavicon = watch("faviconUrl");
+
 
     const { isLoading: isCountriesLoading, isError: isCountriesError } = useGetCountriesQuery();
     const { isLoading: isStatesLoading, isError: isStatesError } = useGetStatesQuery();
@@ -1063,10 +1073,47 @@ export default function SettingsPage() {
             reset(settingsData);
         }
     }, [settingsData, reset]);
+    
+    const handleLogoChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setLogoFile(file);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setLogoPreview(reader.result);
+                setValue('siteLogoUrl', reader.result);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+    
+    const handleFaviconChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setFaviconFile(file);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setFaviconPreview(reader.result);
+                setValue('faviconUrl', reader.result);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
 
     const onSubmit = async (data) => {
         try {
-            await updateSettings(data).unwrap();
+            let finalData = { ...data };
+
+            if (logoFile) {
+                const uploadResult = await uploadImage(logoFile).unwrap();
+                finalData.siteLogoUrl = uploadResult.url;
+            }
+            if (faviconFile) {
+                const uploadResult = await uploadImage(faviconFile).unwrap();
+                finalData.faviconUrl = uploadResult.url;
+            }
+
+            await updateSettings(finalData).unwrap();
             await addActionLog({
                 user: 'Admin User',
                 action: 'updated general settings',
@@ -1077,11 +1124,13 @@ export default function SettingsPage() {
                 title: "Settings Saved",
                 description: "Your general settings have been updated.",
             });
+            setLogoFile(null);
+            setFaviconFile(null);
         } catch (error) {
             toast({
                 variant: 'destructive',
                 title: "Save Failed",
-                description: "There was an error saving the settings.",
+                description: `There was an error saving the settings. ${error.message}`,
             });
         }
     };
@@ -1149,8 +1198,26 @@ export default function SettingsPage() {
                                 <Label htmlFor="siteTagline">Tagline</Label>
                                 <Input id="siteTagline" {...register("siteTagline")} />
                             </div>
-                            <Button type="submit" disabled={isMutationLoading}>
-                                {isMutationLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            <div className="space-y-4">
+                                <div className="space-y-2">
+                                    <Label>Site Logo</Label>
+                                    <div className="flex items-center gap-4">
+                                        <Image src={watchedLogo || '/placeholder.svg'} alt="Site Logo" width={64} height={64} className="rounded-md bg-muted p-2 object-contain" />
+                                        <Input type="file" className="max-w-xs" onChange={handleLogoChange} accept="image/*" />
+                                    </div>
+                                    <p className="text-xs text-muted-foreground">Recommended size: 256x256px</p>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Favicon</Label>
+                                    <div className="flex items-center gap-4">
+                                        <Image src={watchedFavicon || '/placeholder.svg'} alt="Favicon" width={32} height={32} className="rounded-md bg-muted p-1" />
+                                        <Input type="file" className="max-w-xs" onChange={handleFaviconChange} accept="image/png, image/x-icon, image/svg+xml" />
+                                    </div>
+                                    <p className="text-xs text-muted-foreground">Recommended size: 32x32px. Use .ico, .png or .svg</p>
+                                </div>
+                            </div>
+                            <Button type="submit" disabled={isMutationLoading || isUploading}>
+                                {(isMutationLoading || isUploading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                 Save General
                             </Button>
                         </form>

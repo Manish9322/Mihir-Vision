@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -7,9 +8,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Mountain } from 'lucide-react';
 import { useGetSettingsDataQuery } from '@/services/api';
 import { Skeleton } from '@/components/ui/skeleton';
+import Image from 'next/image';
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -19,6 +20,7 @@ export default function AdminLoginPage() {
   const { data: settingsData, isLoading: isSettingsLoading } = useGetSettingsDataQuery();
 
   const siteName = settingsData?.siteName || 'Pinnacle Pathways';
+  const siteLogoUrl = settingsData?.siteLogoUrl;
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,7 +49,13 @@ export default function AdminLoginPage() {
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4 flex items-center justify-center gap-2">
-            <Mountain className="h-8 w-8" />
+            {isSettingsLoading ? (
+                <Skeleton className="h-8 w-8" />
+            ) : siteLogoUrl ? (
+                <Image src={siteLogoUrl} alt={siteName} width={32} height={32} />
+            ) : (
+                <Skeleton className="h-8 w-8" />
+            )}
              {isSettingsLoading ? (
                 <Skeleton className="h-8 w-48" />
               ) : (

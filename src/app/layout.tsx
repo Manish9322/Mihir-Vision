@@ -1,4 +1,5 @@
-import type { Metadata } from 'next';
+
+import type { Metadata, ResolvingMetadata } from 'next';
 import { Toaster } from '@/components/ui/toaster';
 import './globals.css';
 import { ThemeProvider } from '@/components/theme-provider';
@@ -17,11 +18,36 @@ const bodyFont = Inter({
   variable: '--font-body',
 });
 
-// Static metadata - will be updated dynamically via client-side if needed
-export const metadata: Metadata = {
-  title: 'Pinnacle Pathways',
-  description: 'Forging new paths to the peak of innovation.',
-};
+async function getSettings() {
+  try {
+    const baseUrl = process.env.VERCEL_URL 
+      ? `https://${process.env.VERCEL_URL}`
+      : 'http://localhost:9002';
+    const res = await fetch(`${baseUrl}/api/settings`, { cache: 'no-store' });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (error) {
+    console.error('Failed to fetch settings:', error);
+    return null;
+  }
+}
+
+export async function generateMetadata(
+  {},
+  parent: ResolvingMetadata
+): Promise<Metadata> {
+  const settings = await getSettings();
+  const previousIcons = (await parent).icons || {}
+
+  return {
+    title: settings?.siteName || 'Pinnacle Pathways',
+    description: settings?.siteTagline || 'Forging new paths to the peak of innovation.',
+    icons: {
+      icon: settings?.faviconUrl || previousIcons.icon,
+    },
+  }
+}
+
 
 export default function RootLayout({
   children,

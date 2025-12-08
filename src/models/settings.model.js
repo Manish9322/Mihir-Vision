@@ -11,6 +11,14 @@ const settingsSchema = new mongoose.Schema({
     type: String,
     default: 'Forging new paths to the peak of innovation.'
   },
+  siteLogoUrl: {
+    type: String,
+    default: '',
+  },
+  faviconUrl: {
+    type: String,
+    default: '',
+  }
 }, { timestamps: true });
 
 const Settings = mongoose.models.Settings ?? mongoose.model('Settings', settingsSchema);
