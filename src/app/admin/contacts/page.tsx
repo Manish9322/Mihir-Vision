@@ -125,7 +125,7 @@ const ViewMessageDialog = ({ message, open, onOpenChange }: { message: ContactMe
 
 const ContactsPage = () => {
     const { toast } = useToast();
-    const { data: messages = [], isLoading, isError } = useGetContactsQuery();
+    const { data: messages = [], isLoading, isError } = useGetContactsQuery(undefined);
     const [deleteContact, { isLoading: isDeleting }] = useDeleteContactMutation();
     
     const [filter, setFilter] = useState<string>('all');
@@ -135,7 +135,7 @@ const ContactsPage = () => {
     const [isViewOpen, setIsViewOpen] = useState(false);
 
     const filteredMessages = useMemo(() => {
-        return (messages || []).filter(message => {
+        return (messages || []).filter((message:any) => {
             const statusMatch = filter === 'all' || message.status.toLowerCase() === filter;
             const searchMatch = !searchQuery ||
                 message.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -153,8 +153,8 @@ const ContactsPage = () => {
     );
 
     const totalMessages = messages.length;
-    const newMessages = messages.filter(m => m.status === 'New').length;
-    const repliedMessages = messages.filter(m => m.status === 'Replied').length;
+    const newMessages = messages.filter((m:any) => m.status === 'New').length;
+    const repliedMessages = messages.filter((m:any) => m.status === 'Replied').length;
     
     const handleDelete = async (id: string) => {
         try {
@@ -290,7 +290,7 @@ const ContactsPage = () => {
                             </TableHeader>
                             <TableBody>
                                 {paginatedMessages.length > 0 ? (
-                                    paginatedMessages.map((message) => (
+                                    paginatedMessages.map((message : any) => (
                                         <TableRow key={message._id}>
                                             <TableCell>
                                                 <div className="font-medium">{message.name}</div>
