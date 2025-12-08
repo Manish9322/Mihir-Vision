@@ -1,68 +1,14 @@
 
+'use client';
 import Link from 'next/link';
 import { Mountain } from 'lucide-react';
-import { MONGODB_URI } from '@/config/config';
+import { useGetProfileDataQuery, useGetSettingsDataQuery } from '@/services/api';
 
-type SocialLink = {
-  platform: string;
-  url: string;
-};
-
-type ProfileData = {
-  fullName: string;
-  email: string;
-  socialLinks: SocialLink[];
-};
-
-type FooterData = {
-  companyName: string;
-};
-
-async function getProfileData(): Promise<ProfileData | null> {
-  if (!MONGODB_URI) {
-    console.error('MongoDB URI is not configured, skipping fetch for Profile data.');
-    return null;
-  }
-  try {
-    const baseUrl = process.env.NODE_ENV === 'production' 
-      ? `https://` + process.env.NEXT_PUBLIC_VERCEL_URL
-      : 'http://localhost:9002';
-      
-    const res = await fetch(`${baseUrl}/api/profile`, { cache: 'no-store' });
-    if (!res.ok) {
-      console.error(`Failed to fetch profile data: ${res.status} ${res.statusText}`);
-      return null;
-    }
-    return await res.json();
-  } catch (error) {
-    console.error('An error occurred while fetching profile data:', error);
-    return null;
-  }
-}
-
-async function getSettingsData(): Promise<FooterData | null> {
-    if (!MONGODB_URI) {
-        return null;
-    }
-    try {
-        const baseUrl = process.env.NODE_ENV === 'production' 
-            ? `https://` + process.env.NEXT_PUBLIC_VERCEL_URL
-            : 'http://localhost:9002';
-        const res = await fetch(`${baseUrl}/api/settings`, { cache: 'no-store' });
-        if (!res.ok) return null;
-        const data = await res.json();
-        return { companyName: data.siteName };
-    } catch (error) {
-        return null;
-    }
-}
-
-
-export default async function Footer() {
-  const profileData = await getProfileData();
-  const settingsData = await getSettingsData();
+export default function Footer() {
+  const { data: profileData } = useGetProfileDataQuery(undefined);
+  const { data: settingsData } = useGetSettingsDataQuery(undefined);
   
-  const companyName = settingsData?.companyName || 'Pinnacle Pathways';
+  const companyName = settingsData?.siteName || 'Pinnacle Pathways';
   const socialLinks = profileData?.socialLinks || [];
 
   return (
@@ -74,7 +20,7 @@ export default async function Footer() {
             <span className="font-bold font-headline">{companyName}</span>
           </div>
           <div className="flex items-center gap-4">
-            {socialLinks.map((social) => (
+            {socialLinks.map((social: any) => (
               <Link key={social.platform} href={social.url} target="_blank" rel="noopener noreferrer" className="text-sm text-muted-foreground hover:text-foreground">
                 {social.platform}
               </Link>

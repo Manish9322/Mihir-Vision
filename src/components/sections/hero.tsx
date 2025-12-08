@@ -10,11 +10,11 @@ import { useGetProfileDataQuery, useGetProjectsDataQuery, useGetMatchesQuery, us
 import PageViewTracker from '@/components/analytics/page-view-tracker';
 
 export default function Hero() {
-  const { data: profile } = useGetProfileDataQuery();
-  const { data: projectsData = [] } = useGetProjectsDataQuery();
-  const { data: matchesData = [] } = useGetMatchesQuery();
-  const { data: teamData = [] } = useGetTeamDataQuery();
-  const { data: clientsData = [] } = useGetClientsDataQuery();
+  const { data: profile } = useGetProfileDataQuery(undefined);
+  const { data: projectsData = [] } = useGetProjectsDataQuery(undefined);
+  const { data: matchesData = [] } = useGetMatchesQuery(undefined);
+  const { data: teamData = [] } = useGetTeamDataQuery(undefined);
+  const { data: clientsData = [] } = useGetClientsDataQuery(undefined);
   
   const phone = profile?.phone || '+1 (555) 123-4567';
   const email = profile?.email || 'contact@pinnaclepathways.com';

@@ -7,12 +7,13 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { MONGODB_URI } from '@/config/config';
-import type { ImagePlaceholder } from '@/lib/placeholder-images';
 
 type Project = {
     _id?: string;
-    image: ImagePlaceholder;
+    image: {
+      imageUrl: string;
+      description: string;
+    };
     title: string;
     slug: string;
     description: string;
@@ -20,33 +21,25 @@ type Project = {
     tags: string[];
 };
 
+// Force dynamic rendering for this page
+export const dynamic = 'force-dynamic';
+
 async function getProjects(): Promise<Project[] | null> {
-  if (!MONGODB_URI) {
-    return null;
-  }
   try {
-    const baseUrl = process.env.NODE_ENV === 'production' 
-      ? `https://` + process.env.NEXT_PUBLIC_VERCEL_URL
+    // Use relative URL for API calls within the same deployment
+    const baseUrl = process.env.VERCEL_URL 
+      ? `https://${process.env.VERCEL_URL}`
       : 'http://localhost:9002';
-    const res = await fetch(`${baseUrl}/api/projects`, { cache: 'no-store' });
+    const res = await fetch(`${baseUrl}/api/projects`, { 
+      cache: 'no-store',
+      next: { revalidate: 0 }
+    });
     if (!res.ok) return null;
     return await res.json();
   } catch (error) {
     console.error('Failed to fetch projects:', error);
     return null;
   }
-}
-
-export async function generateStaticParams() {
-  const projects = await getProjects();
-
-  if (!projects) {
-    return [];
-  }
-
-  return projects.map((project) => ({
-    slug: project.slug,
-  }));
 }
 
 export default async function ProjectDetailPage({ params }: { params: { slug: string } }) {

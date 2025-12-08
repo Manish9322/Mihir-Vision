@@ -22,7 +22,7 @@ const navLinks = [
 
 export default function Header() {
   const [isSheetOpen, setSheetOpen] = useState(false);
-  const { data: settingsData, isLoading: isSettingsLoading } = useGetSettingsDataQuery();
+  const { data: settingsData, isLoading: isSettingsLoading } = useGetSettingsDataQuery(undefined);
 
   const siteName = settingsData?.siteName || 'Pinnacle Pathways';
 
