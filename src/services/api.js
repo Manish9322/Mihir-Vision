@@ -4,7 +4,7 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 export const contentApi = createApi({
   reducerPath: 'contentApi',
   baseQuery: fetchBaseQuery({ baseUrl: '/api/' }),
-  tagTypes: ['About', 'Activities', 'Videos', 'Gallery', 'Projects', 'Timeline', 'Faq', 'Contacts', 'Profile', 'Settings', 'Countries', 'States', 'Cities', 'Clients', 'Games', 'Team', 'Designations', 'ActionLogs', 'Analytics', 'Sports', 'Matches'],
+  tagTypes: ['About', 'Activities', 'Videos', 'Gallery', 'Projects', 'Timeline', 'Faq', 'Contacts', 'Profile', 'Settings', 'Countries', 'States', 'Cities', 'Clients', 'Games', 'Team', 'Designations', 'ActionLogs', 'Analytics', 'Sports', 'Matches', 'HeroStats'],
   endpoints: (builder) => ({
     login: builder.mutation({
       query: (credentials) => ({
@@ -27,6 +27,10 @@ export const contentApi = createApi({
     getAnalyticsData: builder.query({
       query: () => 'analytics',
       providesTags: ['Analytics'],
+    }),
+    getHeroStats: builder.query({
+      query: () => 'hero-stats',
+      providesTags: ['HeroStats'],
     }),
     getAboutData: builder.query({
       query: () => 'about',
@@ -321,6 +325,7 @@ export const {
   useLoginMutation,
   useUploadImageMutation,
   useGetAnalyticsDataQuery,
+  useGetHeroStatsQuery,
   useGetAboutDataQuery, 
   useUpdateAboutDataMutation,
   useGetActivitiesDataQuery,
