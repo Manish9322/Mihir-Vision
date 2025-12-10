@@ -31,8 +31,8 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-primary/10 backdrop-blur supports-[backdrop-filter]:bg-primary/5">
-      <div className="container flex h-14 items-center justify-between px-4 md:px-6">
-        <div className="flex items-center">
+      <div className="container relative flex h-14 items-center justify-between px-4 md:px-6">
+        <div className="flex items-center lg:flex-1">
           <Link href="/" className="flex items-center gap-2 font-bold">
             {isSettingsLoading ? (
                 <Skeleton className="h-8 w-8" />
@@ -46,6 +46,13 @@ export default function Header() {
             </span>
           </Link>
         </div>
+
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 lg:hidden">
+            <Link href="/" className="font-bold font-headline line-clamp-1">
+                 {isSettingsLoading ? <Skeleton className="h-5 w-32" /> : siteName}
+            </Link>
+        </div>
+
         <nav className="hidden items-center justify-center gap-4 text-sm font-medium lg:flex">
           {navLinks.map((link) => (
             <Link key={link.href} href={link.href} className="transition-colors hover:text-foreground/80 text-foreground/60">
@@ -53,7 +60,7 @@ export default function Header() {
             </Link>
           ))}
         </nav>
-        <div className="flex items-center justify-end gap-2">
+        <div className="flex items-center justify-end gap-2 lg:flex-1">
           <ThemeToggle />
           <Sheet open={isSheetOpen} onOpenChange={setSheetOpen}>
             <SheetTrigger asChild>
