@@ -2,6 +2,7 @@
 'use client';
 import { useGetClientsDataQuery } from '@/services/api';
 import ClientsMarqueeClient from './clients-marquee-client';
+import ClientsMarqueeSkeleton from '../skeletons/clients-marquee-skeleton';
 
 const sectionData = {
     title: "Trusted by Industry Leaders",
@@ -9,9 +10,14 @@ const sectionData = {
 
 export default function ClientsMarquee() {
     const { data: clients, isLoading, isError } = useGetClientsDataQuery(undefined);
+    
+    if (isLoading) {
+        return <ClientsMarqueeSkeleton />;
+    }
+
     const visibleClients = clients?.filter((c: any) => c.isVisible) || [];
 
-    if (isLoading || isError || !visibleClients || visibleClients.length === 0) {
+    if (isError || !visibleClients || visibleClients.length === 0) {
         return null;
     }
 

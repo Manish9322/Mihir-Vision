@@ -25,8 +25,8 @@ async function getHeroStats() {
     ]);
     
     return {
-        phone: profile?.phone || '+1 (555) 123-4567',
-        email: profile?.email || 'contact@pinnaclepathways.com',
+        phone: profile?.phone || '+91 93228 97948',
+        email: profile?.email || 'manishsonawane3010@gmail.com',
         projectsCount: projectsCount || 0,
         gamesCount: matchesCount || 0,
         teamCount: teamCount || 0,

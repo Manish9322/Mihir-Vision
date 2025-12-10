@@ -1,7 +1,9 @@
+
 'use client';
 
 import { useGetVideosDataQuery } from '@/services/api';
 import VideoPlayerClient from './video-player-client';
+import VideoShowcaseSkeleton from '../skeletons/video-showcase-skeleton';
 
 const videoSectionData = {
     title: 'Explore Our Work',
@@ -11,9 +13,13 @@ const videoSectionData = {
 export default function VideoShowcase() {
   const { data: videoData, isLoading, isError } = useGetVideosDataQuery(undefined);
   
+  if (isLoading) {
+    return <VideoShowcaseSkeleton />;
+  }
+
   const visibleVideos = videoData?.filter((video: any) => video.isVisible) || [];
 
-  if (isLoading || isError || !visibleVideos || visibleVideos.length === 0) {
+  if (isError || !visibleVideos || visibleVideos.length === 0) {
     return null;
   }
 

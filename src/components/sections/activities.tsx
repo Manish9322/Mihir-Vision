@@ -4,6 +4,7 @@ import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/ca
 import { useGetActivitiesDataQuery } from '@/services/api';
 import { Rocket, Dna, Users } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import ActivitiesSkeleton from '../skeletons/activities-skeleton';
 
 const iconMap: { [key: string]: LucideIcon } = {
     Rocket: Rocket,
@@ -14,9 +15,13 @@ const iconMap: { [key: string]: LucideIcon } = {
 export default function Activities() {
   const { data: activities, isLoading, isError } = useGetActivitiesDataQuery(undefined);
 
+  if (isLoading) {
+    return <ActivitiesSkeleton />;
+  }
+
   const visibleActivities = activities?.filter((a: any) => a.isVisible) || [];
 
-  if (isLoading || isError || !visibleActivities || visibleActivities.length === 0) {
+  if (isError || !visibleActivities || visibleActivities.length === 0) {
     return null;
   }
 

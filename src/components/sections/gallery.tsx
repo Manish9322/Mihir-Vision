@@ -1,7 +1,9 @@
+
 'use client';
 
 import { useGetGalleryDataQuery } from '@/services/api';
 import GalleryClient from './gallery-client';
+import GallerySkeleton from '../skeletons/gallery-skeleton';
 
 const gallerySectionData = {
     title: 'Screenshot Gallery',
@@ -11,9 +13,13 @@ const gallerySectionData = {
 export default function Gallery() {
   const { data: galleryData, isLoading, isError } = useGetGalleryDataQuery(undefined);
   
+  if (isLoading) {
+    return <GallerySkeleton />;
+  }
+
   const visibleImages = galleryData?.filter((img: any) => img.isVisible) || [];
 
-  if (isLoading || isError || !visibleImages || visibleImages.length === 0) {
+  if (isError || !visibleImages || visibleImages.length === 0) {
     return null;
   }
 

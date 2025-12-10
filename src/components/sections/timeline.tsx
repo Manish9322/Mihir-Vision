@@ -4,6 +4,7 @@
 import { useGetTimelineDataQuery } from '@/services/api';
 import { Lightbulb, Target, Users, Bot } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import TimelineSkeleton from '../skeletons/timeline-skeleton';
 
 const iconMap: { [key: string]: LucideIcon } = {
     Lightbulb: Lightbulb,
@@ -14,6 +15,11 @@ const iconMap: { [key: string]: LucideIcon } = {
 
 export default function Timeline() {
     const { data: timelineEvents, isLoading, isError } = useGetTimelineDataQuery(undefined);
+
+    if (isLoading) {
+      return <TimelineSkeleton />;
+    }
+
     const visibleEvents = timelineEvents?.filter((event: any) => event.isVisible) || [];
 
     const timelineData = {
@@ -21,7 +27,7 @@ export default function Timeline() {
         subheadline: 'A look back at the key milestones that have shaped our journey and defined who we are today.',
     };
 
-    if (isLoading || isError || !visibleEvents || visibleEvents.length === 0) {
+    if (isError || !visibleEvents || visibleEvents.length === 0) {
         return null;
     }
 

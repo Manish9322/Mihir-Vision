@@ -1,3 +1,4 @@
+
 'use client';
 import {
   Accordion,
@@ -6,6 +7,7 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { useGetFaqDataQuery } from '@/services/api';
+import FaqSkeleton from '../skeletons/faq-skeleton';
 
 const faqSectionData = {
     title: 'Frequently Asked Questions',
@@ -14,9 +16,14 @@ const faqSectionData = {
 
 export default function Faq() {
   const { data: allFaqs, isLoading, isError } = useGetFaqDataQuery(undefined);
+
+  if (isLoading) {
+    return <FaqSkeleton />;
+  }
+
   const faqs = allFaqs?.filter((faq: any) => faq.isVisible) || [];
 
-  if (isLoading || isError || !faqs || faqs.length === 0) {
+  if (isError || !faqs || faqs.length === 0) {
     return null;
   }
   

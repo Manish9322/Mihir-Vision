@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { Button } from '../ui/button';
 import { ArrowRight } from 'lucide-react';
 import { useGetProjectsDataQuery } from '@/services/api';
+import FeaturedProjectsSkeleton from '../skeletons/featured-projects-skeleton';
 
 const futureMissionsData = {
   title: 'Featured Projects',
@@ -16,9 +17,13 @@ const futureMissionsData = {
 export default function FeaturedProjects() {
   const { data: projects, isLoading, isError } = useGetProjectsDataQuery(undefined);
   
+  if (isLoading) {
+    return <FeaturedProjectsSkeleton />;
+  }
+  
   const visibleProjects = projects?.filter((p: any) => p.isVisible) || [];
 
-  if (isLoading || isError || !visibleProjects || visibleProjects.length === 0) {
+  if (isError || !visibleProjects || visibleProjects.length === 0) {
     return null;
   }
 

@@ -11,16 +11,7 @@ import Gallery from '@/components/sections/gallery';
 import Timeline from '@/components/sections/timeline';
 import Faq from '@/components/sections/faq';
 import Contact from '@/components/sections/contact';
-import { Suspense } from 'react';
-import AboutSkeleton from '@/components/skeletons/about-skeleton';
-import ClientsMarqueeSkeleton from '@/components/skeletons/clients-marquee-skeleton';
 import Footer from '@/components/layout/footer';
-import ActivitiesSkeleton from '@/components/skeletons/activities-skeleton';
-import VideoShowcaseSkeleton from '@/components/skeletons/video-showcase-skeleton';
-import GallerySkeleton from '@/components/skeletons/gallery-skeleton';
-import FeaturedProjectsSkeleton from '@/components/skeletons/featured-projects-skeleton';
-import TimelineSkeleton from '@/components/skeletons/timeline-skeleton';
-import FaqSkeleton from '@/components/skeletons/faq-skeleton';
 
 export default function Home() {
   return (
@@ -28,31 +19,15 @@ export default function Home() {
       <Header />
       <main className="flex-1">
         <Hero />
-        <Suspense fallback={<AboutSkeleton />}>
-          <About />
-        </Suspense>
-        <Suspense fallback={<ClientsMarqueeSkeleton />}>
-            <ClientsMarquee />
-        </Suspense>
-        <Suspense fallback={<ActivitiesSkeleton />}>
-          <Activities />
-        </Suspense>
+        <About />
+        <ClientsMarquee />
+        <Activities />
         <GrowthChart />
-        <Suspense fallback={<VideoShowcaseSkeleton />}>
-          <VideoShowcase />
-        </Suspense>
-        <Suspense fallback={<GallerySkeleton />}>
-          <Gallery />
-        </Suspense>
-        <Suspense fallback={<FeaturedProjectsSkeleton />}>
-            <FeaturedProjects />
-        </Suspense>
-        <Suspense fallback={<TimelineSkeleton />}>
-            <Timeline />
-        </Suspense>
-        <Suspense fallback={<FaqSkeleton />}>
-          <Faq />
-        </Suspense>
+        <VideoShowcase />
+        <Gallery />
+        <FeaturedProjects />
+        <Timeline />
+        <Faq />
         <Contact />
       </main>
       <Footer />

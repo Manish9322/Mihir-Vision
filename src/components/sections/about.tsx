@@ -3,12 +3,17 @@
 import Image from 'next/image';
 import { Check } from 'lucide-react';
 import { useGetAboutDataQuery } from '@/services/api';
+import AboutSkeleton from '../skeletons/about-skeleton';
 
 export default function About() {
   const { data: aboutData, isLoading, isError } = useGetAboutDataQuery(undefined);
 
+  if (isLoading) {
+    return <AboutSkeleton />;
+  }
+
   // If data fetching fails or returns nothing, render nothing to avoid errors.
-  if (isLoading || isError || !aboutData) {
+  if (isError || !aboutData) {
     return null;
   }
 
