@@ -47,12 +47,6 @@ export default function Header() {
           </Link>
         </div>
 
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 lg:hidden">
-            <Link href="/" className="font-bold font-headline line-clamp-1">
-                 {isSettingsLoading ? <Skeleton className="h-5 w-32" /> : siteName}
-            </Link>
-        </div>
-
         <nav className="hidden items-center justify-center gap-4 text-sm font-medium lg:flex">
           {navLinks.map((link) => (
             <Link key={link.href} href={link.href} className="transition-colors hover:text-foreground/80 text-foreground/60">
